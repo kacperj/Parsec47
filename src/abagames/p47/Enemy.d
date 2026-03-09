@@ -88,7 +88,7 @@ public class Enemy: Actor {
   }
 
   public override void init(ActorInitializer ini) {
-    EnemyInitializer ei = (EnemyInitializer) ini;
+    EnemyInitializer ei = cast(EnemyInitializer)ini;
     field = ei.field;
     bullets = ei.bullets;
     shots = ei.shots;
@@ -234,7 +234,7 @@ public class Enemy: Actor {
   }
 
   private void addBonuses(Vector p, int sl) {
-    int bn = (float) sl * 3 / (((float) cnt / 30) + 1) * Bonus.rate + 0.9;
+    int bn = cast(int)(cast(float)sl * 3 / ((cast(float)cnt / 30) + 1) * Bonus.rate + 0.9);
     manager.addBonus(pos, p, bn);
   }
 
@@ -389,7 +389,7 @@ public class Enemy: Actor {
     for (int i = 0; i < shots.actor.length; i++) {
       if (!shots.actor[i].isExist)
 	continue;
-      Vector sp = ((Shot) shots.actor[i]).pos;
+      Vector sp = (cast(Shot)shots.actor[i]).pos;
       ch = checkHit(sp, 0.7, 0);
       if (ch >= HIT) {
 	manager.addParticle(sp, rand.nextSignedFloat(0.3), 0, Shot.SPEED / 4);
@@ -407,10 +407,10 @@ public class Enemy: Actor {
       for (int i = 0; i < rolls.actor.length; i++) {
 	if (!rolls.actor[i].isExist)
 	  continue;
-	Roll rl = (Roll) rolls.actor[i];
+	Roll rl = cast(Roll)rolls.actor[i];
 	ch = checkHit(rl.pos[0], 1.0, 1.0);
 	if (ch >= HIT) {
-	  for (int i = 0; i < 4; i++)
+	  for (int j = 0; j < 4; j++)
 	    manager.addParticle(rl.pos[0], rand.nextFloat(std.math.PI * 2), 0, Shot.SPEED / 10);
 	  float rd = ROLL_DAMAGE;
 	  if (rl.released) {
@@ -420,9 +420,9 @@ public class Enemy: Actor {
 	      continue;
 	  }
 	  if (ch == HIT)
-	    addDamage(rd);
+	    addDamage(cast(int)rd);
 	  else
-	    addDamageBattery(ch, rd);
+	    addDamageBattery(ch, cast(int)rd);
 	}
       }
     } else if (type.type != EnemyType.SMALL) {
@@ -430,7 +430,7 @@ public class Enemy: Actor {
       for (int i = 0; i < locks.actor.length; i++) {
 	if (!locks.actor[i].isExist)
 	  continue;
-	Lock lk = (Lock) locks.actor[i];
+	Lock lk = cast(Lock)locks.actor[i];
 	if (lk.state == Lock.SEARCH || lk.state == Lock.SEARCHED) {
 	  ch = checkLocked(lk.pos[0], 2.5, lk);
 	  if (ch >= HIT) {
@@ -442,7 +442,7 @@ public class Enemy: Actor {
 	} else if (lk.state == Lock.FIRED && lk.lockedEnemy == this) {
 	  ch = checkHit(lk.pos[0], 1.5, 1.5);
 	  if (ch >= HIT && ch == lk.lockedPart) {
-	    for (int i = 0; i < 4; i++)
+	    for (int j = 0; j < 4; j++)
 	      manager.addParticle(lk.pos[0], rand.nextFloat(std.math.PI * 2), 0, Shot.SPEED / 10);
 	    if (ch == HIT)
 	      addDamage(LOCK_DAMAGE);
@@ -595,7 +595,7 @@ public class Enemy: Actor {
 	if (z < 0)
 	  z -= APPEARANCE_Z / 60;
 	appCnt--;
-	mtr = 1.0 - (float)appCnt / APPEARANCE_CNT;
+	mtr = 1.0 - cast(float)appCnt / APPEARANCE_CNT;
       } else if (dstCnt > 0) {
 	addFragments(1, z, 0.05, rand.nextSignedFloat(std.math.PI));
 	manager.clearBullets();
@@ -609,7 +609,7 @@ public class Enemy: Actor {
 	  manager.setBossShieldMeter(0, 0, 0, 0, 0, 0);
 	  return;
 	}
-	mtr = (float)dstCnt / DESTROYED_CNT;
+	mtr = cast(float)dstCnt / DESTROYED_CNT;
       } else if (timeoutCnt > 0) {
 	z += DESTROYED_Z / 60;
 	timeoutCnt--;
@@ -641,16 +641,16 @@ public class Enemy: Actor {
     if (appCnt > 0) {
       // Appearance effect of the boss.
       P47Screen.setRetroZ(z);
-      ap = (float) appCnt / APPEARANCE_CNT;
+      ap = cast(float)appCnt / APPEARANCE_CNT;
       P47Screen.setRetroParam(1, type.retroSize * (1 + ap * 10));
       P47Screen.setRetroColor(type.r, type.g, type.b, (1 - ap));
     } else if (dstCnt > 0) {
       P47Screen.setRetroZ(z);
-      ap = (float) dstCnt / DESTROYED_CNT / 2 + 0.5;
+      ap = cast(float)dstCnt / DESTROYED_CNT / 2 + 0.5;
       P47Screen.setRetroColor(type.r, type.g, type.b, ap);
     } else if (timeoutCnt > 0) {
       P47Screen.setRetroZ(z);
-      ap = (float) timeoutCnt / TIMEOUT_CNT;
+      ap = cast(float)timeoutCnt / TIMEOUT_CNT;
       P47Screen.setRetroColor(type.r, type.g, type.b, ap);
     } else {
       P47Screen.setRetroParam(1, type.retroSize);
@@ -694,21 +694,21 @@ public class Enemy: Actor {
 	P47Screen.drawLineRetro(pos.x + bt.wingShapePos[0].x, pos.y + bt.wingShapePos[0].y,
 				pos.x + bt.wingShapePos[1].x, pos.y + bt.wingShapePos[1].y);
       } else {
-	for (int i = 0; i < BatteryType.WING_SHAPE_POINT_NUM; i++, ni++) {
+	for (int wi = 0; wi < BatteryType.WING_SHAPE_POINT_NUM; wi++, ni++) {
 	  if (ni >= BatteryType.WING_SHAPE_POINT_NUM)
 	    ni = 0;
-	  P47Screen.drawLineRetro(pos.x + bt.wingShapePos[i].x, pos.y + bt.wingShapePos[i].y,
+	  P47Screen.drawLineRetro(pos.x + bt.wingShapePos[wi].x, pos.y + bt.wingShapePos[wi].y,
 				  pos.x + bt.wingShapePos[ni].x, pos.y + bt.wingShapePos[ni].y);
 	}
 	if (type.type != EnemyType.SMALL) {
 	  glBegin(GL_TRIANGLE_FAN);
 	  Screen3D.setColor
 	    (P47Screen.retroR, P47Screen.retroG, P47Screen.retroB, P47Screen.retroA);
-	  for (int i = 0; i < BatteryType.WING_SHAPE_POINT_NUM; i++) {
-	    if (i == 2)
+	  for (int wi = 0; wi < BatteryType.WING_SHAPE_POINT_NUM; wi++) {
+	    if (wi == 2)
 	      Screen3D.setColor
 		(P47Screen.retroR, P47Screen.retroG, P47Screen.retroB, 0);
-	    glVertex3f(pos.x + bt.wingShapePos[i].x, pos.y + bt.wingShapePos[i].y, z);
+	    glVertex3f(pos.x + bt.wingShapePos[wi].x, pos.y + bt.wingShapePos[wi].y, z);
 	  }
 	  glEnd();
 	}

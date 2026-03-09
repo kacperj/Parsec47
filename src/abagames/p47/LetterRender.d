@@ -23,7 +23,7 @@ public class LetterRender {
     WHITE, RED
   }
 
-  private static void changeColor(int c) {
+  public static void changeColor(int c) {
     colorIdx = c * LETTER_NUM;
   }
 
@@ -177,7 +177,7 @@ public class LetterRender {
     float x, y, length, size, t;
     int deg;
     for (int i = 0;; i++) {
-      deg = (int) spData[idx][i][4];
+      deg = cast(int)spData[idx][i][4];
       if (deg > 99990) break;
       x = -spData[idx][i][0]; 
       y = -spData[idx][i][1];

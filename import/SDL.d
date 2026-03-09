@@ -20,18 +20,21 @@
     slouken@devolution.com
 */
 
-import SDL_types;
-import SDL_getenv;
-import SDL_error;
-import SDL_rwops;
-import SDL_timer;
-import SDL_audio;
-import SDL_cdrom;
-import SDL_joystick;
-import SDL_events;
-import SDL_video;
-import SDL_byteorder;
-import SDL_version;
+public import SDL_types;
+public import SDL_getenv;
+public import SDL_error;
+public import SDL_rwops;
+public import SDL_timer;
+public import SDL_audio;
+public import SDL_cdrom;
+public import SDL_joystick;
+public import SDL_events;
+public import SDL_video;
+public import SDL_byteorder;
+public import SDL_version;
+public import SDL_keyboard;
+public import SDL_keysym;
+public import SDL_mouse;
 
 extern(C):
 
@@ -74,14 +77,14 @@ Uint32 SDL_WasInit(Uint32 flags);
 void SDL_Quit();
 
 void SDL_SetModuleHandle(void *hInst);
-extern(Windows) void* GetModuleHandle(char*);
+extern(Windows) void* GetModuleHandleA(char*);
 
 static this()
 {
 	/* Load SDL dynamic link library */
 	if (SDL_Init(SDL_INIT_NOPARACHUTE) < 0)
 		throw new Error("Error loading SDL");
-	SDL_SetModuleHandle(GetModuleHandle(null));
+	SDL_SetModuleHandle(GetModuleHandleA(null));
 }
 
 static ~this()

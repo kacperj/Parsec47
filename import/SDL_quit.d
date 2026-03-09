@@ -43,5 +43,5 @@ import SDL_events;
 bit SDL_QuitRequested()
 {
 	SDL_PumpEvents();
-	return SDL_PeepEvents(null, 0, SDL_PEEKEVENT, SDL_QUITMASK);
+	return SDL_PeepEvents(null, 0, SDL_PEEKEVENT, SDL_QUITMASK) != 0;
 }

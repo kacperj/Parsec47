@@ -88,9 +88,9 @@ public class P47GameManager: GameManager {
 
   // Initialize actor pools, load BGMs/SEs and textures.
   public override void init() {
-    pad = (Pad) input;
-    prefManager = (P47PrefManager) abstPrefManager;
-    screen = (P47Screen) abstScreen;
+    pad = cast(Pad)input;
+    prefManager = cast(P47PrefManager)abstPrefManager;
+    screen = cast(P47Screen)abstScreen;
     rand = new Rand;
     Field.createDisplayLists();
     field = new Field;
@@ -98,33 +98,33 @@ public class P47GameManager: GameManager {
     Ship.createDisplayLists();
     ship = new Ship;
     ship.init(pad, field, this);
-    auto Particle particleClass = new Particle;
-    auto ParticleInitializer pi = new ParticleInitializer;
+    Particle particleClass = new Particle;
+    ParticleInitializer pi = new ParticleInitializer;
     particles = new LuminousActorPool(128, particleClass, pi);
-    auto Fragment fragmentClass = new Fragment;
-    auto FragmentInitializer fi = new FragmentInitializer;
+    Fragment fragmentClass = new Fragment;
+    FragmentInitializer fi = new FragmentInitializer;
     fragments = new LuminousActorPool(128, fragmentClass, fi);
     BulletActor.createDisplayLists();
-    auto BulletActorInitializer bi = new BulletActorInitializer(field, ship);
+    BulletActorInitializer bi = new BulletActorInitializer(field, ship);
     bullets = new BulletActorPool(512, bi);
     LetterRender.createDisplayLists();
-    auto Shot shotClass = new Shot;
-    auto ShotInitializer shi = new ShotInitializer(field);
+    Shot shotClass = new Shot;
+    ShotInitializer shi = new ShotInitializer(field);
     shots = new ActorPool(32, shotClass, shi);
-    auto Roll rollClass = new Roll;
-    auto RollInitializer ri = new RollInitializer(ship, field, this);
+    Roll rollClass = new Roll;
+    RollInitializer ri = new RollInitializer(ship, field, this);
     rolls = new ActorPool(4, rollClass, ri);
     Lock.init();
-    auto Lock lockClass = new Lock;
-    auto LockInitializer li = new LockInitializer(ship, field, this);
+    Lock lockClass = new Lock;
+    LockInitializer li = new LockInitializer(ship, field, this);
     locks = new ActorPool(4, lockClass, li);
-    auto Enemy enemyClass = new Enemy;
-    auto EnemyInitializer ei = new EnemyInitializer
+    Enemy enemyClass = new Enemy;
+    EnemyInitializer ei = new EnemyInitializer
       (field, bullets, shots, rolls, locks, ship, this);
     enemies = new ActorPool(ENEMY_MAX, enemyClass, ei);
     Bonus.init();
-    auto Bonus bonusClass = new Bonus;
-    auto BonusInitializer bni = new BonusInitializer(field, ship, this);
+    Bonus bonusClass = new Bonus;
+    BonusInitializer bni = new BonusInitializer(field, ship, this);
     bonuses = new ActorPool(128, bonusClass, bni);
     barrageManager = new BarrageManager;
     barrageManager.loadBulletMLs();
@@ -177,7 +177,7 @@ public class P47GameManager: GameManager {
   }
 
   public void addParticle(Vector pos, float deg, float ofs, float speed) {
-    Particle pt = (Particle) particles.getInstanceForced();
+    Particle pt = cast(Particle)particles.getInstanceForced();
     assert(pt);
     pt.set(pos, deg, ofs, speed);
   }
@@ -185,14 +185,14 @@ public class P47GameManager: GameManager {
   public void addFragments(int n, float x1, float y1, float x2, float y2, float z, 
 			   float speed, float deg) {
     for (int i = 0; i < n; i++) {
-      Fragment ft = (Fragment) fragments.getInstanceForced();
+      Fragment ft = cast(Fragment)fragments.getInstanceForced();
       assert(ft);
       ft.set(x1, y1, x2, y2, z, speed, deg);
     }
   }
 
   public void addEnemy(Vector pos, float d, EnemyType type, BulletMLParser *moveParser) {
-    Enemy en = (Enemy) enemies.getInstance();
+    Enemy en = cast(Enemy)enemies.getInstance();
     if (!en)
       return;
     en.set(pos, d, type, moveParser);
@@ -202,33 +202,33 @@ public class P47GameManager: GameManager {
     for (int i = 0; i < bullets.actor.length; i++) {
       if (!bullets.actor[i].isExist)
 	continue;
-      ((BulletActor) bullets.actor[i]).toRetro();
+      (cast(BulletActor)bullets.actor[i]).toRetro();
     }
   }
 
   public void addBoss(Vector pos, float d, EnemyType type) {
-    Enemy en = (Enemy) enemies.getInstance();
+    Enemy en = cast(Enemy)enemies.getInstance();
     if (!en)
       return;
     en.setBoss(pos, d, type);
   }
 
   public void addShot(Vector pos, float deg) {
-    Shot shot = (Shot) shots.getInstance();
+    Shot shot = cast(Shot)shots.getInstance();
     if (!shot)
       return;
     shot.set(pos, deg);
   }
 
   public void addRoll() {
-    Roll roll = (Roll) rolls.getInstance();
+    Roll roll = cast(Roll)rolls.getInstance();
     if (!roll)
       return;
     roll.set();
   }
 
   public void addLock() {
-    Lock lock = (Lock) locks.getInstance();
+    Lock lock = cast(Lock)locks.getInstance();
     if (!lock)
       return;
     lock.set();
@@ -238,7 +238,7 @@ public class P47GameManager: GameManager {
     for (int i = 0; i < rolls.actor.length; i++) {
       if (!rolls.actor[i].isExist)
 	continue;
-      ((Roll) rolls.actor[i]).released = true;
+      (cast(Roll)rolls.actor[i]).released = true;
     }
   }
 
@@ -246,14 +246,14 @@ public class P47GameManager: GameManager {
     for (int i = 0; i < locks.actor.length; i++) {
       if (!locks.actor[i].isExist)
 	continue;
-      ((Lock) locks.actor[i]).released = true;
+      (cast(Lock)locks.actor[i]).released = true;
     }
   }
 
 
   public void addBonus(Vector pos, Vector ofs, int num) {
     for (int i = 0; i < num; i++) {
-      Bonus bonus = (Bonus) bonuses.getInstance();
+      Bonus bonus = cast(Bonus)bonuses.getInstance();
       if (!bonus)
 	return;
       bonus.set(pos, ofs);
@@ -262,11 +262,11 @@ public class P47GameManager: GameManager {
 
   public void setBossShieldMeter(int bs, int s1, int s2, int s3, int s4, float r) {
     r *= 0.7;
-    bossShield = bs * r;
-    bossWingShield[0] = s1 * r ;
-    bossWingShield[1] = s2 * r;
-    bossWingShield[2] = s3 * r;
-    bossWingShield[3] = s4 * r;
+    bossShield = cast(int)(bs * r);
+    bossWingShield[0] = cast(int)(s1 * r);
+    bossWingShield[1] = cast(int)(s2 * r);
+    bossWingShield[2] = cast(int)(s3 * r);
+    bossWingShield[3] = cast(int)(s4 * r);
   }
 
   // Difficulty.
@@ -341,7 +341,7 @@ public class P47GameManager: GameManager {
     rolls.clear();
     locks.clear();
     setScreenShake(0, 0);
-    mainLoop.interval = interval = mainLoop.INTERVAL_BASE;
+    interval = mainLoop.INTERVAL_BASE; mainLoop.interval = mainLoop.INTERVAL_BASE;
     cnt = 0;
     if (score > prefManager.hiScore[mode][difficulty][parsecSlot])
       prefManager.hiScore[mode][difficulty][parsecSlot] = score;
@@ -396,10 +396,10 @@ public class P47GameManager: GameManager {
 	if (sm > 1.75)
 	  sm = 1.75;
 	interval += (sm * mainLoop.INTERVAL_BASE - interval) * 0.1;
-	mainLoop.interval = interval;
+	mainLoop.interval = cast(int)interval;
       } else {
 	interval += (mainLoop.INTERVAL_BASE - interval) * 0.08;
-	mainLoop.interval = interval;
+	mainLoop.interval = cast(int)interval;
       }
     }
   }

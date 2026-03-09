@@ -48,7 +48,7 @@
    Please CC: edwardsac@ieee.org on all correspondence
 */
 
-module MersenneTwister;
+module abagames.mt;
 import std.stream;
 
 /* Period parameters */  
@@ -113,14 +113,14 @@ void init_by_array(uint init_key[], uint key_length)
 
 static void next_state()
 {
-    uint *p=state;
+    uint *p=state.ptr;
 
     /* if init_genrand() has not been called, */
     /* a default initial seed is used         */
     if (initf==0) init_genrand(5489UL);
 
     left = N;
-    next = state;
+    next = state.ptr;
     
     for (int j=N-M+1; --j; p++) 
         *p = p[M] ^ TWIST(p[0], p[1]);
@@ -162,7 +162,7 @@ long genrand_int31()
     y ^= (y << 15) & 0xefc60000UL;
     y ^= (y >> 18);
 
-    return (long)(y>>1);
+    return cast(long)(y>>1);
 }
 
 /* generates a random number on [0,1]-real-interval */
@@ -179,7 +179,7 @@ double genrand_real1()
     y ^= (y << 15) & 0xefc60000UL;
     y ^= (y >> 18);
 
-    return (double)y * (1.0/4294967295.0); 
+    return cast(double)y * (1.0/4294967295.0); 
     /* divided by 2^32-1 */ 
 }
 
@@ -197,7 +197,7 @@ double genrand_real2()
     y ^= (y << 15) & 0xefc60000UL;
     y ^= (y >> 18);
 
-    return (double)y * (1.0/4294967296.0); 
+    return cast(double)y * (1.0/4294967296.0); 
     /* divided by 2^32 */
 }
 
@@ -215,7 +215,7 @@ double genrand_real3()
     y ^= (y << 15) & 0xefc60000UL;
     y ^= (y >> 18);
 
-    return ((double)y + 0.5) * (1.0/4294967296.0); 
+    return (cast(double)y + 0.5) * (1.0/4294967296.0); 
     /* divided by 2^32 */
 }
 

@@ -7,7 +7,7 @@ module abagames.util.Rand;
 
 private:
 import std.date;
-import mt;
+import abagames.mt;
 
 /**
  * Random number generator.
