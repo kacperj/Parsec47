@@ -42,7 +42,7 @@ private void parseArgs(char[][] args) {
 	throw new Exception("Invalid options");
       }
       i++;
-      float b = (float) atoi(args[i]) / 100;
+      float b = cast(float)std.c.stdlib.atoi(std.string.toStringz(args[i])) / 100;
       if (b < 0 || b > 1) {
 	usage(args[0]);
 	throw new Exception("Invalid options");
@@ -55,7 +55,7 @@ private void parseArgs(char[][] args) {
 	throw new Exception("Invalid options");
       }
       i++;
-      float l = (float) atoi(args[i]) / 100;
+      float l = cast(float)std.c.stdlib.atoi(std.string.toStringz(args[i])) / 100;
       if (l < 0 || l > 1) {
 	usage(args[0]);
 	throw new Exception("Invalid options");
@@ -114,13 +114,12 @@ version (Win32_release) {
 import std.c.windows.windows;
 import std.string;
 
-extern (C) void gc_init();
-extern (C) void gc_term();
-extern (C) void _minit();
-extern (C) void _moduleCtor();
+extern (C)void gc_init();
+extern (C)void gc_term();
+extern (C)void _minit();
+extern (C)void _moduleCtor();
 
-extern (Windows)
-public int WinMain(HINSTANCE hInstance,
+extern (Windows)public int WinMain(HINSTANCE hInstance,
 	    HINSTANCE hPrevInstance,
 	    LPSTR lpCmdLine,
 	    int nCmdShow) {
@@ -131,9 +130,9 @@ public int WinMain(HINSTANCE hInstance,
   try {
     _moduleCtor();
     char exe[4096];
-    GetModuleFileNameA(null, exe, 4096);
+    GetModuleFileNameA(null, exe.ptr, 4096);
     char[][1] prog;
-    prog[0] = std.string.toString(exe);
+    prog[0] = std.string.toString(exe.ptr);
     result = boot(prog ~ std.string.split(std.string.toString(lpCmdLine)));
   } catch (Object o) {
     //Logger.error("Exception: " ~ o.toString());

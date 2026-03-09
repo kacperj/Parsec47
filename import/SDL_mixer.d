@@ -24,7 +24,7 @@
 
 /* $Id: SDL_mixer.d,v 1.1.1.1 2003/11/28 17:26:28 kenta Exp $ */
 
-import SDL;
+public import SDL;
 
 extern (C) {
 

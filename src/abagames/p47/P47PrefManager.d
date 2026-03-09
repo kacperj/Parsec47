@@ -50,7 +50,7 @@ public class P47PrefManager: PrefManager {
   }
 
   public void load() {
-    auto File fd = new File;
+    File fd = new File;
     try {
       int ver;
       fd.open(PREF_FILE);
@@ -82,7 +82,7 @@ public class P47PrefManager: PrefManager {
   }
 
   public void save() {
-    auto File fd = new File;
+    File fd = new File;
     fd.create(PREF_FILE);
     fd.write(VERSION_NUM);
     for (int k = 0; k < MODE_NUM; k++) {

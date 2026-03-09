@@ -28,7 +28,7 @@ public class Vector {
   }
 
   public Vector getElement(Vector v) {
-    Vector rsl;
+    Vector rsl = new Vector;
     float ll = v.x * v.x + v.y * v.y;
     if (ll != 0) {
       float mag = innerProduct(v);

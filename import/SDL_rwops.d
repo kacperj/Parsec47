@@ -84,35 +84,25 @@ void SDL_FreeRW(SDL_RWops *area);
 /* Macros to easily read and write from an SDL_RWops structure */
 int SDL_RWseek(SDL_RWops *ctx, int offset, int whence)
 {
-	int (*seek)(SDL_RWops *context, int offset, int whence);
-	seek = ctx.seek;
-	return (*seek)(ctx, offset, whence);
+	return ctx.seek(ctx, offset, whence);
 }
 
 int SDL_RWtell(SDL_RWops *ctx)
 {
-	int (*seek)(SDL_RWops *context, int offset, int whence);
-	seek = ctx.seek;
-	return (*seek)(ctx, 0, 1);
+	return ctx.seek(ctx, 0, 1);
 }
 
 int SDL_RWread(SDL_RWops *ctx, void* ptr, int size, int n)
 {
-	int (*read)(SDL_RWops *context, void *ptr, int size, int maxnum);
-	read = ctx.read;
-	return (*read)(ctx, ptr, size, n);
+	return ctx.read(ctx, ptr, size, n);
 }
 
 int SDL_RWwrite(SDL_RWops *ctx, void* ptr, int size, int n)
 {
-	int (*write)(SDL_RWops *context, void *ptr, int size, int num);
-	write = ctx.write;
-	return (*write)(ctx, ptr, size, n);
+	return ctx.write(ctx, ptr, size, n);
 }
 
 int SDL_RWclose(SDL_RWops *ctx)
 {
-	int (*close)(SDL_RWops *context);
-	close = ctx.close;
-	return (*close)(ctx);
+	return ctx.close(ctx);
 }

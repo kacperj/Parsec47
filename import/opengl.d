@@ -1112,7 +1112,7 @@ const uint GL_TEXTURE_COMPONENTS = GL_TEXTURE_INTERNAL_FORMAT;
 /*************************************************************/
 
 extern(Windows) void /*APIENTRY*/glAccum (GLenum op, GLfloat value);
-extern(Windows) void /*APIENTRY*/glAlphaFunc (GLenum func, GLclampf ref);
+extern(Windows) void /*APIENTRY*/glAlphaFunc (GLenum func, GLclampf ref_);
 extern(Windows) GLboolean /*APIENTRY*/glAreTexturesResident (GLsizei n, GLuint *textures, GLboolean *residences);
 extern(Windows) void /*APIENTRY*/glArrayElement (GLint i);
 extern(Windows) void /*APIENTRY*/glBegin (GLenum mode);
@@ -1365,7 +1365,7 @@ extern(Windows) void /*APIENTRY*/glScalef (GLfloat x, GLfloat y, GLfloat z);
 extern(Windows) void /*APIENTRY*/glScissor (GLint x, GLint y, GLsizei width, GLsizei height);
 extern(Windows) void /*APIENTRY*/glSelectBuffer (GLsizei size, GLuint *buffer);
 extern(Windows) void /*APIENTRY*/glShadeModel (GLenum mode);
-extern(Windows) void /*APIENTRY*/glStencilFunc (GLenum func, GLint ref, GLuint mask);
+extern(Windows) void /*APIENTRY*/glStencilFunc (GLenum func, GLint ref_, GLuint mask);
 extern(Windows) void /*APIENTRY*/glStencilMask (GLuint mask);
 extern(Windows) void /*APIENTRY*/glStencilOp (GLenum fail, GLenum zfail, GLenum zpass);
 extern(Windows) void /*APIENTRY*/glTexCoord1d (GLdouble s);

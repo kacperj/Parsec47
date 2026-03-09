@@ -1,1 +1,0 @@
-p47.exe -window

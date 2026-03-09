@@ -255,7 +255,7 @@ public class StageManager {
     field.aimSpeed = 0.1 + section * 0.02;
     if (section == 4) {
       // Set the middle boss.
-      auto Vector pos = new Vector;
+      Vector pos = new Vector;
       pos.x = 0; pos.y = field.size.y / 4 * 3;
       gameManager.addBoss(pos, std.math.PI, middleBossType);
       bossSection = true;
@@ -264,7 +264,7 @@ public class StageManager {
       return;
     } else if (section == 9) {
       // Set the large boss.
-      auto Vector pos = new Vector;
+      Vector pos = new Vector;
       pos.x = 0; pos.y = field.size.y / 4 * 3;
       gameManager.addBoss(pos, std.math.PI, largeBossType);
       bossSection = true;
@@ -295,16 +295,16 @@ public class StageManager {
     else if (middleRushSection)
       ap = MIDDLE_RUSH_SECTION_PATTERN;
     for (int i = 0; i < apparancePattern[gameManager.mode][ap][0]; i++, apNum++) {
-      EnemyAppearance* ap = &(appearance[apNum]);
-      setAppearance(ap, SMALL);
+      EnemyAppearance* ea = &(appearance[apNum]);
+      setAppearance(ea, SMALL);
     }
     for (int i = 0; i < apparancePattern[gameManager.mode][ap][1]; i++, apNum++) {
-      EnemyAppearance* ap = &(appearance[apNum]);
-      setAppearance(ap, MIDDLE);
+      EnemyAppearance* ea = &(appearance[apNum]);
+      setAppearance(ea, MIDDLE);
     }
     for (int i = 0; i < apparancePattern[gameManager.mode][ap][2]; i++, apNum++) {
-      EnemyAppearance* ap = &(appearance[apNum]);
-      setAppearance(ap, LARGE);
+      EnemyAppearance* ea = &(appearance[apNum]);
+      setAppearance(ea, LARGE);
     }
   }
 

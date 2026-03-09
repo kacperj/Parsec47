@@ -37,7 +37,7 @@ public class BarrageManager {
 
   public void loadBulletMLs() {
     for (int i = 0; i< BARRAGE_TYPE; i++) {
-      DIR* d = opendir(dirName[i]);
+      DIR* d = opendir(std.string.toStringz(dirName[i]));
       int j;
       for (j = 0;;) {
 	char* fn = readdir_filename(d);
