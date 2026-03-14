@@ -50,11 +50,7 @@ public:
 	DECLSPEC int getRefID() const { return refID_; }
 
     DECLSPEC BulletMLNode* getChild(Name name);
-/*
 
-    template <class OutIte_>
-    void getAllChildren(Name name, OutIte_ outIte);
-*/
     DECLSPEC void getAllChildrenVec(Name name, std::vector<BulletMLNode*>& outvec);
 
 
@@ -70,20 +66,7 @@ protected:
     Name name_;
 	Type type_;
 	int refID_;
-    std::auto_ptr<Number> val_;
+    std::unique_ptr<Number> val_;
 };
-
-
-/*
-template <class OutIte_>
-void BulletMLNode::getAllChildren(Name name, OutIte_ outIte) {
-    ChildIterator ite;
-    for (ite = childBegin(); ite != childEnd(); ite++) {
-		if ((*ite)->getName() == name) *outIte = *ite;
-		outIte++;
-    }
-}
-
-*/
 
 #endif // ! BULLETMLTREE_H_

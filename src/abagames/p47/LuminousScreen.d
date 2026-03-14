@@ -7,7 +7,6 @@ module abagames.p47.LuminousScreen;
 
 private:
 import std.math;
-import std.string;
 import opengl;
 import abagames.util.Rand;
 import std.c.string;

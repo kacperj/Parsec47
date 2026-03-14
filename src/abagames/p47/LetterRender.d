@@ -135,36 +135,6 @@ public class LetterRender {
     }
   }
 
-  /*public static void drawTime(int time, float lx ,float y, float s) {
-    int n = time;
-    float x = lx;
-    for (int i = 0; i < 7; i++) {
-      if (i != 4) {
-	drawLetter(n % 10, x, y, s);
-	n /= 10;
-      } else {
-	drawLetter(n % 6, x, y, s);
-	n /= 6;
-      }
-      if ((i & 1) == 1 || i == 0) {
-	switch (i) {
-	case 3:
-	  drawLetter(41, x + s * 1.16f, y, s);
-	  break;
-	case 5:
-	  drawLetter(40, x + s * 1.16f, y, s);
-	  break;
-	default:
-	  break;
-	}
-	x -= s * 1.7f;
-      } else {
-	x -= s * 2.2f;
-      }
-      if (n <= 0) break;
-    }
-    }*/
-
   private static void drawBox(float x, float y, float width, float height,
 			      float r, float g, float b) {
     Screen3D.setColor(r, g, b, 0.5);

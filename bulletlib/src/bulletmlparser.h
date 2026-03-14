@@ -12,8 +12,6 @@
 #include <string>
 #include <vector>
 
-#include <stdio.h>
-
 class BulletMLParser {
 protected:
     typedef std::vector<std::string> MyAttributes;
