@@ -61,6 +61,10 @@ install_dmd1() {
 
 install_dmd1
 
+cd bulletlib
+./build_bulletml.sh
+cd ..
+
 DMD="$DMD1_INSTALL_DIR/windows/bin/dmd.exe"
 PROJ="$(pwd)"
 SRC="$PROJ/src"

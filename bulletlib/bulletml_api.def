@@ -1,0 +1,26 @@
+LIBRARY bulletml.dll
+EXPORTS
+    _BulletMLParserTinyXML_new          = BulletMLParserTinyXML_new
+    _BulletMLParserTinyXML_parse        = BulletMLParserTinyXML_parse
+    _BulletMLParserTinyXML_delete       = BulletMLParserTinyXML_delete
+    _BulletMLRunner_new_parser          = BulletMLRunner_new_parser
+    _BulletMLRunner_new_state           = BulletMLRunner_new_state
+    _BulletMLRunner_delete              = BulletMLRunner_delete
+    _BulletMLRunner_run                 = BulletMLRunner_run
+    _BulletMLRunner_isEnd               = BulletMLRunner_isEnd
+    _BulletMLRunner_set_getBulletDirection  = BulletMLRunner_set_getBulletDirection
+    _BulletMLRunner_set_getAimDirection     = BulletMLRunner_set_getAimDirection
+    _BulletMLRunner_set_getBulletSpeed      = BulletMLRunner_set_getBulletSpeed
+    _BulletMLRunner_set_getDefaultSpeed     = BulletMLRunner_set_getDefaultSpeed
+    _BulletMLRunner_set_getRank             = BulletMLRunner_set_getRank
+    _BulletMLRunner_set_createSimpleBullet  = BulletMLRunner_set_createSimpleBullet
+    _BulletMLRunner_set_createBullet        = BulletMLRunner_set_createBullet
+    _BulletMLRunner_set_getTurn             = BulletMLRunner_set_getTurn
+    _BulletMLRunner_set_doVanish            = BulletMLRunner_set_doVanish
+    _BulletMLRunner_set_doChangeDirection   = BulletMLRunner_set_doChangeDirection
+    _BulletMLRunner_set_doChangeSpeed       = BulletMLRunner_set_doChangeSpeed
+    _BulletMLRunner_set_doAccelX            = BulletMLRunner_set_doAccelX
+    _BulletMLRunner_set_doAccelY            = BulletMLRunner_set_doAccelY
+    _BulletMLRunner_set_getBulletSpeedX     = BulletMLRunner_set_getBulletSpeedX
+    _BulletMLRunner_set_getBulletSpeedY     = BulletMLRunner_set_getBulletSpeedY
+    _BulletMLRunner_set_getRand             = BulletMLRunner_set_getRand
