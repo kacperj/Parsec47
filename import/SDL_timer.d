@@ -39,7 +39,7 @@ Uint32 SDL_GetTicks();
 void SDL_Delay(Uint32 ms);
 
 /* Function prototype for the timer callback function */
-alias Uint32 (*SDL_TimerCallback)(Uint32 interval);
+alias SDL_TimerCallback = extern(C) Uint32 function(Uint32 interval);
 
 /* Set a callback to run after the specified number of milliseconds has
  * elapsed. The callback function is passed the current timer interval
@@ -79,7 +79,7 @@ int SDL_SetTimer(Uint32 interval, SDL_TimerCallback callback);
  * passed in, the periodic alarm continues, otherwise a new alarm is
  * scheduled.  If the callback returns 0, the periodic alarm is cancelled.
  */
-alias Uint32 (*SDL_NewTimerCallback)(Uint32 interval, void *param);
+alias SDL_NewTimerCallback = extern(C) Uint32 function(Uint32 interval, void *param);
 
 /* Definition of the timer ID type */
 alias void *SDL_TimerID;

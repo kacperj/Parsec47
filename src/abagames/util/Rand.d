@@ -6,21 +6,21 @@
 module abagames.util.Rand;
 
 private:
-import std.date;
+import core.time;
 import abagames.mt;
 
 /**
  * Random number generator.
  */
 public class Rand {
-  
+
   public this() {
-    d_time timer = getUTCtime();
-    init_genrand(timer);
+    long timer = MonoTime.currTime.ticks;
+    init_genrand(cast(uint)timer);
   }
 
   public void setSeed(long n) {
-    init_genrand(n);
+    init_genrand(cast(uint)n);
   }
 
   public int nextInt(int n) {

@@ -40,7 +40,7 @@ public class LetterRender {
     TO_RIGHT, TO_DOWN, TO_LEFT, TO_UP,
   }
 
-  public static void drawString(char[] str, float lx, float y, float s, int d) {
+  public static void drawString(string str, float lx, float y, float s, int d) {
     float x = lx;
     int c;
     int idx;
@@ -58,6 +58,7 @@ public class LetterRender {
     case TO_UP:
       ld = 270;
       break;
+    default: break;
     }
     for (int i = 0; i < str.length; i++) {
       c = str[i];
@@ -92,6 +93,7 @@ public class LetterRender {
       case TO_UP:
 	y -= s * 1.7f;
 	break;
+      default: break;
       }
     }
   }
@@ -113,6 +115,7 @@ public class LetterRender {
     case TO_UP:
       ld = 270;
       break;
+    default: break;
     }
     for (;;) {
       drawLetter(n % 10, x, y, s, ld);
@@ -129,6 +132,7 @@ public class LetterRender {
       case TO_UP:
 	y += s * 1.7f;
 	break;
+      default: break;
       }
       n /= 10;
       if (n <= 0) break;

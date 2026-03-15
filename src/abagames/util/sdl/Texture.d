@@ -16,15 +16,15 @@ import abagames.util.sdl.SDLInitFailedException;
  */
 public class Texture {
  public:
-  static char[] imagesDir = "images/";
+  static string imagesDir = "images/";
 
  private:
   GLuint num;
 
-  public this(char[] name) {
-    char[] fileName = imagesDir ~ name;
+  public this(string name) {
+    string fileName = imagesDir ~ name;
     SDL_Surface *surface;    
-    surface = SDL_LoadBMP(std.string.toStringz(fileName));
+    surface = SDL_LoadBMP(cast(char*)std.string.toStringz(fileName));
     if (!surface) {
       throw new SDLInitFailedException("Unable to load: " ~ fileName);
     }

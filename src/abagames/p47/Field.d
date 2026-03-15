@@ -11,7 +11,9 @@ import opengl;
 import abagames.util.Vector;
 import abagames.util.sdl.Screen3D;
 import abagames.p47.P47Screen;
-import abagames.p47.P47GameManager;
+
+// Mode constants (mirrored from P47GameManager to avoid cyclic import)
+private enum : int { ROLL = 0, LOCK = 1 }
 
 /**
  * Stage field.
@@ -47,16 +49,17 @@ public class Field {
 
   public void setColor(int mode) {
     switch (mode){
-    case P47GameManager.ROLL:
+    case ROLL:
       r = 0.2;
       g = 0.2;
       b = 0.7;
       break;
-    case P47GameManager.LOCK:
+    case LOCK:
       r = 0.5;
       g = 0.3;
       b = 0.6;
       break;
+    default: break;
     }
   }
 
@@ -89,6 +92,7 @@ public class Field {
       aimYawYBase = 10;
       aimYawZBase = 30;
       break;
+    default: break;
     }
   }
 
@@ -125,7 +129,7 @@ public class Field {
   }
 
   private static const int RING_POS_NUM = 16;
-  private static Vector ringPos[RING_POS_NUM];
+  private static Vector[RING_POS_NUM] ringPos;
   private static const float RING_DEG = std.math.PI / 3 / (cast(float)(RING_POS_NUM / 2) + 0.5);
   private static const float RING_RADIUS = 10;
   private static const float RING_SIZE = 0.5;

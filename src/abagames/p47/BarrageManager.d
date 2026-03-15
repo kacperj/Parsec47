@@ -7,7 +7,7 @@ module abagames.p47.BarrageManager;
 
 private:
 import std.string;
-import std.path;
+import std.path: extension;
 import dirent;
 import bulletml;
 import abagames.p47.MorphBullet;
@@ -18,37 +18,37 @@ import abagames.util.Logger;
  */
 public class BarrageManager {
  public:
-  static enum {
+  enum {
     MORPH, SMALL, SMALLMOVE, SMALLSIDEMOVE,
     MIDDLE, MIDDLESUB, MIDDLEMOVE, MIDDLEBACKMOVE,
     LARGE, LARGEMOVE,
     MORPH_LOCK, SMALL_LOCK, MIDDLESUB_LOCK,
   }
   const int BARRAGE_TYPE = 13;
-  const int BARRAGE_MAX = 64;
-  BulletMLParserTinyXML* parser[BARRAGE_TYPE][BARRAGE_MAX];
-  int parserNum[BARRAGE_TYPE];
+  static const int BARRAGE_MAX = 64;
+  BulletMLParserTinyXML*[BARRAGE_MAX][BARRAGE_TYPE] parser;
+  int[BARRAGE_TYPE] parserNum;
  private:
-  const char[][BARRAGE_TYPE] dirName = 
-    ["morph", "small", "smallmove", "smallsidemove", 
+  const string[BARRAGE_TYPE] dirName =
+    ["morph", "small", "smallmove", "smallsidemove",
     "middle", "middlesub", "middlemove", "middlebackmove",
     "large", "largemove",
     "morph_lock", "small_lock", "middlesub_lock"];
 
   public void loadBulletMLs() {
     for (int i = 0; i< BARRAGE_TYPE; i++) {
-      DIR* d = opendir(std.string.toStringz(dirName[i]));
+      DIR* d = opendir(cast(char*)std.string.toStringz(dirName[i]));
       int j;
       for (j = 0;;) {
 	char* fn = readdir_filename(d);
-	if (!fn) 
+	if (!fn)
 	  break;
-	char[] fileName = std.string.toString(fn);
-	if (getExt(fileName) != "xml")
+	string fileName = fn.fromStringz.idup;
+	if (extension(fileName) != ".xml")
 	  continue;
 	Logger.info("Load BulletML: " ~ dirName[i] ~ "/" ~ fileName);
-	parser[i][j] = 
-	  BulletMLParserTinyXML_new(std.string.toStringz(dirName[i] ~ "/" ~ fileName));
+	parser[i][j] =
+	  BulletMLParserTinyXML_new(cast(char*)std.string.toStringz(dirName[i] ~ "/" ~ fileName));
 	BulletMLParserTinyXML_parse(parser[i][j]);
 	j++;
       }

@@ -98,7 +98,7 @@ public class BulletActorPool: ActorPool, BulletsManager {
 			       float x, float y, float deg, float speed, 
 			       float rank,
 			       float speedRank, int shape, int color, float size, float xReverse,
-			       BulletMLParser *morph[], int morphNum, int morphCnt) {
+			       BulletMLParser*[] morph, int morphNum, int morphCnt) {
     BulletActor ba = cast(BulletActor)getInstance();
     if (!ba)
       return null;
@@ -109,7 +109,7 @@ public class BulletActorPool: ActorPool, BulletsManager {
     return ba;
   }
 
-  public void move() {
+  public override void move() {
     super.move();
     cnt++;
   }

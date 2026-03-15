@@ -39,7 +39,7 @@ public class Screen3D: Screen {
     // Initialize SDL.
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
       throw new SDLInitFailedException(
-	"Unable to initialize SDL: " ~ std.string.toString(SDL_GetError()));
+	"Unable to initialize SDL: " ~ std.string.fromStringz(SDL_GetError()).idup);
     }
     // Create an OpenGL screen.
     Uint32 videoFlags;
@@ -50,7 +50,7 @@ public class Screen3D: Screen {
     } 
     if (SDL_SetVideoMode(width, height, 0, videoFlags) == null) {
       throw new SDLInitFailedException
-	("Unable to create SDL screen: " ~ std.string.toString(SDL_GetError()));
+	("Unable to create SDL screen: " ~ std.string.fromStringz(SDL_GetError()).idup);
     }
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     resized(width, height);
@@ -99,8 +99,8 @@ public class Screen3D: Screen {
     throw new Exception("OpenGL error");
   }
 
-  protected void setCaption(char[] name) {
-    SDL_WM_SetCaption(std.string.toStringz(name), null);
+  protected void setCaption(string name) {
+    SDL_WM_SetCaption(cast(char*)std.string.toStringz(name), null);
   }
 
   public static void setColor(float r, float g, float b, float a) {

@@ -6,7 +6,7 @@
 module abagames.util.Logger;
 
 private:
-import std.stream;
+import std.stdio;
 
 /**
  * Logger(error/info).
@@ -14,27 +14,27 @@ import std.stream;
 version(Win32_release) {
 
 import std.string;
-import std.c.windows.windows;
+import core.sys.windows.windows;
 
 public class Logger {
 
-  public static void info(char[] msg) {
+  public static void info(string msg) {
     // Win32 exe file crashes if it writes something to stderr.
-    //stderr.writeLine("Info: " ~ msg);
+    //stderr.writeln("Info: " ~ msg);
   }
 
   public static void info(int n) {
     /*if (n >= 0)
-      stderr.writeLine("Info: " ~ std.string.toString(n));
+      stderr.writeln("Info: " ~ to!string(n));
     else
-    stderr.writeLine("Info: -" ~ std.string.toString(-n));*/
+    stderr.writeln("Info: -" ~ to!string(-n));*/
   }
 
-  private static void putMessage(char[] msg) {
+  private static void putMessage(string msg) {
     MessageBoxA(null, std.string.toStringz(msg), "Error", MB_OK | MB_ICONEXCLAMATION);
   }
 
-  public static void error(char[] msg) {
+  public static void error(string msg) {
     putMessage("Error: " ~ msg);
   }
 
@@ -49,31 +49,31 @@ public class Logger {
 
 } else {
 
+import std.conv: to;
+
 public class Logger {
 
-  public static void info(char[] msg) {
-    stderr.writeLine("Info: " ~ msg);
+  public static void info(string msg) {
+    stderr.writeln("Info: " ~ msg);
   }
 
   public static void info(int n) {
     if (n >= 0)
-      stderr.writeLine("Info: " ~ std.string.toString(n));
+      stderr.writeln("Info: " ~ to!string(n));
     else
-      stderr.writeLine("Info: -" ~ std.string.toString(-n));
+      stderr.writeln("Info: -" ~ to!string(-n));
   }
 
-  public static void error(char[] msg) {
-    stderr.writeLine("Error: " ~ msg);
+  public static void error(string msg) {
+    stderr.writeln("Error: " ~ msg);
   }
 
   public static void error(Exception e) {
-    stderr.writeLine("Error: " ~ e.toString());
+    stderr.writeln("Error: " ~ e.toString());
   }
 
   public static void error(Error e) {
-    stderr.writeLine("Error: " ~ e.toString());
-    if (e.next)
-      error(e.next);
+    stderr.writeln("Error: " ~ e.toString());
   }
 }
 

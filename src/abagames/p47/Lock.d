@@ -28,7 +28,7 @@ public class Lock: Actor {
   }
   int state;
   static const int LENGTH = 12;
-  Vector pos[LENGTH]; 
+  Vector[LENGTH] pos;
   static const int NO_COLLISION_CNT = 8;
   int cnt;
   float lockMinY;
@@ -117,9 +117,10 @@ public class Lock: Actor {
     case LOCKED:
       if (cnt >= NO_COLLISION_CNT)
 	state = FIRED;
-    case FIRED:
+      goto case;
+    case FIRED: goto case;
     case CANCELED:
-      if (state != CANCELED) { 
+      if (state != CANCELED) {
 	if (!lockedEnemy.isExist || 
 	    lockedEnemy.shield <= 0 ||
 	    (lockedPart >= 0 && lockedEnemy.battery[lockedPart].shield <= 0) ) {
@@ -170,6 +171,7 @@ public class Lock: Actor {
 	}
       }
       break;
+    default: break;
     }
     cnt++;
   }
@@ -209,6 +211,8 @@ public class Lock: Actor {
 	P47Screen.setRetroParam(rr, 0.33);
 	P47Screen.drawLineRetro(pos[i].x, pos[i].y, pos[i + 1].x, pos[i + 1].y);
       }
+      break;
+    default: break;
     }
   }
 }

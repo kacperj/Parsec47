@@ -25,8 +25,8 @@ public class Title {
   P47GameManager gameManager;
   P47PrefManager prefManager;
   Field field;
-  int slotNum[P47PrefManager.MODE_NUM][P47PrefManager.DIFFICULTY_NUM + 1];
-  int startReachedParsec[P47PrefManager.MODE_NUM][P47PrefManager.DIFFICULTY_NUM];
+  int[P47PrefManager.DIFFICULTY_NUM + 1][P47PrefManager.MODE_NUM] slotNum;
+  int[P47PrefManager.DIFFICULTY_NUM][P47PrefManager.MODE_NUM] startReachedParsec;
   int curX, curY;
   int mode;
   static const int BOX_COUNT = 16;
@@ -153,9 +153,9 @@ public class Title {
   }
 
   private const int BOX_SMALL_SIZE = 24;
-  private const char[][] DIFFICULTY_SHORT_STR = ["P", "N", "H", "E", "Q"];
-  private const char[][] DIFFICULTY_STR = ["PRACTICE", "NORMAL", "HARD", "EXTREME", "QUIT"];
-  private const char[][] MODE_STR = ["ROLL", "LOCK"];
+  private const string[] DIFFICULTY_SHORT_STR = ["P", "N", "H", "E", "Q"];
+  private const string[] DIFFICULTY_STR = ["PRACTICE", "NORMAL", "HARD", "EXTREME", "QUIT"];
+  private const string[] MODE_STR = ["ROLL", "LOCK"];
 
   private void drawTitleBoard() {
     glEnable(GL_TEXTURE_2D);

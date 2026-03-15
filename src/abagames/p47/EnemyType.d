@@ -19,7 +19,7 @@ import abagames.p47.MorphBullet;
 public class Barrage {
  public:
   BulletMLParser *parser;
-  BulletMLParser *morphParser[MorphBullet.MORPH_MAX];
+  BulletMLParser*[MorphBullet.MORPH_MAX] morphParser;
   int morphNum, morphCnt;
   float rank, speedRank, morphRank;
   int shape, color;
@@ -35,12 +35,12 @@ public class BatteryType {
   static const int WING_SHAPE_POINT_NUM = 3;
   static const int WING_BATTERY_MAX = 3;
   static const int BARRAGE_PATTERN_MAX = 8;
-  Vector wingShapePos[WING_SHAPE_POINT_NUM];
+  Vector[WING_SHAPE_POINT_NUM] wingShapePos;
   Vector collisionPos, collisionSize;
-  Vector batteryPos[WING_BATTERY_MAX];
+  Vector[WING_BATTERY_MAX] batteryPos;
   int batteryNum;
   float r, g, b;
-  Barrage barrage[BARRAGE_PATTERN_MAX];
+  Barrage[BARRAGE_PATTERN_MAX] barrage;
   bool xReverseAlternate;
   int shield;
 
@@ -69,14 +69,14 @@ public class EnemyType {
   static const int BATTERY_MAX = 4;
   static const int ENEMY_TYPE_MAX = 32;
   // Whether each type of the enemy is exist or not.
-  static bool isExist[ENEMY_TYPE_MAX];
-  Barrage barrage[BARRAGE_PATTERN_MAX];
-  Vector bodyShapePos[BODY_SHAPE_POINT_NUM];
+  static bool[ENEMY_TYPE_MAX] isExist;
+  Barrage[BARRAGE_PATTERN_MAX] barrage;
+  Vector[BODY_SHAPE_POINT_NUM] bodyShapePos;
   Vector collisionSize;
   bool wingCollision;
   float r, g, b;
   float retroSize;
-  BatteryType batteryType[BATTERY_MAX];
+  BatteryType[BATTERY_MAX] batteryType;
   int batteryNum;
   int shield;
   int fireInterval, firePeriod, barragePatternNum;
@@ -122,7 +122,7 @@ public class EnemyType {
   }
 
   // To avoid using the same morph pattern.
-  private static bool usedMorphParser[BarrageManager.BARRAGE_MAX];
+  private static bool[BarrageManager.BARRAGE_MAX] usedMorphParser;
   
   private void setBarrageType(Barrage br, int btn, int mode) {
     br.parser = barrageManager.parser
@@ -202,8 +202,6 @@ public class EnemyType {
 
   private void setBarrageShape(Barrage br, float size) {
     // To avoid the forward reference.
-    //br.shape = rand.nextInt(BulletActor.BULLET_SHAPE_NUM);
-    //br.color = rand.nextInt(BulletActor.BULLET_COLOR_NUM);
     br.shape = rand.nextInt(BULLET_SHAPE_NUM);
     br.color = rand.nextInt(BULLET_COLOR_NUM);
     br.bulletSize = (1.0 + rand.nextSignedFloat(0.1)) * size;
@@ -233,6 +231,7 @@ public class EnemyType {
       eg = rand.nextFloat(0.7) + 0.3;
       eb = 1;
       break;
+    default: break;
     }
   }
 
@@ -273,6 +272,7 @@ public class EnemyType {
     case LARGEBOSS:
       batteryNum = 4;
       break;
+    default: break;
     }
     float px, py, mpx, mpy;
     int bsl;
@@ -317,6 +317,7 @@ public class EnemyType {
 	case LARGEBOSS:
 	  bsl = 200 + rand.nextInt(50);
 	  break;
+	default: break;
 	}
 	createEnemyColor();
 	wrl = -1;
@@ -348,6 +349,7 @@ public class EnemyType {
 	bt.wingShapePos[2].x = mpx * wrl;
 	bt.wingShapePos[2].y = mpy;
 	break;
+      default: break;
       }
       bt.collisionPos.x = (px + px / 4) / 2 * wrl;
       bt.collisionPos.y = (py + mpy + py / 4) / 3;
@@ -453,6 +455,7 @@ public class EnemyType {
 	cr = 0;
 	sr = rank / 2;
 	break;
+      default: break;
       }
     } else {
       switch (rand.nextInt(6)) {
@@ -468,6 +471,7 @@ public class EnemyType {
 	cr = 0;
 	sr = rank / 2;
 	break;
+      default: break;
       }
     }
     setBarrageRank(br, cr, MORPHWEAK, mode);
@@ -523,6 +527,7 @@ public class EnemyType {
 	sr1 = rank / 3 * 2;
 	sr2 = rank / 3 * 2;
 	break;
+      default: break;
       }
     } else {
       switch (rand.nextInt(9)) {
@@ -550,6 +555,7 @@ public class EnemyType {
 	sr1 = rank / 3 * 2;
 	sr2 = rank / 3 * 2;
 	break;
+      default: break;
       }
     }
     setBarrageRank(br, cr, WEAK, mode);
@@ -596,6 +602,7 @@ public class EnemyType {
 	cr = 0;
 	sr = rank;
 	break;
+      default: break;
       }
       setBarrageRankSlow(br, cr, NORMAL, mode, 0.9);
       setBarrageShape(br, 0.9);
@@ -636,6 +643,7 @@ public class EnemyType {
 	sr1 = 0;
 	sr2 = rank / 3;
 	break;
+      default: break;
       }
       setBarrageRankSlow(br, cr, NORMAL, mode, 0.9);
       setBarrageShape(br, 1.0);

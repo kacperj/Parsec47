@@ -1,8 +1,8 @@
 #!/c/msys64/usr/bin/bash
-# Build bulletML for DMD1/optlink on Windows
+# Build bulletML for DMD2/COFF linker on Windows
 #
 # Outputs deployed directly to p47/:
-#   lib/bulletml.lib      — OMF import library for optlink
+#   lib/bulletml.lib      — COFF import library for DMD2's COFF linker
 #   bulletml.dll          — 32-bit DLL
 #   libgcc_s_dw2-1.dll   \
 #   libstdc++-6.dll        } MinGW runtime DLLs (ship alongside p47.exe)
@@ -10,7 +10,7 @@
 #
 # Toolchain:
 #   Compile + link DLL : mingw32 g++ (i686-w64-mingw32) — only compiler with C++11 support
-#   OMF import library : Borland implib.exe (-a adds _ aliases for cdecl symbols)
+#   COFF import library : dlltool (adds _ prefix for i386 cdecl automatically)
 set -e
 
 export PATH="/c/msys64/mingw32/bin:$PATH"
@@ -23,7 +23,7 @@ export TMP="$BDIR/temp"
 export TEMP="$BDIR/temp"
 
 GPP="/c/msys64/mingw32/bin/g++.exe"
-IMPLIB="$BDIR/implib.exe"
+DLLTOOL="/c/msys64/mingw32/bin/dlltool.exe"
 INC="$BDIR/include"
 SRC="$BDIR/src"
 OUTDIR="$BDIR/bin/Release"
@@ -50,8 +50,9 @@ mkdir -p "$OUTDIR"
   "${SOURCES[@]}" \
   -o "$OUTDIR/bulletml.dll"
 
-echo "=== Generating OMF import library: bulletml.lib ==="
-"$IMPLIB" "$OUTDIR/bulletml.lib" "$BDIR/bulletml_api.def"
+echo "=== Generating COFF import library: bulletml.lib ==="
+"$DLLTOOL" --dllname bulletml.dll --input-def "$BDIR/bulletml_api.def" \
+  --output-lib "$OUTDIR/bulletml.lib" -m i386
 
 echo "=== Deploying to p47 ==="
 P47="$BDIR/.."

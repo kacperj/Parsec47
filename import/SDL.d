@@ -31,7 +31,7 @@ public import SDL_joystick;
 public import SDL_events;
 public import SDL_video;
 public import SDL_byteorder;
-public import SDL_version;
+public import SDL_version : SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL, SDL_version, SDL_VERSION, SDL_VERSIONNUM, SDL_COMPILEDVERSION, SDL_VERSION_ATLEAST, SDL_Linked_Version;
 public import SDL_keyboard;
 public import SDL_keysym;
 public import SDL_mouse;
@@ -79,7 +79,7 @@ void SDL_Quit();
 void SDL_SetModuleHandle(void *hInst);
 extern(Windows) void* GetModuleHandleA(char*);
 
-static this()
+extern(D) static this()
 {
 	/* Load SDL dynamic link library */
 	if (SDL_Init(SDL_INIT_NOPARACHUTE) < 0)
@@ -87,7 +87,7 @@ static this()
 	SDL_SetModuleHandle(GetModuleHandleA(null));
 }
 
-static ~this()
+extern(D) static ~this()
 {
 	SDL_Quit();
 }

@@ -40,7 +40,7 @@ import SDL_events;
 */
 
 /* There are no functions directly affecting the quit event */
-bit SDL_QuitRequested()
+bool SDL_QuitRequested()
 {
 	SDL_PumpEvents();
 	return SDL_PeepEvents(null, 0, SDL_PEEKEVENT, SDL_QUITMASK) != 0;

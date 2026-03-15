@@ -59,13 +59,13 @@ public class StageManager {
   BarrageManager barrageManager;
   Field field;
   const int SIMULTANEOUS_APPEARNCE_MAX = 4;
-  EnemyAppearance appearance[SIMULTANEOUS_APPEARNCE_MAX];
+  EnemyAppearance[SIMULTANEOUS_APPEARNCE_MAX] appearance;
   const int SMALL_ENEMY_TYPE_MAX = 3;
-  EnemyType smallType[SMALL_ENEMY_TYPE_MAX];
+  EnemyType[SMALL_ENEMY_TYPE_MAX] smallType;
   const int MIDDLE_ENEMY_TYPE_MAX = 4;
-  EnemyType middleType[MIDDLE_ENEMY_TYPE_MAX];
+  EnemyType[MIDDLE_ENEMY_TYPE_MAX] middleType;
   const int LARGE_ENEMY_TYPE_MAX = 2;
-  EnemyType largeType[LARGE_ENEMY_TYPE_MAX];
+  EnemyType[LARGE_ENEMY_TYPE_MAX] largeType;
   EnemyType middleBossType;
   EnemyType largeBossType;
   int apNum;
@@ -116,6 +116,7 @@ public class StageManager {
     case 4:
       ap.pattern = BOTH_SIDES;
       break;
+    default: break;
     }
     switch (rand.nextInt(3)) {
     case 0:
@@ -125,6 +126,7 @@ public class StageManager {
     case 2:
       ap.sequence = FIXED;
       break;
+    default: break;
     }
   }
 
@@ -159,6 +161,7 @@ public class StageManager {
       ap.groupInterval = 45 + rand.nextInt(20);
       ap.interval = 25 + rand.nextInt(5);
       break;
+    default: break;
     }
   }
 
@@ -193,6 +196,7 @@ public class StageManager {
       ap.groupInterval = 150 + rand.nextInt(50);
       ap.interval = 100;
       break;
+    default: break;
     }
   }
 
@@ -219,6 +223,7 @@ public class StageManager {
       ap.groupInterval = 270 + rand.nextInt(50);
       ap.interval = 200;
       break;
+    default: break;
     }
   }
 
@@ -233,6 +238,7 @@ public class StageManager {
     case LARGE:
       setLargeAppearance(ap);
       break;
+    default: break;
     }
     ap.cnt = 0;
     ap.left = ap.num;
@@ -242,7 +248,7 @@ public class StageManager {
 
   // [#smalltype, #middletype, #largetype]
   private const int MIDDLE_RUSH_SECTION_PATTERN = 6; 
-  private const int apparancePattern[][][3] =
+  private const int[3][][] apparancePattern =
     [
      [[1, 0, 0], [2, 0, 0], [1, 1, 0], [1, 0, 1], [2, 1, 0], [2, 0, 1], [0, 1, 1]],
      [[1, 0, 0], [1, 1, 0], [1, 1, 0], [1, 0, 1], [2, 1, 0], [1, 1, 1], [0, 1, 1]],
@@ -371,6 +377,7 @@ public class StageManager {
       case FIXED:
 	p = ap.pos;
 	break;
+      default: break;
       }
       float d;
       switch (ap.point) {
@@ -413,6 +420,7 @@ public class StageManager {
 	else
 	  d = std.math.PI / 2 * 3;
 	break;
+      default: break;
       }
       apos.x *= 0.88;
       gameManager.addEnemy(apos, d, ap.type, ap.moveParser);

@@ -1,4 +1,4 @@
-import std.c.windows.windows;
+import core.sys.windows.windows;
 
 extern(Windows):
 
@@ -1452,35 +1452,28 @@ extern(Windows) void /*APIENTRY*/glViewport (GLint x, GLint y, GLsizei width, GL
 extern(Windows):
 
 /* EXT_vertex_array */
-typedef void (* PFNGLARRAYELEMENTEXTPROC) (GLint i);
-typedef void (* PFNGLDRAWARRAYSEXTPROC) (GLenum mode, GLint first, GLsizei count);
-typedef void (* PFNGLVERTEXPOINTEREXTPROC) (GLint size, GLenum type, GLsizei stride, GLsizei count, GLvoid *pointer);
-typedef void (* PFNGLNORMALPOINTEREXTPROC) (GLenum type, GLsizei stride, GLsizei count, GLvoid *pointer);
-typedef void (* PFNGLCOLORPOINTEREXTPROC) (GLint size, GLenum type, GLsizei stride, GLsizei count, GLvoid *pointer);
-typedef void (* PFNGLINDEXPOINTEREXTPROC) (GLenum type, GLsizei stride, GLsizei count, GLvoid *pointer);
-typedef void (* PFNGLTEXCOORDPOINTEREXTPROC) (GLint size, GLenum type, GLsizei stride, GLsizei count, GLvoid *pointer);
-typedef void (* PFNGLEDGEFLAGPOINTEREXTPROC) (GLsizei stride, GLsizei count, GLboolean *pointer);
-typedef void (* PFNGLGETPOINTERVEXTPROC) (GLenum pname, GLvoid* *params);
-typedef void (* PFNGLARRAYELEMENTARRAYEXTPROC)(GLenum mode, GLsizei count, GLvoid* pi);
+alias PFNGLARRAYELEMENTEXTPROC = extern(Windows) void function(GLint i);
+alias PFNGLDRAWARRAYSEXTPROC = extern(Windows) void function(GLenum mode, GLint first, GLsizei count);
+alias PFNGLVERTEXPOINTEREXTPROC = extern(Windows) void function(GLint size, GLenum type, GLsizei stride, GLsizei count, GLvoid *pointer);
+alias PFNGLNORMALPOINTEREXTPROC = extern(Windows) void function(GLenum type, GLsizei stride, GLsizei count, GLvoid *pointer);
+alias PFNGLCOLORPOINTEREXTPROC = extern(Windows) void function(GLint size, GLenum type, GLsizei stride, GLsizei count, GLvoid *pointer);
+alias PFNGLINDEXPOINTEREXTPROC = extern(Windows) void function(GLenum type, GLsizei stride, GLsizei count, GLvoid *pointer);
+alias PFNGLTEXCOORDPOINTEREXTPROC = extern(Windows) void function(GLint size, GLenum type, GLsizei stride, GLsizei count, GLvoid *pointer);
+alias PFNGLEDGEFLAGPOINTEREXTPROC = extern(Windows) void function(GLsizei stride, GLsizei count, GLboolean *pointer);
+alias PFNGLGETPOINTERVEXTPROC = extern(Windows) void function(GLenum pname, GLvoid* *params);
+alias PFNGLARRAYELEMENTARRAYEXTPROC = extern(Windows) void function(GLenum mode, GLsizei count, GLvoid* pi);
 
 /* WIN_draw_range_elements */
-typedef void (* PFNGLDRAWRANGEELEMENTSWINPROC) (GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, GLvoid *indices);
+alias PFNGLDRAWRANGEELEMENTSWINPROC = extern(Windows) void function(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, GLvoid *indices);
 
 /* WIN_swap_hint */
-typedef void (* PFNGLADDSWAPHINTRECTWINPROC)  (GLint x, GLint y, GLsizei width, GLsizei height);
+alias PFNGLADDSWAPHINTRECTWINPROC = extern(Windows) void function(GLint x, GLint y, GLsizei width, GLsizei height);
 
 /* EXT_paletted_texture */
-typedef void (* PFNGLCOLORTABLEEXTPROC)
-    (GLenum target, GLenum internalFormat, GLsizei width, GLenum format,
-     GLenum type, GLvoid *data);
-typedef void (* PFNGLCOLORSUBTABLEEXTPROC)
-    (GLenum target, GLsizei start, GLsizei count, GLenum format,
-     GLenum type, GLvoid *data);
-typedef void (* PFNGLGETCOLORTABLEEXTPROC)
-    (GLenum target, GLenum format, GLenum type, GLvoid *data);
-typedef void (* PFNGLGETCOLORTABLEPARAMETERIVEXTPROC)
-    (GLenum target, GLenum pname, GLint *params);
-typedef void (* PFNGLGETCOLORTABLEPARAMETERFVEXTPROC)
-    (GLenum target, GLenum pname, GLfloat *params);
+alias PFNGLCOLORTABLEEXTPROC = extern(Windows) void function(GLenum target, GLenum internalFormat, GLsizei width, GLenum format, GLenum type, GLvoid *data);
+alias PFNGLCOLORSUBTABLEEXTPROC = extern(Windows) void function(GLenum target, GLsizei start, GLsizei count, GLenum format, GLenum type, GLvoid *data);
+alias PFNGLGETCOLORTABLEEXTPROC = extern(Windows) void function(GLenum target, GLenum format, GLenum type, GLvoid *data);
+alias PFNGLGETCOLORTABLEPARAMETERIVEXTPROC = extern(Windows) void function(GLenum target, GLenum pname, GLint *params);
+alias PFNGLGETCOLORTABLEPARAMETERFVEXTPROC = extern(Windows) void function(GLenum target, GLenum pname, GLfloat *params);
 
 import openglu;

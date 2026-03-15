@@ -26,8 +26,8 @@ public class Fragment: LuminousActor {
  private:
   static Rand rand;
   static const int POINT_NUM = 2;
-  Vector pos[POINT_NUM];
-  Vector vel[POINT_NUM];
+  Vector[POINT_NUM] pos;
+  Vector[POINT_NUM] vel;
   Vector impact;
   float z;
   float lumAlp;
@@ -42,8 +42,7 @@ public class Fragment: LuminousActor {
     return new Fragment;
   }
 
-  public override void init(ActorInitializer ini) {
-    FragmentInitializer fi = cast(FragmentInitializer)ini;
+  public override void init(ActorInitializer _) {
     for (int i = 0; i < POINT_NUM; i++) {
       pos[i] = new Vector;
       vel[i] = new Vector;
@@ -99,7 +98,4 @@ public class Fragment: LuminousActor {
     glVertex3f(pos[0].x, pos[0].y, z);
     glVertex3f(pos[1].x, pos[1].y, z);
   }
-}
-
-public class FragmentInitializer: ActorInitializer {
 }

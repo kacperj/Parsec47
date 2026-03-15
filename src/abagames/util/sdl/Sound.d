@@ -18,8 +18,8 @@ public class Sound {
  public:
   static bool noSound = false;
   static int fadeOutSpeed = 1280;
-  static char[] soundsDir = "sounds/";
-  static char[] chunksDir = "sounds/";
+  static string soundsDir = "sounds/";
+  static string chunksDir = "sounds/";
 
   public static void init() {
     if (noSound) return;
@@ -32,7 +32,7 @@ public class Sound {
     if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
       noSound = 1;
       throw new SDLInitFailedException
-	("Unable to initialize SDL_AUDIO: " ~ std.string.toString(SDL_GetError()));
+	("Unable to initialize SDL_AUDIO: " ~ std.string.fromStringz(SDL_GetError()).idup);
     }
 
     audio_rate = 44100;
@@ -42,7 +42,7 @@ public class Sound {
     if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers) < 0) {
       noSound = 1;
       throw new SDLInitFailedException
-	("Couldn't open audio: " ~ std.string.toString(SDL_GetError()));
+	("Couldn't open audio: " ~ std.string.fromStringz(SDL_GetError()).idup);
     }
     Mix_QuerySpec(&audio_rate, &audio_format, &audio_channels);
   }
@@ -64,25 +64,25 @@ public class Sound {
 
   // Load a sound or a chunk.
 
-  public void loadSound(char[] name) {
+  public void loadSound(string name) {
     if (noSound) return;
-    char[] fileName = soundsDir ~ name;
-    music = Mix_LoadMUS(std.string.toStringz(fileName));
+    string fileName = soundsDir ~ name;
+    music = Mix_LoadMUS(cast(char*)std.string.toStringz(fileName));
     if (!music) {
       noSound = true;
       throw new SDLInitFailedException("Couldn't load: " ~ fileName ~ 
-				       " (" ~ std.string.toString(Mix_GetError()) ~ ")");
+				       " (" ~ std.string.fromStringz(Mix_GetError()).idup ~ ")");
     }
   }
   
-  public void loadChunk(char[] name, int ch) {
+  public void loadChunk(string name, int ch) {
     if (noSound) return;
-    char[] fileName = chunksDir ~ name;
-    chunk = Mix_LoadWAV(std.string.toStringz(fileName));
+    string fileName = chunksDir ~ name;
+    chunk = Mix_LoadWAV(cast(char*)std.string.toStringz(fileName));
     if (!chunk) {
       noSound = true;
       throw new SDLInitFailedException("Couldn't load: " ~ fileName ~ 
-				       " (" ~ std.string.toString(Mix_GetError()) ~ ")");
+				       " (" ~ std.string.fromStringz(Mix_GetError()).idup ~ ")");
     }
     chunkChannel = ch;
   }

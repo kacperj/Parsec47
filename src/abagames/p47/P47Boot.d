@@ -7,7 +7,7 @@ module abagames.p47.P47Boot;
 
 private:
 import std.string;
-import std.c.stdlib;
+import core.stdc.stdlib;
 import abagames.util.Logger;
 import abagames.util.sdl.Pad;
 import abagames.util.sdl.MainLoop;
@@ -28,12 +28,12 @@ P47GameManager gameManager;
 P47PrefManager prefManager;
 MainLoop mainLoop;
 
-private void usage(char[] args0) {
+private void usage(string args0) {
   Logger.error
     ("Usage: " ~ args0 ~ " [-brightness [0-100]] [-luminous [0-100]] [-nosound] [-window] [-reverse] [-lowres] [-slowship] [-nowait]");
 }
 
-private void parseArgs(char[][] args) {
+private void parseArgs(string[] args) {
   for (int i = 1; i < args.length; i++) {
     switch (args[i]) {
     case "-brightness":
@@ -42,7 +42,7 @@ private void parseArgs(char[][] args) {
 	throw new Exception("Invalid options");
       }
       i++;
-      float b = cast(float)std.c.stdlib.atoi(std.string.toStringz(args[i])) / 100;
+      float b = cast(float)atoi(std.string.toStringz(args[i])) / 100;
       if (b < 0 || b > 1) {
 	usage(args[0]);
 	throw new Exception("Invalid options");
@@ -55,7 +55,7 @@ private void parseArgs(char[][] args) {
 	throw new Exception("Invalid options");
       }
       i++;
-      float l = cast(float)std.c.stdlib.atoi(std.string.toStringz(args[i])) / 100;
+      float l = cast(float)atoi(std.string.toStringz(args[i])) / 100;
       if (l < 0 || l > 1) {
 	usage(args[0]);
 	throw new Exception("Invalid options");
@@ -90,7 +90,7 @@ private void parseArgs(char[][] args) {
   }
 }
 
-public int boot(char[][] args) {
+public int boot(string[] args) {
   screen = new P47Screen;
   pad = new Pad;
   try {
@@ -111,42 +111,35 @@ public int boot(char[][] args) {
 version (Win32_release) {
 
 // Boot as the Windows executable.
-import std.c.windows.windows;
-import std.string;
+import core.sys.windows.windows;
+import core.runtime;
 
-extern (C)void gc_init();
-extern (C)void gc_term();
-extern (C)void _minit();
-extern (C)void _moduleCtor();
-
-extern (Windows)public int WinMain(HINSTANCE hInstance,
+extern (Windows) public int WinMain(HINSTANCE hInstance,
 	    HINSTANCE hPrevInstance,
 	    LPSTR lpCmdLine,
 	    int nCmdShow) {
   int result;
-  
-  gc_init();
-  _minit();
+
+  Runtime.initialize();
   try {
-    _moduleCtor();
-    char exe[4096];
+    char[4096] exe;
     GetModuleFileNameA(null, exe.ptr, 4096);
-    char[][1] prog;
-    prog[0] = std.string.toString(exe.ptr);
-    result = boot(prog ~ std.string.split(std.string.toString(lpCmdLine)));
-  } catch (Object o) {
+    string[1] prog;
+    prog[0] = exe.ptr.fromStringz.idup;
+    result = boot(prog ~ std.string.split(lpCmdLine.fromStringz.idup));
+  } catch (Throwable o) {
     //Logger.error("Exception: " ~ o.toString());
     Logger.info("Exception: " ~ o.toString());
     result = EXIT_FAILURE;
   }
-  gc_term();
+  Runtime.terminate();
   return result;
 }
 
 } else {
 
 // Boot as the general executable.
-public int main(char[][] args) {
+public int main(string[] args) {
   return boot(args);
 }
 

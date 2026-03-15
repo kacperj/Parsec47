@@ -29,11 +29,12 @@ public class Ship {
   Vector pos;
   const float SIZE = 0.3;
   bool restart;
-  const int RESTART_CNT = 300;
-  const int INVINCIBLE_CNT = 228;
+  static const int RESTART_CNT = 300;
+  static const int INVINCIBLE_CNT = 228;
   int cnt;
  private:
-  static Rand rand;
+  static Rand _rand;
+  static @property Rand rand() { if (!_rand) _rand = new Rand; return _rand; }
   Pad pad;
   Field field;
   P47GameManager manager;
@@ -57,10 +58,6 @@ public class Ship {
   float fieldLimitX, fieldLimitY;
   int rollLockCnt;
   bool rollCharged;
-
-  public static this() {
-    rand = new Rand;
-  }
 
   public void init(Pad pad, Field field, P47GameManager manager) {
     this.pad = pad;
@@ -198,6 +195,7 @@ public class Ship {
 	firePos.y = pos.y;
 	td = - fireWideDeg * (fireCnt / 4 % 5) * 0.2;
 	break;
+      default: break;
       }
       manager.addShot(firePos, td);
       SoundManager.playSe(SoundManager.SHOT);

@@ -35,22 +35,22 @@ struct SDL_RWops {
 		SEEK_SET, SEEK_CUR, SEEK_END
 	   Returns the final offset in the data source.
 	 */
-	int (*seek)(SDL_RWops *context, int offset, int whence);
+	extern(C) int function(SDL_RWops *context, int offset, int whence) seek;
 
 	/* Read up to 'num' objects each of size 'objsize' from the data
 	   source to the area pointed at by 'ptr'.
 	   Returns the number of objects read, or -1 if the read failed.
 	 */
-	int (*read)(SDL_RWops *context, void *ptr, int size, int maxnum);
+	extern(C) int function(SDL_RWops *context, void *ptr, int size, int maxnum) read;
 
 	/* Write exactly 'num' objects each of size 'objsize' from the area
 	   pointed at by 'ptr' to data source.
 	   Returns 'num', or -1 if the write failed.
 	 */
-	int (*write)(SDL_RWops *context, void *ptr, int size, int num);
+	extern(C) int function(SDL_RWops *context, void *ptr, int size, int num) write;
 
 	/* Close and free an allocated SDL_FSops structure */
-	int (*close)(SDL_RWops *context);
+	extern(C) int function(SDL_RWops *context) close;
 
 	Uint32 type;
 	union {

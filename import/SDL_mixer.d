@@ -105,7 +105,7 @@ extern (C) {
 /* Load a wave file or a music (.mod .s3m .it .xm) file */
 	Mix_Chunk * Mix_LoadWAV_RW(SDL_RWops *src, int freesrc);
 	Mix_Chunk * Mix_LoadWAV(char *file) {
-		return Mix_LoadWAV_RW(SDL_RWFromFile(file, "rb"), 1);
+		return Mix_LoadWAV_RW(SDL_RWFromFile(file, cast(char*)"rb"), 1);
 	}
 	Mix_Music * Mix_LoadMUS(char *file);
 
@@ -128,19 +128,17 @@ extern (C) {
    This can be used to provide real-time visual display of the audio stream
    or add a custom mixer filter for the stream data.
 */
-	void Mix_SetPostMix(void (*mix_func)
-						(void *udata, Uint8 *stream, int len), void *arg);
+	void Mix_SetPostMix(void function(void* udata, Uint8* stream, int len) mix_func, void* arg);
 
 /* Add your own music player or additional mixer function.
    If 'mix_func' is NULL, the default music player is re-enabled.
 */
-	void Mix_HookMusic(void (*mix_func)
-					   (void *udata, Uint8 *stream, int len), void *arg);
+	void Mix_HookMusic(void function(void* udata, Uint8* stream, int len) mix_func, void* arg);
 
 /* Add your own callback when the music has finished playing.
    This callback is only called if the music finishes naturally.
 */
-	void Mix_HookMusicFinished(void (*music_finished)());
+	void Mix_HookMusicFinished(void function() music_finished);
 
 /* Get a pointer to the user data for the current music hook */
 	void * Mix_GetMusicHookData();
@@ -153,7 +151,7 @@ extern (C) {
  *  inside the audio callback, or SDL_mixer will explicitly lock the audio
  *  before calling your callback.
  */
-	void Mix_ChannelFinished(void (*channel_finished)(int channel));
+	void Mix_ChannelFinished(void function(int channel) channel_finished);
 
 
 /* Special Effects API by ryan c. gordon. (icculus@linuxgames.com) */
@@ -177,7 +175,7 @@ extern (C) {
  *
  * DO NOT EVER call SDL_LockAudio() from your callback function!
  */
-	typedef void (*Mix_EffectFunc_t)(int chan, void *stream, int len, void *udata);
+	alias Mix_EffectFunc_t = void function(int chan, void *stream, int len, void *udata);
 
 /*
  * This is a callback that signifies that a channel has finished all its
@@ -188,7 +186,7 @@ extern (C) {
  *
  * DO NOT EVER call SDL_LockAudio() from your callback function!
  */
-	typedef void (*Mix_EffectDone_t)(int chan, void *udata);
+	alias Mix_EffectDone_t = void function(int chan, void *udata);
 
 
 /* Register a special effect function. At mixing time, the channel data is

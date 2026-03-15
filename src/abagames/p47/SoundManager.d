@@ -23,12 +23,12 @@ public class SoundManager {
 
  private static:
   P47GameManager manager;
-  Sound bgm[BGM_NUM];
-  Sound se[SE_NUM];
+  Sound[BGM_NUM] bgm;
+  Sound[SE_NUM] se;
 
-  const char[][] bgmFileName = 
+  const string[] bgmFileName =
     ["ptn0.ogg", "ptn1.ogg", "ptn2.ogg", "ptn3.ogg"];
-  const char[][] seFileName = 
+  const string[] seFileName =
     ["shot.wav", "rollchg.wav", "rollrls.wav", "shipdst.wav", "getbonus.wav", "extend.wav",
     "enemydst.wav", "largedst.wav", "bossdst.wav", "lock.wav", "laser.wav"];
   const int[] seChannel = 

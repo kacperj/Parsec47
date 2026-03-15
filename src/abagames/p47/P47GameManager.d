@@ -81,7 +81,7 @@ public class P47GameManager: GameManager {
   int pauseCnt;
   const int BOSS_WING_NUM = 4;
   int bossShield;
-  int bossWingShield[BOSS_WING_NUM];
+  int[BOSS_WING_NUM] bossWingShield;
   const float[P47PrefManager.MODE_NUM] SLOWDOWN_START_BULLETS_SPEED = [30, 42];
   float interval;
   Title title;
@@ -102,8 +102,7 @@ public class P47GameManager: GameManager {
     ParticleInitializer pi = new ParticleInitializer;
     particles = new LuminousActorPool(128, particleClass, pi);
     Fragment fragmentClass = new Fragment;
-    FragmentInitializer fi = new FragmentInitializer;
-    fragments = new LuminousActorPool(128, fragmentClass, fi);
+    fragments = new LuminousActorPool(128, fragmentClass, null);
     BulletActor.createDisplayLists();
     BulletActorInitializer bi = new BulletActorInitializer(field, ship);
     bullets = new BulletActorPool(512, bi);
@@ -307,6 +306,7 @@ public class P47GameManager: GameManager {
       ship.setSpeedRate(1);
       Bonus.setSpeedRate(1);
       break;
+    default: break;
     }
   }
 
@@ -618,6 +618,7 @@ public class P47GameManager: GameManager {
 	drawBox(475 - bossWingShield[i], y, bossWingShield[i], 6);
 	y += 12;
 	break;
+      default: break;
       }
     }
   }
