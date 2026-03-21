@@ -11,7 +11,7 @@ import SDL;
 import abagames.util.Logger;
 import abagames.util.Rand;
 import abagames.p47.P47PrefManager;
-import abagames.util.sdl.GameManager;
+import abagames.p47.P47GameManager;
 import abagames.util.sdl.Screen3D;
 import abagames.util.sdl.Sound;
 import abagames.util.sdl.SDLInitFailedException;
@@ -32,11 +32,11 @@ public:
 private:
   Screen3D screen;
   Pad input;
-  GameManager gameManager;
+  P47GameManager gameManager;
   P47PrefManager prefManager;
 
   public this(Screen3D screen, Pad input,
-    GameManager gameManager, P47PrefManager prefManager)
+    P47GameManager gameManager, P47PrefManager prefManager)
   {
     this.screen = screen;
     this.input = input;

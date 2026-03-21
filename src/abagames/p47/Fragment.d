@@ -11,7 +11,6 @@ import opengl;
 import abagames.util.Vector;
 import abagames.util.Rand;
 import abagames.util.Actor;
-import abagames.util.ActorInitializer;
 import abagames.p47.Renderer;
 import abagames.p47.LuminousActor;
 import abagames.p47.Field;
@@ -40,12 +39,7 @@ private:
     rand = new Rand;
   }
 
-  public override Actor newActor()
-  {
-    return new Fragment;
-  }
-
-  public override void init(ActorInitializer _)
+  public this()
   {
     for (int i = 0; i < POINT_NUM; i++)
     {

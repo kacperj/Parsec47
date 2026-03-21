@@ -8,7 +8,7 @@ module abagames.p47.BulletActorPool;
 private:
 import std.math;
 import bulletml;
-import abagames.util.ActorInitializer;
+import abagames.util.Actor;
 import abagames.util.ActorPool;
 import abagames.util.Vector;
 import abagames.util.bulletml.Bullet;
@@ -24,10 +24,9 @@ public class BulletActorPool : ActorPool, BulletsManager
 private:
   int cnt;
 
-  public this(int n, ActorInitializer ini)
+  public this(int n, Actor delegate() factory)
   {
-    BulletActor bulletActorClass = new BulletActor;
-    super(n, bulletActorClass, ini);
+    super(n, factory);
     Bullet.setBulletsManager(this);
     BulletActor.init();
     cnt = 0;

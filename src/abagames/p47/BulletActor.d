@@ -10,7 +10,6 @@ import std.math;
 import opengl;
 import bulletml;
 import abagames.util.Actor;
-import abagames.util.ActorInitializer;
 import abagames.util.Vector;
 import abagames.util.bulletml.Bullet;
 import abagames.p47.Field;
@@ -57,16 +56,10 @@ private:
     totalBulletsSpeed = 0;
   }
 
-  public override Actor newActor()
+  public this(Field field, Ship ship)
   {
-    return new BulletActor;
-  }
-
-  public override void init(ActorInitializer ini)
-  {
-    BulletActorInitializer bi = cast(BulletActorInitializer) ini;
-    field = bi.field;
-    ship = bi.ship;
+    this.field = field;
+    this.ship = ship;
     bullet = new P47Bullet(nextId);
     ppos = new Vector;
     nextId++;
@@ -529,15 +522,3 @@ private:
   }
 }
 
-public class BulletActorInitializer : ActorInitializer
-{
-public:
-  Field field;
-  Ship ship;
-
-  public this(Field field, Ship ship)
-  {
-    this.field = field;
-    this.ship = ship;
-  }
-}

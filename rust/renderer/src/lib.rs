@@ -13,6 +13,12 @@ pub(crate) const GL_TRIANGLE_FAN: GLenum = 0x0006;
 pub(crate) const GL_LINE_LOOP: GLenum = 0x0002;
 pub(crate) const GL_COMPILE: GLenum = 0x1300;
 pub(crate) const GL_BLEND: GLenum = 0x0BE2;
+pub(crate) const GL_TEXTURE_2D: GLenum = 0x0DE1;
+pub(crate) const GL_BGR: GLenum = 0x80E0;
+pub(crate) const GL_UNSIGNED_BYTE: GLenum = 0x1401;
+pub(crate) const GL_TEXTURE_MIN_FILTER: GLenum = 0x2801;
+pub(crate) const GL_TEXTURE_MAG_FILTER: GLenum = 0x2800;
+pub(crate) const GL_LINEAR: GLint = 0x2601;
 
 #[link(name = "opengl32")]
 extern "system" {
@@ -32,6 +38,14 @@ extern "system" {
     pub(crate) fn glDeleteLists(list: GLuint, range: GLsizei);
     pub(crate) fn glEnable(cap: GLenum);
     pub(crate) fn glDisable(cap: GLenum);
+    pub(crate) fn glGenTextures(n: GLsizei, textures: *mut GLuint);
+    pub(crate) fn glBindTexture(target: GLenum, texture: GLuint);
+    pub(crate) fn glTexImage2D(target: GLenum, level: GLint, internalformat: GLint,
+        width: GLsizei, height: GLsizei, border: GLint,
+        format: GLenum, type_: GLenum, pixels: *const u8);
+    pub(crate) fn glTexParameteri(target: GLenum, pname: GLenum, param: GLint);
+    pub(crate) fn glDeleteTextures(n: GLsizei, textures: *const GLuint);
+    pub(crate) fn glTexCoord2f(s: c_float, t: c_float);
 }
 
 static mut BRIGHTNESS: c_float = 1.0;
@@ -164,6 +178,58 @@ fn renderer_draw_parsec(parsec: i32) {
         110.0
     };
     letter_render::letter_render_draw_num(parsec, 600.0, y, 25.0, 1);
+}
+
+static TITLE_BMP: &[u8] = include_bytes!("title.bmp");
+static mut TITLE_TEXTURE: GLuint = 0;
+
+fn load_bmp_from_bytes(data: &[u8]) -> (i32, i32, *const u8) {
+    let pixel_offset = u32::from_le_bytes([data[10], data[11], data[12], data[13]]) as usize;
+    let width = i32::from_le_bytes([data[18], data[19], data[20], data[21]]);
+    let height = i32::from_le_bytes([data[22], data[23], data[24], data[25]]);
+    (width, height.abs(), data[pixel_offset..].as_ptr())
+}
+
+#[no_mangle]
+pub extern "C" fn renderer_title_texture_init() {
+    let (w, h, pixels) = load_bmp_from_bytes(TITLE_BMP);
+    unsafe {
+        glGenTextures(1, &mut TITLE_TEXTURE);
+        glBindTexture(GL_TEXTURE_2D, TITLE_TEXTURE);
+        glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0, GL_BGR, GL_UNSIGNED_BYTE, pixels);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn renderer_title_texture_delete() {
+    unsafe {
+        glDeleteTextures(1, &TITLE_TEXTURE);
+        TITLE_TEXTURE = 0;
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn renderer_draw_title_board() {
+    unsafe {
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, TITLE_TEXTURE);
+    }
+    set_color(1.0, 1.0, 1.0, 1.0);
+    unsafe {
+        glBegin(GL_TRIANGLE_FAN);
+        glTexCoord2f(0.0, 1.0);
+        glVertex3f(180.0, 20.0, 0.0);
+        glTexCoord2f(1.0, 1.0);
+        glVertex3f(308.0, 20.0, 0.0);
+        glTexCoord2f(1.0, 0.0);
+        glVertex3f(308.0, 148.0, 0.0);
+        glTexCoord2f(0.0, 0.0);
+        glVertex3f(180.0, 148.0, 0.0);
+        glEnd();
+        glDisable(GL_TEXTURE_2D);
+    }
 }
 
 #[panic_handler]

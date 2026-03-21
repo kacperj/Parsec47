@@ -828,17 +828,6 @@ const uint GL_SELECT                     = 0x1C02;
 const uint GL_FLAT                       = 0x1D00;
 const uint GL_SMOOTH                     = 0x1D01;
 
-
-/* StencilFunction */
-/*      GL_NEVER */
-/*      GL_LESS */
-/*      GL_EQUAL */
-/*      GL_LEQUAL */
-/*      GL_GREATER */
-/*      GL_NOTEQUAL */
-/*      GL_GEQUAL */
-/*      GL_ALWAYS */
-
 /* StencilOp */
 /*      GL_ZERO */
 const uint GL_KEEP                       = 0x1E00;
@@ -859,17 +848,9 @@ const uint GL_T                          = 0x2001;
 const uint GL_R                          = 0x2002;
 const uint GL_Q                          = 0x2003;
 
-/* TexCoordPointerType */
-/*      GL_SHORT */
-/*      GL_INT */
-/*      GL_FLOAT */
-/*      GL_DOUBLE */
-
 /* TextureEnvMode */
 const uint GL_MODULATE                   = 0x2100;
 const uint GL_DECAL                      = 0x2101;
-/*      GL_BLEND */
-/*      GL_REPLACE */
 
 /* TextureEnvParameter */
 const uint GL_TEXTURE_ENV_MODE           = 0x2200;
@@ -892,9 +873,6 @@ const uint GL_EYE_PLANE                  = 0x2502;
 const uint GL_NEAREST                    = 0x2600;
 const uint GL_LINEAR                     = 0x2601;
 
-/* TextureMinFilter */
-/*      GL_NEAREST */
-/*      GL_LINEAR */
 const uint GL_NEAREST_MIPMAP_NEAREST     = 0x2700;
 const uint GL_LINEAR_MIPMAP_NEAREST      = 0x2701;
 const uint GL_NEAREST_MIPMAP_LINEAR      = 0x2702;
@@ -905,24 +883,10 @@ const uint GL_TEXTURE_MAG_FILTER         = 0x2800;
 const uint GL_TEXTURE_MIN_FILTER         = 0x2801;
 const uint GL_TEXTURE_WRAP_S             = 0x2802;
 const uint GL_TEXTURE_WRAP_T             = 0x2803;
-/*      GL_TEXTURE_BORDER_COLOR */
-/*      GL_TEXTURE_PRIORITY */
-
-/* TextureTarget */
-/*      GL_TEXTURE_1D */
-/*      GL_TEXTURE_2D */
-/*      GL_PROXY_TEXTURE_1D */
-/*      GL_PROXY_TEXTURE_2D */
 
 /* TextureWrapMode */
 const uint GL_CLAMP                      = 0x2900;
 const uint GL_REPEAT                     = 0x2901;
-
-/* VertexPointerType */
-/*      GL_SHORT */
-/*      GL_INT */
-/*      GL_FLOAT */
-/*      GL_DOUBLE */
 
 /* ClientAttribMask */
 const uint GL_CLIENT_PIXEL_STORE_BIT     = 0x00000001;
@@ -1475,5 +1439,3 @@ alias PFNGLCOLORSUBTABLEEXTPROC = extern(Windows) void function(GLenum target, G
 alias PFNGLGETCOLORTABLEEXTPROC = extern(Windows) void function(GLenum target, GLenum format, GLenum type, GLvoid *data);
 alias PFNGLGETCOLORTABLEPARAMETERIVEXTPROC = extern(Windows) void function(GLenum target, GLenum pname, GLint *params);
 alias PFNGLGETCOLORTABLEPARAMETERFVEXTPROC = extern(Windows) void function(GLenum target, GLenum pname, GLfloat *params);
-
-import openglu;

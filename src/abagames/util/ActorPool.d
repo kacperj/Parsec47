@@ -7,7 +7,6 @@ module abagames.util.ActorPool;
 
 private:
 import abagames.util.Actor;
-import abagames.util.ActorInitializer;
 
 /**
  * Object pooling for actors.
@@ -19,14 +18,13 @@ public:
 protected:
   int actorIdx;
 
-  public this(int n, Actor act, ActorInitializer ini)
+  public this(int n, Actor delegate() factory)
   {
     actor = new Actor[n];
     for (int i = 0; i < actor.length; i++)
     {
-      actor[i] = act.newActor();
+      actor[i] = factory();
       actor[i].isExist = false;
-      actor[i].init(ini);
     }
     actorIdx = n;
   }

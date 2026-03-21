@@ -89,11 +89,4 @@ private static:
       return;
     se[n].playChunk();
   }
-
-  public static void stopSe(int n)
-  {
-    if (Sound.noSound)
-      return;
-    se[n].haltChunk();
-  }
 }

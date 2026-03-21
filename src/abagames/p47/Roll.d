@@ -9,7 +9,6 @@ private:
 import std.math;
 import abagames.util.Vector;
 import abagames.util.Actor;
-import abagames.util.ActorInitializer;
 import abagames.p47.Ship;
 import abagames.p47.Field;
 import abagames.p47.P47Screen;
@@ -36,17 +35,11 @@ private:
   P47GameManager manager;
   float dist;
 
-  public override Actor newActor()
+  public this(Ship ship, Field field, P47GameManager manager)
   {
-    return new Roll;
-  }
-
-  public override void init(ActorInitializer ini)
-  {
-    RollInitializer ri = cast(RollInitializer) ini;
-    ship = ri.ship;
-    field = ri.field;
-    manager = ri.manager;
+    this.ship = ship;
+    this.field = field;
+    this.manager = manager;
     for (int i = 0; i < LENGTH; i++)
     {
       pos[i] = new Vector;
@@ -121,17 +114,3 @@ private:
   }
 }
 
-public class RollInitializer : ActorInitializer
-{
-public:
-  Ship ship;
-  Field field;
-  P47GameManager manager;
-
-  public this(Ship ship, Field field, P47GameManager manager)
-  {
-    this.ship = ship;
-    this.field = field;
-    this.manager = manager;
-  }
-}

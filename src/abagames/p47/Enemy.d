@@ -12,7 +12,6 @@ import bulletml;
 import abagames.util.Vector;
 import abagames.util.Rand;
 import abagames.util.Actor;
-import abagames.util.ActorInitializer;
 import abagames.util.ActorPool;
 import abagames.p47.Ship;
 import abagames.p47.Field;
@@ -88,21 +87,16 @@ private:
   bool damaged;
   int bossTimer;
 
-  public override Actor newActor()
+  public this(Field field, BulletActorPool bullets, ActorPool shots,
+    ActorPool rolls, ActorPool locks, Ship ship, P47GameManager manager)
   {
-    return new Enemy;
-  }
-
-  public override void init(ActorInitializer ini)
-  {
-    EnemyInitializer ei = cast(EnemyInitializer) ini;
-    field = ei.field;
-    bullets = ei.bullets;
-    shots = ei.shots;
-    rolls = ei.rolls;
-    locks = ei.locks;
-    ship = ei.ship;
-    manager = ei.manager;
+    this.field = field;
+    this.bullets = bullets;
+    this.shots = shots;
+    this.rolls = rolls;
+    this.locks = locks;
+    this.ship = ship;
+    this.manager = manager;
     pos = new Vector;
     for (int i = 0; i < movePoint.length; i++)
     {
@@ -874,26 +868,3 @@ private:
   }
 }
 
-public class EnemyInitializer : ActorInitializer
-{
-public:
-  Field field;
-  BulletActorPool bullets;
-  ActorPool shots;
-  ActorPool rolls;
-  ActorPool locks;
-  Ship ship;
-  P47GameManager manager;
-
-  public this(Field field, BulletActorPool bullets, ActorPool shots,
-    ActorPool rolls, ActorPool locks, Ship ship, P47GameManager manager)
-  {
-    this.field = field;
-    this.bullets = bullets;
-    this.shots = shots;
-    this.rolls = rolls;
-    this.locks = locks;
-    this.ship = ship;
-    this.manager = manager;
-  }
-}

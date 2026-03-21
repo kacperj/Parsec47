@@ -11,7 +11,6 @@ import opengl;
 import abagames.util.Vector;
 import abagames.util.Rand;
 import abagames.util.Actor;
-import abagames.util.ActorInitializer;
 import abagames.p47.Renderer;
 import abagames.p47.LuminousActor;
 
@@ -35,12 +34,7 @@ private:
     rand = new Rand;
   }
 
-  public override Actor newActor()
-  {
-    return new Particle;
-  }
-
-  public override void init(ActorInitializer ini)
+  public this()
   {
     pos = new Vector;
     ppos = new Vector;
@@ -103,6 +97,3 @@ private:
   }
 }
 
-public class ParticleInitializer : ActorInitializer
-{
-}

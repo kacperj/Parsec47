@@ -21,20 +21,11 @@
 */
 
 public import SDL_types;
-public import SDL_getenv;
-public import SDL_error;
-public import SDL_rwops;
-public import SDL_timer;
-public import SDL_audio;
-public import SDL_cdrom;
-public import SDL_joystick;
 public import SDL_events;
+public import SDL_timer;
+public import SDL_input;
 public import SDL_video;
-public import SDL_byteorder;
-public import SDL_version : SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL, SDL_version, SDL_VERSION, SDL_VERSIONNUM, SDL_COMPILEDVERSION, SDL_VERSION_ATLEAST, SDL_Linked_Version;
-public import SDL_keyboard;
 public import SDL_keysym;
-public import SDL_mouse;
 
 extern(C):
 
@@ -43,14 +34,9 @@ extern(C):
 /* These are the flags which may be passed to SDL_Init() -- you should
    specify the subsystems which you will be using in your application.
 */
-const uint SDL_INIT_TIMER		= 0x00000001;
-const uint SDL_INIT_AUDIO		= 0x00000010;
 const uint SDL_INIT_VIDEO		= 0x00000020;
-const uint SDL_INIT_CDROM		= 0x00000100;
 const uint SDL_INIT_JOYSTICK	= 0x00000200;
 const uint SDL_INIT_NOPARACHUTE	= 0x00100000;	/* Don't catch fatal signals */
-const uint SDL_INIT_EVENTTHREAD	= 0x01000000;	/* Not supported on all OS's */
-const uint SDL_INIT_EVERYTHING	= 0x0000FFFF;
 
 /* This function loads the SDL dynamically linked library and initializes 
  * the subsystems specified by 'flags' (and those satisfying dependencies)
@@ -64,12 +50,6 @@ int SDL_InitSubSystem(Uint32 flags);
 
 /* This function cleans up specific SDL subsystems */
 void SDL_QuitSubSystem(Uint32 flags);
-
-/* This function returns mask of the specified subsystems which have
-   been initialized.
-   If 'flags' is 0, it returns a mask of all initialized subsystems.
-*/
-Uint32 SDL_WasInit(Uint32 flags);
 
 /* This function cleans up all initialized subsystems and unloads the
  * dynamically linked library.  You should call it upon all exit conditions.
@@ -91,3 +71,5 @@ extern(D) static ~this()
 {
 	SDL_Quit();
 }
+
+char * SDL_GetError();

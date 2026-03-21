@@ -156,9 +156,6 @@ COPY src/       src/
 COPY import/    import/
 COPY lib/       lib/
 COPY resource/  resource/
-# Workaround: on Windows both `import SDL_keysym` and `import SDL_Keysym`
-# resolve to SDL_keysym.d (case-insensitive FS). On Linux we need a wrapper.
-RUN printf 'module SDL_Keysym;\npublic import SDL_keysym;\n' > import/SDL_Keysym.d
 
 RUN set -e && \
     ALL_SRC=$(find import src -name '*.d' ! -name 'SDL_mixer.d' | sort | tr '\n' ' ') && \

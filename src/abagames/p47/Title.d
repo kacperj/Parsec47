@@ -6,18 +6,17 @@
 module abagames.p47.Title;
 
 private:
-import opengl;
 import abagames.util.sdl.Pad;
-import abagames.util.sdl.Texture;
 import abagames.p47.P47GameManager;
 import abagames.p47.P47PrefManager;
-import abagames.p47.P47Screen;
 import abagames.p47.LetterRender;
 import abagames.p47.Field;
-import abagames.p47.Renderer;
 
 private extern (C) void renderer_draw_box_outlined(int x, int y, int w, int h);
 private extern (C) void renderer_draw_box_light(int x, int y, int w, int h);
+private extern (C) void renderer_title_texture_init();
+private extern (C) void renderer_title_texture_delete();
+private extern (C) void renderer_draw_title_board();
 
 /**
  * Title.
@@ -35,7 +34,6 @@ private:
   int mode;
   static const int BOX_COUNT = 16;
   int boxCnt;
-  Texture titleTexture;
 
   public void init(Pad p, P47GameManager gm, P47PrefManager pm, Field fl)
   {
@@ -46,12 +44,12 @@ private:
     gameManager.difficulty = prefManager.selectedDifficulty;
     gameManager.parsecSlot = prefManager.selectedParsecSlot;
     gameManager.mode = prefManager.selectedMode;
-    titleTexture = new Texture("title.bmp");
+    renderer_title_texture_init();
   }
 
   public void close()
   {
-    titleTexture.deleteTexture();
+    renderer_title_texture_delete();
   }
 
   public void start()
@@ -175,20 +173,7 @@ private:
 
   private void drawTitleBoard()
   {
-    glEnable(GL_TEXTURE_2D);
-    titleTexture.bind();
-    Renderer.setColor(Color(1, 1, 1, 1));
-    glBegin(GL_TRIANGLE_FAN);
-    glTexCoord2f(0, 0);
-    glVertex3f(180, 20, 0);
-    glTexCoord2f(1, 0);
-    glVertex3f(308, 20, 0);
-    glTexCoord2f(1, 1);
-    glVertex3f(308, 148, 0);
-    glTexCoord2f(0, 1);
-    glVertex3f(180, 148, 0);
-    glEnd();
-    glDisable(GL_TEXTURE_2D);
+    renderer_draw_title_board();
   }
 
   public void draw()

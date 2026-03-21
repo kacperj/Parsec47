@@ -9,7 +9,6 @@ private:
 import std.math;
 import abagames.util.Vector;
 import abagames.util.Actor;
-import abagames.util.ActorInitializer;
 import abagames.util.Rand;
 import abagames.p47.Ship;
 import abagames.p47.Field;
@@ -56,17 +55,11 @@ private:
     rand = new Rand;
   }
 
-  public override Actor newActor()
+  public this(Ship ship, Field field, P47GameManager manager)
   {
-    return new Lock;
-  }
-
-  public override void init(ActorInitializer ini)
-  {
-    LockInitializer li = cast(LockInitializer) ini;
-    ship = li.ship;
-    field = li.field;
-    manager = li.manager;
+    this.ship = ship;
+    this.field = field;
+    this.manager = manager;
     for (int i = 0; i < LENGTH; i++)
     {
       pos[i] = new Vector;
@@ -267,17 +260,3 @@ private:
   }
 }
 
-public class LockInitializer : ActorInitializer
-{
-public:
-  Ship ship;
-  Field field;
-  P47GameManager manager;
-
-  public this(Ship ship, Field field, P47GameManager manager)
-  {
-    this.ship = ship;
-    this.field = field;
-    this.manager = manager;
-  }
-}

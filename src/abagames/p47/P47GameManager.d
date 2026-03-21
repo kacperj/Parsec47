@@ -13,8 +13,8 @@ import bulletml;
 import abagames.util.Rand;
 import abagames.util.Vector;
 import abagames.util.ActorPool;
-import abagames.util.sdl.GameManager;
-import abagames.util.sdl.Texture;
+import abagames.util.sdl.MainLoop;
+import abagames.util.sdl.Screen3D;
 import abagames.util.sdl.Pad;
 import abagames.util.sdl.Sound;
 import abagames.p47.LuminousActorPool;
@@ -47,9 +47,10 @@ private extern (C) void renderer_draw_box(int x, int y, int w, int h);
 private extern (C) void renderer_draw_side_info(int score, int bonusScore, int left, int parsec);
 private extern (C) void renderer_draw_score(int score, int bonusScore);
 
-public class P47GameManager : GameManager
+public class P47GameManager
 {
 public:
+  int status;
   bool nowait = false;
   int difficulty, parsecSlot;
   static enum
@@ -66,7 +67,28 @@ public:
     PAUSE
   }
   int state;
+  MainLoop mainLoop;
+  Screen3D abstScreen;
+  P47PrefManager prefManager;
+
+  public void setMainLoop(MainLoop mainLoop)
+  {
+    this.mainLoop = mainLoop;
+  }
+
+  public void setUIs(Screen3D screen, Pad input)
+  {
+    abstScreen = screen;
+    this.input = input;
+  }
+
+  public void setPrefManager(P47PrefManager prefManager)
+  {
+    this.prefManager = prefManager;
+  }
+
 private:
+  Pad input;
   Pad pad;
   const int ENEMY_MAX = 32;
   P47Screen screen;
@@ -98,7 +120,7 @@ private:
   Title title;
 
   // Initialize actor pools, load BGMs/SEs and textures.
-  public override void init()
+  public void init()
   {
     pad = cast(Pad) input;
     screen = cast(P47Screen) abstScreen;
@@ -109,32 +131,18 @@ private:
     Ship.createDisplayLists();
     ship = new Ship;
     ship.init(pad, field, this);
-    Particle particleClass = new Particle;
-    ParticleInitializer pi = new ParticleInitializer;
-    particles = new LuminousActorPool(128, particleClass, pi);
-    Fragment fragmentClass = new Fragment;
-    fragments = new LuminousActorPool(128, fragmentClass, null);
+    particles = new LuminousActorPool(128, () => new Particle);
+    fragments = new LuminousActorPool(128, () => new Fragment);
     BulletActor.createDisplayLists();
-    BulletActorInitializer bi = new BulletActorInitializer(field, ship);
-    bullets = new BulletActorPool(512, bi);
+    bullets = new BulletActorPool(512, () => new BulletActor(field, ship));
     LetterRender.createDisplayLists();
-    Shot shotClass = new Shot;
-    ShotInitializer shi = new ShotInitializer(field);
-    shots = new ActorPool(32, shotClass, shi);
-    Roll rollClass = new Roll;
-    RollInitializer ri = new RollInitializer(ship, field, this);
-    rolls = new ActorPool(4, rollClass, ri);
+    shots = new ActorPool(32, () => new Shot(field));
     Lock.init();
-    Lock lockClass = new Lock;
-    LockInitializer li = new LockInitializer(ship, field, this);
-    locks = new ActorPool(4, lockClass, li);
-    Enemy enemyClass = new Enemy;
-    EnemyInitializer ei = new EnemyInitializer(field, bullets, shots, rolls, locks, ship, this);
-    enemies = new ActorPool(ENEMY_MAX, enemyClass, ei);
+    rolls = new ActorPool(4, () => new Roll(ship, field, this));
+    locks = new ActorPool(4, () => new Lock(ship, field, this));
+    enemies = new ActorPool(ENEMY_MAX, () => new Enemy(field, bullets, shots, rolls, locks, ship, this));
     Bonus.init();
-    Bonus bonusClass = new Bonus;
-    BonusInitializer bni = new BonusInitializer(field, ship, this);
-    bonuses = new ActorPool(128, bonusClass, bni);
+    bonuses = new ActorPool(128, () => new Bonus(field, ship, this));
     barrageManager = new BarrageManager;
     barrageManager.loadBulletMLs();
     EnemyType.init(barrageManager);
@@ -146,12 +154,12 @@ private:
     SoundManager.init(this);
   }
 
-  public override void start()
+  public void start()
   {
     startTitle();
   }
 
-  public override void close()
+  public void close()
   {
     barrageManager.unloadBulletMLs();
     title.close();
@@ -555,7 +563,7 @@ private:
     }
   }
 
-  public override void move()
+  public void move()
   {
     if (pad.keys[SDLK_ESCAPE] == SDL_PRESSED)
     {
@@ -714,7 +722,7 @@ private:
     glTranslatef(x, y, -field.eyeZ);
   }
 
-  public override void draw()
+  public void draw()
   {
     SDL_Event e = mainLoop.event;
     if (e.type == SDL_VIDEORESIZE)

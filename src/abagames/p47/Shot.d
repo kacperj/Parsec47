@@ -8,7 +8,6 @@ module abagames.p47.Shot;
 private:
 import std.math;
 import abagames.util.Actor;
-import abagames.util.ActorInitializer;
 import abagames.util.Vector;
 import abagames.p47.Field;
 import abagames.p47.P47Screen;
@@ -32,15 +31,9 @@ private:
   int cnt;
   const int RETRO_CNT = 4;
 
-  public override Actor newActor()
+  public this(Field field)
   {
-    return new Shot;
-  }
-
-  public override void init(ActorInitializer ini)
-  {
-    ShotInitializer si = cast(ShotInitializer) ini;
-    field = si.field;
+    this.field = field;
     pos = new Vector;
     vel = new Vector;
   }
@@ -79,13 +72,3 @@ private:
   }
 }
 
-public class ShotInitializer : ActorInitializer
-{
-public:
-  Field field;
-
-  public this(Field field)
-  {
-    this.field = field;
-  }
-}

@@ -149,7 +149,6 @@ version (Win32_release)
     }
     catch (Throwable o)
     {
-      //Logger.error("Exception: " ~ o.toString());
       Logger.info("Exception: " ~ o.toString());
       result = EXIT_FAILURE;
     }

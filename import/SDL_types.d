@@ -22,21 +22,12 @@
 
 /* General data types used by the SDL library */
 
-/* Basic data types */
-alias int SDL_bool;
-enum {
-	SDL_FALSE = 0,
-	SDL_TRUE  = 1
-}
 alias ubyte	Uint8;
 alias byte	Sint8;
 alias ushort	Uint16;
 alias short	Sint16;
 alias uint	Uint32;
 alias int		Sint32;
-
-alias ulong	Uint64;
-alias long	Sint64;
 
 /* General keyboard/mouse state definitions */
 enum { SDL_PRESSED = 0x01, SDL_RELEASED = 0x00 };

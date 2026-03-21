@@ -21,25 +21,12 @@ public class Logger
     stderr.writeln("Info: " ~ msg);
   }
 
-  public static void info(int n)
-  {
-    if (n >= 0)
-      stderr.writeln("Info: " ~ to!string(n));
-    else
-      stderr.writeln("Info: -" ~ to!string(-n));
-  }
-
   public static void error(string msg)
   {
     stderr.writeln("Error: " ~ msg);
   }
 
   public static void error(Exception e)
-  {
-    stderr.writeln("Error: " ~ e.toString());
-  }
-
-  public static void error(Error e)
   {
     stderr.writeln("Error: " ~ e.toString());
   }

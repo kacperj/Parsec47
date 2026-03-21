@@ -8,7 +8,6 @@ module abagames.p47.LuminousActorPool;
 private:
 import abagames.util.Actor;
 import abagames.util.ActorPool;
-import abagames.util.ActorInitializer;
 import abagames.p47.LuminousActor;
 
 /**
@@ -16,9 +15,9 @@ import abagames.p47.LuminousActor;
  */
 public class LuminousActorPool : ActorPool
 {
-  public this(int n, Actor act, ActorInitializer ini)
+  public this(int n, Actor delegate() factory)
   {
-    super(n, act, ini);
+    super(n, factory);
   }
 
   public void drawLuminous()

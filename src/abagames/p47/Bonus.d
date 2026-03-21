@@ -11,7 +11,6 @@ import opengl;
 import abagames.util.Vector;
 import abagames.util.Rand;
 import abagames.util.Actor;
-import abagames.util.ActorInitializer;
 import abagames.p47.Field;
 import abagames.p47.Ship;
 import abagames.p47.P47GameManager;
@@ -63,17 +62,11 @@ private:
     speed = BASE_SPEED * rate;
   }
 
-  public override Actor newActor()
+  public this(Field field, Ship ship, P47GameManager manager)
   {
-    return new Bonus;
-  }
-
-  public override void init(ActorInitializer ini)
-  {
-    BonusInitializer bi = cast(BonusInitializer) ini;
-    field = bi.field;
-    ship = bi.ship;
-    manager = bi.manager;
+    this.field = field;
+    this.ship = ship;
+    this.manager = manager;
     pos = new Vector;
     vel = new Vector;
     fieldLimitX = field.size.x / 6 * 5;
@@ -218,17 +211,3 @@ private:
   }
 }
 
-public class BonusInitializer : ActorInitializer
-{
-public:
-  Field field;
-  Ship ship;
-  P47GameManager manager;
-
-  public this(Field field, Ship ship, P47GameManager manager)
-  {
-    this.field = field;
-    this.ship = ship;
-    this.manager = manager;
-  }
-}
