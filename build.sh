@@ -1,58 +1,22 @@
 #!/usr/bin/env bash
-# Build script for p47 using DMD 2.x (D2)
+# Build p47 entirely inside Docker — no local compilers needed.
+#
+# Produces: p47.exe + bulletml.dll (Windows x64)
+#
+# Prerequisites: Docker
 set -e
 
-DMD2_INSTALL_DIR="$(pwd)/dmd2"
-DMD2_VERSION="2.109.1"
+rm -f bulletml.dll p47.exe
 
-install_dmd2() {
-  if [ -f "$DMD2_INSTALL_DIR/windows/bin64/dmd.exe" ]; then
-    echo "=== DMD2 already installed at $DMD2_INSTALL_DIR ==="
-    return 0
-  fi
+IMAGE="p47-builder"
 
-  echo "=== Installing DMD2 version $DMD2_VERSION ==="
-  ZIP_FILE="$(pwd)/dmd2.zip"
+echo "=== Building in Docker ==="
+docker build -t "$IMAGE" .
 
-  unzip -q "$ZIP_FILE" -d . || true
+echo "=== Extracting artifacts ==="
+CONTAINER=$(docker create "$IMAGE")
+docker cp "$CONTAINER:/build/out/p47.exe"     ./p47.exe
+docker cp "$CONTAINER:/build/out/bulletml.dll" ./bulletml.dll
+docker rm "$CONTAINER" >/dev/null
 
-  [ -f "$DMD2_INSTALL_DIR/windows/bin64/dmd.exe" ] || {
-    echo "ERROR: dmd.exe not found after install" >&2
-    find "$DMD2_INSTALL_DIR" | head -20 >&2
-    exit 1
-  }
-
-  echo "=== DMD2 installed at $DMD2_INSTALL_DIR ==="
-}
-
-rm -f bulletml.dll lib/bulletml.lib p47.exe p47.obj p47.lib
-
-cd bulletlib
-./build_bulletml.sh
-cd ..
-install_dmd2
-
-DMD="$DMD2_INSTALL_DIR/windows/bin64/dmd.exe"
-PROJ="$(pwd)"
-SRC="$PROJ/src"
-IMPORT="$PROJ/import"
-LIB="$PROJ/lib"
-RESOURCE="$PROJ/resource"
-OUT="p47.exe"
-
-DFLAGS="-c -m64 -I$IMPORT -O -release -version=Win32_release -wi"
-
-echo "=== DMD2 version ==="
-"$DMD" --version
-
-echo "=== Compiling ==="
-ALL_SRC=$(find "$IMPORT" "$SRC" -name "*.d" | sort | tr '\n' ' ')
-"$DMD" $DFLAGS -ofp47.obj $ALL_SRC
-
-echo "=== Compile step done ==="
-
-"$DMD" -m64 -of$OUT p47.obj \
-  "$RESOURCE/p47.RES" "$RESOURCE/p47.def" \
-  "$LIB/SDL.lib" "$LIB/SDL_mixer.lib" "$LIB/opengl32.lib" "$LIB/bulletml.lib" \
-  -L/DEFAULTLIB:user32.lib \
-  -L/FORCE:MULTIPLE
+echo "=== Done: p47.exe + bulletml.dll ==="

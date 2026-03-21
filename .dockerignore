@@ -1,0 +1,9 @@
+tools/
+dmd2/
+dmd2.zip
+*.exe
+*.obj
+*.o
+*.dll
+bulletlib/bin/
+.git/
