@@ -14,7 +14,6 @@ import abagames.util.Rand;
 import abagames.util.Actor;
 import abagames.util.ActorInitializer;
 import abagames.util.ActorPool;
-import abagames.util.sdl.Screen3D;
 import abagames.p47.Ship;
 import abagames.p47.Field;
 import abagames.p47.Bonus;
@@ -27,6 +26,8 @@ import abagames.p47.BulletActor;
 import abagames.p47.BulletActorPool;
 import abagames.p47.EnemyType;
 import abagames.p47.SoundManager;
+import abagames.p47.Renderer;
+
 
 /**
  * Enemies.
@@ -665,10 +666,10 @@ public class Enemy: Actor {
     }
     if (type.type != EnemyType.SMALL) {
       glBegin(GL_TRIANGLE_FAN);
-      Screen3D.setColor(P47Screen.retroR, P47Screen.retroG, P47Screen.retroB, 0);
+      Renderer.setColor(P47Screen.retroR, P47Screen.retroG, P47Screen.retroB, 0);
       for (int i = 0; i < EnemyType.BODY_SHAPE_POINT_NUM; i++) {
 	if (i == 2)
-	  Screen3D.setColor
+	  Renderer.setColor
 	    (P47Screen.retroR, P47Screen.retroG, P47Screen.retroB, P47Screen.retroA);
 	glVertex3f(pos.x + type.bodyShapePos[i].x, pos.y + type.bodyShapePos[i].y, z);
       }
@@ -699,11 +700,11 @@ public class Enemy: Actor {
 	}
 	if (type.type != EnemyType.SMALL) {
 	  glBegin(GL_TRIANGLE_FAN);
-	  Screen3D.setColor
+	  Renderer.setColor
 	    (P47Screen.retroR, P47Screen.retroG, P47Screen.retroB, P47Screen.retroA);
 	  for (int wi = 0; wi < BatteryType.WING_SHAPE_POINT_NUM; wi++) {
 	    if (wi == 2)
-	      Screen3D.setColor
+	      Renderer.setColor
 		(P47Screen.retroR, P47Screen.retroG, P47Screen.retroB, 0);
 	    glVertex3f(pos.x + bt.wingShapePos[wi].x, pos.y + bt.wingShapePos[wi].y, z);
 	  }

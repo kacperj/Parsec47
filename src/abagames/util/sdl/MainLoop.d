@@ -10,12 +10,12 @@ import std.string;
 import SDL;
 import abagames.util.Logger;
 import abagames.util.Rand;
-import abagames.util.PrefManager;
+import abagames.p47.P47PrefManager;
 import abagames.util.sdl.GameManager;
-import abagames.util.sdl.Screen;
-import abagames.util.sdl.Input;
+import abagames.util.sdl.Screen3D;
 import abagames.util.sdl.Sound;
 import abagames.util.sdl.SDLInitFailedException;
+import abagames.util.sdl.Pad;
 
 /**
  * SDL main loop.
@@ -29,13 +29,13 @@ public class MainLoop {
   SDL_Event event;
 
  private:
-  Screen screen;
-  Input input;
+  Screen3D screen;
+  Pad input;
   GameManager gameManager;
-  PrefManager prefManager;
+  P47PrefManager prefManager;
 
-  public this(Screen screen, Input input,
-	      GameManager gameManager, PrefManager prefManager) {
+  public this(Screen3D screen, Pad input,
+	      GameManager gameManager, P47PrefManager prefManager) {
     this.screen = screen;
     this.input = input;
     gameManager.setMainLoop(this);

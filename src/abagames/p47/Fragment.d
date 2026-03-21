@@ -12,7 +12,7 @@ import abagames.util.Vector;
 import abagames.util.Rand;
 import abagames.util.Actor;
 import abagames.util.ActorInitializer;
-import abagames.util.sdl.Screen3D;
+import abagames.p47.Renderer;
 import abagames.p47.LuminousActor;
 import abagames.p47.Field;
 import abagames.p47.P47Screen;
@@ -94,7 +94,7 @@ public class Fragment: LuminousActor {
 
   public override void drawLuminous() {
     if (lumAlp < 0.2) return;
-    Screen3D.setColor(R, G, B, lumAlp);
+    Renderer.setColor(R, G, B, lumAlp);
     glVertex3f(pos[0].x, pos[0].y, z);
     glVertex3f(pos[1].x, pos[1].y, z);
   }

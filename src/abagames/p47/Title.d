@@ -8,13 +8,13 @@ module abagames.p47.Title;
 private:
 import opengl;
 import abagames.util.sdl.Pad;
-import abagames.util.sdl.Screen3D;
 import abagames.util.sdl.Texture;
 import abagames.p47.P47GameManager;
 import abagames.p47.P47PrefManager;
 import abagames.p47.P47Screen;
 import abagames.p47.LetterRender;
 import abagames.p47.Field;
+import abagames.p47.Renderer;
 
 /**
  * Title.
@@ -139,17 +139,17 @@ public class Title {
   }
 
   private void drawBox(int x, int y, int w, int h) {
-    Screen3D.setColor(1, 1, 1, 1);
-    P47Screen.drawBoxLine(x, y, w, h);
-    Screen3D.setColor(1, 1, 1, 0.5);
-    P47Screen.drawBoxSolid(x, y, w, h);
+    Renderer.setColor(1, 1, 1, 1);
+    Renderer.drawBoxLine(x, y, w, h);
+    Renderer.setColor(1, 1, 1, 0.5);
+    Renderer.drawBoxSolid(x, y, w, h);
   }
 
   private void drawBoxLight(int x, int y, int w, int h) {
-    Screen3D.setColor(1, 1, 1, 0.7);
-    P47Screen.drawBoxLine(x, y, w, h);
-    Screen3D.setColor(1, 1, 1, 0.3);
-    P47Screen.drawBoxSolid(x, y, w, h);
+    Renderer.setColor(1, 1, 1, 0.7);
+    Renderer.drawBoxLine(x, y, w, h);
+    Renderer.setColor(1, 1, 1, 0.3);
+    Renderer.drawBoxSolid(x, y, w, h);
   }
 
   private const int BOX_SMALL_SIZE = 24;
@@ -160,7 +160,7 @@ public class Title {
   private void drawTitleBoard() {
     glEnable(GL_TEXTURE_2D);
     titleTexture.bind();
-    P47Screen.setColor(1, 1, 1, 1);
+    Renderer.setColor(1, 1, 1, 1);
     glBegin(GL_TRIANGLE_FAN);
     glTexCoord2f(0, 0);
     glVertex3f(180, 20, 0);

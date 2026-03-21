@@ -11,12 +11,11 @@ import opengl;
 import abagames.util.Vector;
 import abagames.util.Rand;
 import abagames.util.sdl.Pad;
-import abagames.util.sdl.Screen3D;
 import abagames.util.bulletml.Bullet;
 import abagames.p47.Field;
 import abagames.p47.Bonus;
 import abagames.p47.P47GameManager;
-import abagames.p47.P47Screen;
+import abagames.p47.Renderer;
 import abagames.p47.SoundManager;
 
 /**
@@ -253,22 +252,22 @@ public class Ship {
   public static void createDisplayLists() {
     displayListIdx = glGenLists(3);
     glNewList(displayListIdx, GL_COMPILE);
-    Screen3D.setColor(0.5, 1, 0.5, 0.2);
-    P47Screen.drawBoxSolid(-0.1, -0.5, 0.2, 1);
-    Screen3D.setColor(0.5, 1, 0.5, 0.4);
-    P47Screen.drawBoxLine(-0.1, -0.5, 0.2, 1);
+    Renderer.setColor(0.5, 1, 0.5, 0.2);
+    Renderer.drawBoxSolid(-0.1, -0.5, 0.2, 1);
+    Renderer.setColor(0.5, 1, 0.5, 0.4);
+    Renderer.drawBoxLine(-0.1, -0.5, 0.2, 1);
     glEndList();
     glNewList(displayListIdx + 1, GL_COMPILE);
-    Screen3D.setColor(1, 0.2, 0.2, 1);
-    P47Screen.drawBoxSolid(-0.2, -0.2, 0.4, 0.4);
-    Screen3D.setColor(1, 0.5, 0.5, 1);
-    P47Screen.drawBoxLine(-0.2, -0.2, 0.4, 0.4);
+    Renderer.setColor(1, 0.2, 0.2, 1);
+    Renderer.drawBoxSolid(-0.2, -0.2, 0.4, 0.4);
+    Renderer.setColor(1, 0.5, 0.5, 1);
+    Renderer.drawBoxLine(-0.2, -0.2, 0.4, 0.4);
     glEndList();
     glNewList(displayListIdx + 2, GL_COMPILE);
-    Screen3D.setColor(0.7, 1, 0.5, 0.3);
-    P47Screen.drawBoxSolid(-0.15, -0.3, 0.3, 0.6);
-    Screen3D.setColor(0.7, 1, 0.5, 0.6);
-    P47Screen.drawBoxLine(-0.15, -0.3, 0.3, 0.6);
+    Renderer.setColor(0.7, 1, 0.5, 0.3);
+    Renderer.drawBoxSolid(-0.15, -0.3, 0.3, 0.6);
+    Renderer.setColor(0.7, 1, 0.5, 0.6);
+    Renderer.drawBoxLine(-0.15, -0.3, 0.3, 0.6);
     glEndList();
   }
 

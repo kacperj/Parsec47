@@ -6,10 +6,10 @@
 module abagames.util.sdl.GameManager;
 
 private:
-import abagames.util.PrefManager;
+import abagames.p47.P47PrefManager;
 import abagames.util.sdl.MainLoop;
-import abagames.util.sdl.Screen;
-import abagames.util.sdl.Input;
+import abagames.util.sdl.Screen3D;
+import abagames.util.sdl.Pad;
 
 /**
  * Manage the lifecycle of the game.
@@ -20,9 +20,9 @@ public class GameManager {
 
  protected:
   MainLoop mainLoop;
-  Screen abstScreen;
-  Input input;
-  PrefManager abstPrefManager;
+  Screen3D abstScreen;
+  Pad input;
+  P47PrefManager prefManager;
 
  private:
 
@@ -30,13 +30,13 @@ public class GameManager {
     this.mainLoop = mainLoop;
   }
 
-  public void setUIs(Screen screen, Input input) {
+  public void setUIs(Screen3D screen, Pad input) {
     abstScreen = screen;
     this.input = input;
   }
 
-  public void setPrefManager(PrefManager prefManager) {
-    abstPrefManager = prefManager;
+  public void setPrefManager(P47PrefManager prefManager) {
+    this.prefManager = prefManager;
   }
 
   public abstract void init();

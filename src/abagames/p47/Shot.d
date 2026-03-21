@@ -10,7 +10,6 @@ import std.math;
 import abagames.util.Actor;
 import abagames.util.ActorInitializer;
 import abagames.util.Vector;
-import abagames.util.sdl.Screen3D;
 import abagames.p47.Field;
 import abagames.p47.P47Screen;
 

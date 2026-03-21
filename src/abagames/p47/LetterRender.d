@@ -7,8 +7,7 @@ module abagames.p47.LetterRender;
 
 private:
 import opengl;
-import abagames.util.sdl.Screen3D;
-import abagames.p47.P47Screen;
+import abagames.p47.Renderer;
 
 /**
  * Letters' renderer.
@@ -141,10 +140,10 @@ public class LetterRender {
 
   private static void drawBox(float x, float y, float width, float height,
 			      float r, float g, float b) {
-    Screen3D.setColor(r, g, b, 0.5);
-    P47Screen.drawBoxSolid(x - width, y - height, width * 2, height * 2);
-    Screen3D.setColor(r, g, b, 1);
-    P47Screen.drawBoxLine(x - width, y - height, width * 2, height * 2);
+    Renderer.setColor(r, g, b, 0.5);
+    Renderer.drawBoxSolid(x - width, y - height, width * 2, height * 2);
+    Renderer.setColor(r, g, b, 1);
+    Renderer.drawBoxLine(x - width, y - height, width * 2, height * 2);
   }
 
   private static void drawLetter(int idx, float r, float g, float b) {

@@ -6,4 +6,5 @@ dmd2.zip
 *.o
 *.dll
 bulletlib/bin/
+rustlib/target/
 .git/

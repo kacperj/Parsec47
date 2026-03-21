@@ -1,41 +1,34 @@
-/*
- * $Id: Rand.d,v 1.2 2004/01/01 11:26:43 kenta Exp $
- *
- * Copyright 2003 Kenta Cho. All rights reserved.
- */
 module abagames.util.Rand;
 
 private:
 import core.time;
-import abagames.mt;
 
-/**
- * Random number generator.
- */
+extern(C) {
+    void rand_set_seed(uint s);
+    int rand_next_int(int n);
+    float rand_next_float(float n);
+    float rand_next_signed_float(float n);
+}
+
 public class Rand {
 
   public this() {
-    long timer = MonoTime.currTime.ticks;
-    init_genrand(cast(uint)timer);
+    rand_set_seed(cast(uint) MonoTime.currTime.ticks);
   }
 
   public void setSeed(long n) {
-    init_genrand(cast(uint)n);
+    rand_set_seed(cast(uint) n);
   }
 
   public int nextInt(int n) {
-    return genrand_int32() % n;
-  }
-
-  public int nextSignedInt(int n) {
-    return genrand_int32() % (n * 2) - n;
+    return rand_next_int(n);
   }
 
   public float nextFloat(float n) {
-    return genrand_real1() * n;
+    return rand_next_float(n);
   }
 
   public float nextSignedFloat(float n) {
-    return genrand_real1() * (n * 2) - n;
+    return rand_next_signed_float(n);
   }
 }

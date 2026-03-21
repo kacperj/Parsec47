@@ -8,13 +8,12 @@ module abagames.util.sdl.Pad;
 private:
 import std.string;
 import SDL;
-import abagames.util.sdl.Input;
 import abagames.util.sdl.SDLInitFailedException;
 
 /**
  * Joystick and keyboard input.
  */
-public class Pad: Input {
+public class Pad {
  public:
   static const int PAD_UP = 1;
   static const int PAD_DOWN = 2;
@@ -37,7 +36,7 @@ public class Pad: Input {
     stick = SDL_JoystickOpen(0);
   }
 
-  public override void handleEvent(SDL_Event *event) {
+  public void handleEvent(SDL_Event *event) {
     keys = SDL_GetKeyState(null);
   }
   

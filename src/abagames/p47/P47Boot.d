@@ -16,6 +16,7 @@ import abagames.util.sdl.Sound;
 import abagames.p47.P47Screen;
 import abagames.p47.P47GameManager;
 import abagames.p47.P47PrefManager;
+import abagames.p47.Renderer;
 import abagames.p47.Ship;
 
 /**
@@ -47,7 +48,7 @@ private void parseArgs(string[] args) {
 	usage(args[0]);
 	throw new Exception("Invalid options");
       }
-      Screen3D.brightness = b;
+      Renderer.brightness = b;
       break;
     case "-luminous":
       if (i >= args.length - 1) {

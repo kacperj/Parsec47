@@ -9,8 +9,7 @@ private:
 import std.math;
 import opengl;
 import abagames.util.Vector;
-import abagames.util.sdl.Screen3D;
-import abagames.p47.P47Screen;
+import abagames.p47.Renderer;
 
 // Mode constants (mirrored from P47GameManager to avoid cyclic import)
 private enum : int { ROLL = 0, LOCK = 1 }
@@ -97,7 +96,7 @@ public class Field {
   }
 
   public void draw() {
-    Screen3D.setColor(r, g, b, 0.7);
+    Renderer.setColor(r, g, b, 0.7);
     float d = -RING_NUM * RING_ANGLE_INT / 2 + roll;
     for (int i = 0; i < RING_NUM; i++) {
       for (int j = 1; j < 8; j++) {

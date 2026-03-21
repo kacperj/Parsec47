@@ -30,7 +30,22 @@ RUN cat <<'CONF' > /opt/ldc2/etc/ldc2.conf/60-target-windows.conf
 };
 CONF
 
+## Install Rust with the Windows cross-compilation target
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable && \
+    . "$HOME/.cargo/env" && \
+    rustup target add x86_64-pc-windows-gnu
+
 WORKDIR /build
+
+# ── Rust workspace (mt + renderer → Windows static libs) ──
+COPY rust/ rust/
+
+RUN . "$HOME/.cargo/env" && \
+    mkdir -p out && \
+    cd rust && \
+    cargo build --release --target x86_64-pc-windows-gnu && \
+    cp target/x86_64-pc-windows-gnu/release/libmt.a /build/out/mt.lib && \
+    cp target/x86_64-pc-windows-gnu/release/librenderer.a /build/out/renderer.lib
 
 # ── bulletml (C++ → Windows DLL) ──
 COPY bulletlib/src/         bulletlib/src/
@@ -78,7 +93,7 @@ RUN set -e && \
       -of=out/p47.exe out/p47.obj \
       -L=resource/p47.RES \
       -L=lib/SDL.lib -L=lib/SDL_mixer.lib \
-      -L=opengl32.lib -L=out/bulletml.lib \
+      -L=opengl32.lib -L=out/bulletml.lib -L=out/mt.lib -L=out/renderer.lib \
       -L=/SUBSYSTEM:WINDOWS \
       -L=/DEFAULTLIB:user32 && \
     rm -f out/p47.obj

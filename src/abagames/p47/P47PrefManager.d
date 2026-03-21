@@ -7,12 +7,11 @@ module abagames.p47.P47PrefManager;
 
 private:
 import std.stdio;
-import abagames.util.PrefManager;
 
 /**
  * Save/Load the high score.
  */
-public class P47PrefManager: PrefManager {
+public class P47PrefManager {
  public:
   static const int PREV_VERSION_NUM = 10;
   static const int VERSION_NUM = 20;
@@ -49,7 +48,7 @@ public class P47PrefManager: PrefManager {
     fd.rawRead((&selectedParsecSlot)[0..1]);
   }
 
-  public override void load() {
+  public void load() {
     try {
       auto fd = File(PREF_FILE, "rb");
       int ver;
@@ -77,7 +76,7 @@ public class P47PrefManager: PrefManager {
     }
   }
 
-  public override void save() {
+  public void save() {
     auto fd = File(PREF_FILE, "wb");
     fd.rawWrite((&VERSION_NUM)[0..1]);
     for (int k = 0; k < MODE_NUM; k++) {

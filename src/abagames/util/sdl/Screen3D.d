@@ -10,15 +10,13 @@ import std.string;
 import SDL;
 import opengl;
 import abagames.util.Logger;
-import abagames.util.sdl.Screen;
 import abagames.util.sdl.SDLInitFailedException;
 
 /**
  * SDL screen handler(3D, OpenGL).
  */
-public class Screen3D: Screen {
+public class Screen3D {
  public:
-  static float brightness = 1;
   static int width = 640;
   static int height = 480;
   static bool lowres = false;
@@ -31,7 +29,7 @@ public class Screen3D: Screen {
   protected abstract void init();
   protected abstract void close();
 
-  public override void initSDL() {
+  public void initSDL() {
     if (lowres) {
       width /= 2;
       height /= 2;
@@ -64,7 +62,7 @@ public class Screen3D: Screen {
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    //gluPerspective(45.0f, cast(GLfloat)width/cast(GLfloat)height, nearPlane, farPlane);
+
     glFrustum(-nearPlane,
 	      nearPlane,
 	      -nearPlane * cast(GLfloat)height / cast(GLfloat)width,
@@ -78,17 +76,17 @@ public class Screen3D: Screen {
     screenResized();
   }
 
-  public override void closeSDL() {
+  public void closeSDL() {
     close();
     SDL_ShowCursor(SDL_ENABLE);
   }
 
-  public override void flip() {
+  public void flip() {
     handleError();
     SDL_GL_SwapBuffers();
   }
 
-  public override void clear() {
+  public void clear() {
     glClear(GL_COLOR_BUFFER_BIT);
   }
 
@@ -101,9 +99,5 @@ public class Screen3D: Screen {
 
   protected void setCaption(string name) {
     SDL_WM_SetCaption(cast(char*)std.string.toStringz(name), null);
-  }
-
-  public static void setColor(float r, float g, float b, float a) {
-    glColor4f(r * brightness, g * brightness, b * brightness, a);
   }
 }

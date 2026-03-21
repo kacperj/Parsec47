@@ -14,7 +14,6 @@ import abagames.util.Rand;
 import abagames.util.Vector;
 import abagames.util.ActorPool;
 import abagames.util.sdl.GameManager;
-import abagames.util.sdl.Screen3D;
 import abagames.util.sdl.Texture;
 import abagames.util.sdl.Pad;
 import abagames.util.sdl.Sound;
@@ -38,6 +37,7 @@ import abagames.p47.Bonus;
 import abagames.p47.StageManager;
 import abagames.p47.Title;
 import abagames.p47.SoundManager;
+import abagames.p47.Renderer;
 
 /**
  * Manage the game status and actor pools.
@@ -57,7 +57,6 @@ public class P47GameManager: GameManager {
  private:
   Pad pad;
   const int ENEMY_MAX = 32;
-  P47PrefManager prefManager;
   P47Screen screen;
   Rand rand;
   Field field;
@@ -89,7 +88,6 @@ public class P47GameManager: GameManager {
   // Initialize actor pools, load BGMs/SEs and textures.
   public override void init() {
     pad = cast(Pad)input;
-    prefManager = cast(P47PrefManager)abstPrefManager;
     screen = cast(P47Screen)abstScreen;
     rand = new Rand;
     Field.createDisplayLists();
@@ -501,7 +499,7 @@ public class P47GameManager: GameManager {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     bonuses.draw();
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-    Screen3D.setColor(Particle.R, Particle.G, Particle.B, 1);
+    Renderer.setColor(Particle.R, Particle.G, Particle.B, 1);
     glBegin(GL_LINES);
     particles.draw();
     glEnd();
@@ -528,7 +526,7 @@ public class P47GameManager: GameManager {
 
   private void gameoverDraw() {
     field.draw();
-    Screen3D.setColor(Particle.R, Particle.G, Particle.B, 1);
+    Renderer.setColor(Particle.R, Particle.G, Particle.B, 1);
     glBegin(GL_LINES);
     particles.draw();
     glEnd();
@@ -600,10 +598,10 @@ public class P47GameManager: GameManager {
   private void drawBox(int x, int y, int w, int h) {
     if (w <= 0)
       return;
-    Screen3D.setColor(1, 1, 1, 0.5);
-    P47Screen.drawBoxSolid(x, y, w, h);
-    Screen3D.setColor(1, 1, 1, 1);
-    P47Screen.drawBoxLine(x, y, w, h);
+    Renderer.setColor(1, 1, 1, 0.5);
+    Renderer.drawBoxSolid(x, y, w, h);
+    Renderer.setColor(1, 1, 1, 1);
+    Renderer.drawBoxLine(x, y, w, h);
   }
 
   private void drawBossShieldMeter() {

@@ -12,13 +12,13 @@ import bulletml;
 import abagames.util.Actor;
 import abagames.util.ActorInitializer;
 import abagames.util.Vector;
-import abagames.util.sdl.Screen3D;
 import abagames.util.bulletml.Bullet;
 import abagames.p47.Field;
 import abagames.p47.P47Bullet;
 import abagames.p47.BulletActorPool;
 import abagames.p47.Ship;
 import abagames.p47.P47Screen;
+import abagames.p47.Renderer;
 
 /**
  * Actor of the bullet.
@@ -311,7 +311,7 @@ public class BulletActor: Actor {
       b += (1 - b) * 0.5;
       for (int j = 0; j < BULLET_SHAPE_NUM + 1; j++) {
 	glNewList(displayListIdx + idx, GL_COMPILE);
-	Screen3D.setColor(r, g, b, 1);
+	Renderer.setColor(r, g, b, 1);
 	switch (j) {
 	case 0:
 	  glBegin(GL_TRIANGLE_FAN);
@@ -330,11 +330,11 @@ public class BulletActor: Actor {
 	  glVertex3f( 0, size,  0);
 	  glEnd();
 	  glEnable(GL_BLEND);
-	  Screen3D.setColor(r, g, b, 0.55);
+	  Renderer.setColor(r, g, b, 0.55);
 	  glBegin(GL_TRIANGLE_FAN);
 	  glVertex3f(-sz, -sz,  0);
 	  glVertex3f( sz, -sz,  0);
-	  Screen3D.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
+	  Renderer.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
 	  glVertex3f( 0, size,  0);
 	  glEnd();
 	  break;
@@ -348,11 +348,11 @@ public class BulletActor: Actor {
 	  glVertex3f(-sz,     0,  0);
 	  glEnd();
 	  glEnable(GL_BLEND);
-	  Screen3D.setColor(r, g, b, 0.7);
+	  Renderer.setColor(r, g, b, 0.7);
 	  glBegin(GL_TRIANGLE_FAN);
 	  glVertex3f(  0, -size,  0);
 	  glVertex3f( sz,     0,  0);
-	  Screen3D.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
+	  Renderer.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
 	  glVertex3f(  0,  size,  0);
 	  glVertex3f(-sz,     0,  0);
 	  glEnd();
@@ -367,11 +367,11 @@ public class BulletActor: Actor {
 	  glVertex3f(-sz,  sz2,  0);
 	  glEnd();
 	  glEnable(GL_BLEND);
-	  Screen3D.setColor(r, g, b, 0.45);
+	  Renderer.setColor(r, g, b, 0.45);
 	  glBegin(GL_TRIANGLE_FAN);
 	  glVertex3f(-sz, -sz2,  0);
 	  glVertex3f( sz, -sz2,  0);
-	  Screen3D.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
+	  Renderer.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
 	  glVertex3f( sz, sz2,  0);
 	  glVertex3f(-sz, sz2,  0);
 	  glEnd();
@@ -386,11 +386,11 @@ public class BulletActor: Actor {
 	  glVertex3f(-sz,  sz,  0);
 	  glEnd();
 	  glEnable(GL_BLEND);
-	  Screen3D.setColor(r, g, b, 0.7);
+	  Renderer.setColor(r, g, b, 0.7);
 	  glBegin(GL_TRIANGLE_FAN);
 	  glVertex3f(-sz, -sz,  0);
 	  glVertex3f( sz, -sz,  0);
-	  Screen3D.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
+	  Renderer.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
 	  glVertex3f( sz,  sz,  0);
 	  glVertex3f(-sz,  sz,  0);
 	  glEnd();
@@ -409,13 +409,13 @@ public class BulletActor: Actor {
 	  glVertex3f(-sz,  -sz/2,  0);
 	  glEnd();
 	  glEnable(GL_BLEND);
-	  Screen3D.setColor(r, g, b, 0.85);
+	  Renderer.setColor(r, g, b, 0.85);
 	  glBegin(GL_TRIANGLE_FAN);
 	  glVertex3f(-sz/2, -sz,  0);
 	  glVertex3f( sz/2, -sz,  0);
 	  glVertex3f( sz,  -sz/2,  0);
 	  glVertex3f( sz,   sz/2,  0);
-	  Screen3D.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
+	  Renderer.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
 	  glVertex3f( sz/2,  sz,  0);
 	  glVertex3f(-sz/2,  sz,  0);
 	  glVertex3f(-sz,   sz/2,  0);
@@ -431,11 +431,11 @@ public class BulletActor: Actor {
 	  glVertex3f( sz, -sz+sz2,  0);
 	  glEnd();
 	  glEnable(GL_BLEND);
-	  Screen3D.setColor(r, g, b, 0.55);
+	  Renderer.setColor(r, g, b, 0.55);
 	  glBegin(GL_TRIANGLE_FAN);
 	  glVertex3f(-sz, -sz+sz2,  0);
 	  glVertex3f( sz, -sz+sz2,  0);
-	  Screen3D.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
+	  Renderer.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
 	  glVertex3f( 0, sz+sz2,  0);
 	  glEnd();
 	  break;
@@ -451,12 +451,12 @@ public class BulletActor: Actor {
 	  glVertex3f(-sz,   0,  0);
 	  glEnd();
 	  glEnable(GL_BLEND);
-	  Screen3D.setColor(r, g, b, 0.85);
+	  Renderer.setColor(r, g, b, 0.85);
 	  glBegin(GL_TRIANGLE_FAN);
 	  glVertex3f(-sz, -sz,  0);
 	  glVertex3f(  0, -sz,  0);
 	  glVertex3f( sz,   0,  0);
-	  Screen3D.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
+	  Renderer.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
 	  glVertex3f( sz,  sz,  0);
 	  glVertex3f(  0,  sz,  0);
 	  glVertex3f(-sz,   0,  0);

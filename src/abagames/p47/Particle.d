@@ -12,9 +12,8 @@ import abagames.util.Vector;
 import abagames.util.Rand;
 import abagames.util.Actor;
 import abagames.util.ActorInitializer;
-import abagames.util.sdl.Screen3D;
+import abagames.p47.Renderer;
 import abagames.p47.LuminousActor;
-import abagames.p47.P47Screen;
 
 /**
  * Particles.
@@ -82,7 +81,7 @@ public class Particle: LuminousActor {
 
   public override void drawLuminous() {
     if (lumAlp < 0.2) return;
-    Screen3D.setColor(R, G, B, lumAlp);
+    Renderer.setColor(R, G, B, lumAlp);
     glVertex3f(ppos.x, ppos.y, pz);
     glVertex3f(pos.x, pos.y, z);
   }

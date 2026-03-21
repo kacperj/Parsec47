@@ -12,12 +12,12 @@ import abagames.util.Vector;
 import abagames.util.Rand;
 import abagames.util.Actor;
 import abagames.util.ActorInitializer;
-import abagames.util.sdl.Screen3D;
 import abagames.p47.Field;
 import abagames.p47.Ship;
 import abagames.p47.P47GameManager;
 import abagames.p47.P47Screen;
 import abagames.p47.SoundManager;
+import abagames.p47.Renderer;
 
 /**
  * Bonus items.
@@ -171,18 +171,18 @@ public class Bonus: Actor {
       P47Screen.drawBoxRetro(pos.x + oy, pos.y - ox, BOX_SIZE / 2, BOX_SIZE / 2, 0);
     } else {
       if (isInhaled)
-	Screen3D.setColor(0.8, 0.6, 0.4, 0.7);
+	Renderer.setColor(0.8, 0.6, 0.4, 0.7);
       else if (isDown)
-	Screen3D.setColor(0.4, 0.9, 0.6, 0.7);
+	Renderer.setColor(0.4, 0.9, 0.6, 0.7);
       else
-	Screen3D.setColor(0.8, 0.9, 0.5, 0.7);
-      P47Screen.drawBoxLine(pos.x - ox - BOX_SIZE / 2, pos.y - oy - BOX_SIZE / 2, 
+	Renderer.setColor(0.8, 0.9, 0.5, 0.7);
+      Renderer.drawBoxLine(pos.x - ox - BOX_SIZE / 2, pos.y - oy - BOX_SIZE / 2, 
 			    BOX_SIZE, BOX_SIZE);
-      P47Screen.drawBoxLine(pos.x + ox - BOX_SIZE / 2, pos.y + oy - BOX_SIZE / 2, 
+      Renderer.drawBoxLine(pos.x + ox - BOX_SIZE / 2, pos.y + oy - BOX_SIZE / 2, 
 			    BOX_SIZE, BOX_SIZE);
-      P47Screen.drawBoxLine(pos.x - oy - BOX_SIZE / 2, pos.y + ox - BOX_SIZE / 2,
+      Renderer.drawBoxLine(pos.x - oy - BOX_SIZE / 2, pos.y + ox - BOX_SIZE / 2,
 			    BOX_SIZE, BOX_SIZE);
-      P47Screen.drawBoxLine(pos.x + oy - BOX_SIZE / 2, pos.y - ox - BOX_SIZE / 2,
+      Renderer.drawBoxLine(pos.x + oy - BOX_SIZE / 2, pos.y - ox - BOX_SIZE / 2,
 			    BOX_SIZE, BOX_SIZE);
     }
   }
