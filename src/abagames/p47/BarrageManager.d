@@ -6,9 +6,9 @@
 module abagames.p47.BarrageManager;
 
 private:
+import std.file: dirEntries, SpanMode;
+import std.path: baseName, extension;
 import std.string;
-import std.path: extension;
-import dirent;
 import bulletml;
 import abagames.p47.MorphBullet;
 import abagames.util.Logger;
@@ -36,14 +36,10 @@ public class BarrageManager {
     "morph_lock", "small_lock", "middlesub_lock"];
 
   public void loadBulletMLs() {
-    for (int i = 0; i< BARRAGE_TYPE; i++) {
-      DIR* d = opendir(cast(char*)std.string.toStringz(dirName[i]));
-      int j;
-      for (j = 0;;) {
-	char* fn = readdir_filename(d);
-	if (!fn)
-	  break;
-	string fileName = fn.fromStringz.idup;
+    for (int i = 0; i < BARRAGE_TYPE; i++) {
+      int j = 0;
+      foreach (entry; dirEntries(dirName[i], SpanMode.shallow)) {
+	string fileName = baseName(entry.name);
 	if (extension(fileName) != ".xml")
 	  continue;
 	Logger.info("Load BulletML: " ~ dirName[i] ~ "/" ~ fileName);
@@ -52,7 +48,6 @@ public class BarrageManager {
 	BulletMLParserTinyXML_parse(parser[i][j]);
 	j++;
       }
-      closedir(d);
       parserNum[i] = j;
     }
   }

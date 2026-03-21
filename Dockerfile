@@ -57,8 +57,7 @@ RUN set -e && mkdir -p out && \
     done && \
     x86_64-w64-mingw32-clang++ -shared -static \
       -o out/bulletml.dll out/*.o bulletlib/bulletml_api.def && \
-    x86_64-w64-mingw32-dlltool -d bulletlib/bulletml_api.def -D bulletml.dll \
-      -l out/bulletml.lib && \
+    llvm-lib /DEF:bulletlib/bulletml_api.def /OUT:out/bulletml.lib /MACHINE:X64 && \
     rm -f out/*.o
 
 # ── p47 (D → Windows EXE) ──
@@ -66,7 +65,6 @@ COPY src/       src/
 COPY import/    import/
 COPY lib/       lib/
 COPY resource/  resource/
-
 # Workaround: on Windows both `import SDL_keysym` and `import SDL_Keysym`
 # resolve to SDL_keysym.d (case-insensitive FS). On Linux we need a wrapper.
 RUN printf 'module SDL_Keysym;\npublic import SDL_keysym;\n' > import/SDL_Keysym.d
@@ -80,8 +78,7 @@ RUN set -e && \
       -of=out/p47.exe out/p47.obj \
       -L=resource/p47.RES \
       -L=lib/SDL.lib -L=lib/SDL_mixer.lib \
-      -L=lib/opengl32.lib -L=out/bulletml.lib \
+      -L=opengl32.lib -L=out/bulletml.lib \
       -L=/SUBSYSTEM:WINDOWS \
-      -L=/DEFAULTLIB:user32 \
-      -L=/FORCE:MULTIPLE && \
+      -L=/DEFAULTLIB:user32 && \
     rm -f out/p47.obj
