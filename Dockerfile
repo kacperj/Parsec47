@@ -108,6 +108,7 @@ WORKDIR /build
 
 # ── Rust workspace (mt + renderer → static libs, sound → DLL) ──
 COPY rust/ rust/
+COPY assets/images/ assets/images/
 
 RUN . "$HOME/.cargo/env" && \
     mkdir -p out && \
@@ -153,14 +154,13 @@ RUN set -e && mkdir -p out && \
 
 # ── p47 (D → Windows EXE) ──
 COPY src/       src/
-COPY import/    import/
 COPY lib/       lib/
 COPY resource/  resource/
 
 RUN set -e && \
-    ALL_SRC=$(find import src -name '*.d' ! -name 'SDL_mixer.d' | sort | tr '\n' ' ') && \
+    ALL_SRC=$(find import src -name '*.d' | sort | tr '\n' ' ') && \
     ldc2 --mtriple=x86_64-windows-msvc \
-      -c -I=import -O --release -d-version=Win32_release -wi \
+      -c -O --release -d-version=Win32_release -wi \
       -of=out/p47.obj $ALL_SRC && \
     ldc2 --mtriple=x86_64-windows-msvc \
       -of=out/p47.exe out/p47.obj \

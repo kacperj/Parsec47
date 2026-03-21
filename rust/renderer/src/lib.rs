@@ -180,7 +180,7 @@ fn renderer_draw_parsec(parsec: i32) {
     letter_render::letter_render_draw_num(parsec, 600.0, y, 25.0, 1);
 }
 
-static TITLE_BMP: &[u8] = include_bytes!("title.bmp");
+static TITLE_BMP: &[u8] = include_bytes!("../../../assets/images/title.bmp");
 static mut TITLE_TEXTURE: GLuint = 0;
 
 fn load_bmp_from_bytes(data: &[u8]) -> (i32, i32, *const u8) {

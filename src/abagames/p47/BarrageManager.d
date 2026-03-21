@@ -52,14 +52,15 @@ private:
     for (int i = 0; i < BARRAGE_TYPE; i++)
     {
       int j = 0;
-      foreach (entry; dirEntries(dirName[i], SpanMode.shallow))
+      string dir = "assets/bulletdata/" ~ dirName[i];
+      foreach (entry; dirEntries(dir, SpanMode.shallow))
       {
         string fileName = baseName(entry.name);
         if (extension(fileName) != ".xml")
           continue;
-        Logger.info("Load BulletML: " ~ dirName[i] ~ "/" ~ fileName);
+        Logger.info("Load BulletML: " ~ dir ~ "/" ~ fileName);
         parser[i][j] =
-          BulletMLParserTinyXML_new(cast(char*) std.string.toStringz(dirName[i] ~ "/" ~ fileName));
+          BulletMLParserTinyXML_new(cast(char*) std.string.toStringz(dir ~ "/" ~ fileName));
         BulletMLParserTinyXML_parse(parser[i][j]);
         j++;
       }

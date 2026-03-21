@@ -28,8 +28,8 @@ public:
   static @property void noSound(bool v) { sound_set_no_sound(v ? 1 : 0); }
 
   static int fadeOutSpeed = 1280;
-  static string soundsDir = "sounds/";
-  static string chunksDir = "sounds/";
+  static string soundsDir = "assets/sounds/";
+  static string chunksDir = "assets/sounds/";
 
   public static void init()
   {

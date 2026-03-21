@@ -6,7 +6,8 @@
 # Prerequisites: Docker
 set -e
 
-rm -f bulletml.dll sound.dll p47.exe SDL2.dll SDL2_mixer.dll
+rm -rf build
+mkdir -p build/assets
 
 IMAGE="p47-builder"
 
@@ -15,11 +16,15 @@ docker build -t "$IMAGE" .
 
 echo "=== Extracting artifacts ==="
 CONTAINER=$(docker create "$IMAGE")
-docker cp "$CONTAINER:/build/out/p47.exe"         ./p47.exe
-docker cp "$CONTAINER:/build/out/bulletml.dll"     ./bulletml.dll
-docker cp "$CONTAINER:/build/out/sound.dll"        ./sound.dll
-docker cp "$CONTAINER:/build/out/SDL2.dll"         ./SDL2.dll
-docker cp "$CONTAINER:/build/out/SDL2_mixer.dll"   ./SDL2_mixer.dll
+docker cp "$CONTAINER:/build/out/p47.exe"         ./build/p47.exe
+docker cp "$CONTAINER:/build/out/bulletml.dll"     ./build/bulletml.dll
+docker cp "$CONTAINER:/build/out/sound.dll"        ./build/sound.dll
+docker cp "$CONTAINER:/build/out/SDL2.dll"         ./build/SDL2.dll
+docker cp "$CONTAINER:/build/out/SDL2_mixer.dll"   ./build/SDL2_mixer.dll
 docker rm "$CONTAINER" >/dev/null
+
+cp -r assets/* build/assets
+cp SDL.dll build/SDL.dll
+cp p47.prf build/p47.prf
 
 echo "=== Done ==="
