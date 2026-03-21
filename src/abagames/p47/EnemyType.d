@@ -11,7 +11,7 @@ import bulletml;
 import abagames.util.Vector;
 import abagames.util.Rand;
 import abagames.p47.BarrageManager;
-import abagames.p47.MorphBullet;
+import abagames.util.bulletml.Bullet;
 
 /**
  * Barrage pattern.
@@ -20,7 +20,7 @@ public class Barrage
 {
 public:
   BulletMLParser* parser;
-  BulletMLParser*[MorphBullet.MORPH_MAX] morphParser;
+  BulletMLParser*[Bullet.MORPH_MAX] morphParser;
   int morphNum, morphCnt;
   float rank, speedRank, morphRank;
   int shape, color;
@@ -436,7 +436,7 @@ private:
     setBarrageShape(br, 0.8);
     br.xReverse = rand.nextInt(2) * 2 - 1;
     br2.parser = br.parser;
-    for (int i = 0; i < MorphBullet.MORPH_MAX; i++)
+    for (int i = 0; i < Bullet.MORPH_MAX; i++)
     {
       br2.morphParser[i] = br.morphParser[i];
     }

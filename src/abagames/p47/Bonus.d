@@ -29,6 +29,7 @@ public:
   static int bonusScore;
 private:
   static const float BASE_SPEED = 0.1;
+  static const Color BONUS_COLOR = Color(0.2, 0.7, 0.5, 1);
   static float speed;
   static const float INHALE_WIDTH = 3;
   static const float ACQUIRE_WIDTH = 1;
@@ -180,6 +181,7 @@ private:
 
   public override void draw()
   {
+    P47Screen.setRetroColor(BONUS_COLOR);
     float retro;
     if (cnt < RETRO_CNT)
       retro = 1 - cast(float) cnt / RETRO_CNT;
@@ -199,11 +201,11 @@ private:
     else
     {
       if (isInhaled)
-        Renderer.setColor(0.8, 0.6, 0.4, 0.7);
+        Renderer.setColor(Color(0.8, 0.6, 0.4, 0.7));
       else if (isDown)
-        Renderer.setColor(0.4, 0.9, 0.6, 0.7);
+        Renderer.setColor(Color(0.4, 0.9, 0.6, 0.7));
       else
-        Renderer.setColor(0.8, 0.9, 0.5, 0.7);
+        Renderer.setColor(Color(0.8, 0.9, 0.5, 0.7));
       Renderer.drawBoxLine(pos.x - ox - BOX_SIZE / 2, pos.y - oy - BOX_SIZE / 2,
         BOX_SIZE, BOX_SIZE);
       Renderer.drawBoxLine(pos.x + ox - BOX_SIZE / 2, pos.y + oy - BOX_SIZE / 2,

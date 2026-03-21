@@ -23,7 +23,7 @@ import abagames.p47.P47Screen;
 public class Fragment : LuminousActor
 {
 public:
-  static const float R = 1, G = 0.8, B = 0.6;
+  static const Color FRAGMENT_COLOR = Color(1, 0.8, 0.6, 1);
 private:
   static Rand rand;
   static const int POINT_NUM = 2;
@@ -98,16 +98,16 @@ private:
 
   public override void draw()
   {
-    P47Screen.setRetroZ(z);
+    P47Screen.setRetroColor(FRAGMENT_COLOR);
     P47Screen.setRetroParam(retro, 0.2);
-    P47Screen.drawLineRetro(pos[0].x, pos[0].y, pos[1].x, pos[1].y);
+    P47Screen.drawLineRetroWithZ(pos[0].x, pos[0].y, pos[1].x, pos[1].y, z);
   }
 
   public override void drawLuminous()
   {
     if (lumAlp < 0.2)
       return;
-    Renderer.setColor(R, G, B, lumAlp);
+    Renderer.setColor(Color(FRAGMENT_COLOR.r, FRAGMENT_COLOR.g, FRAGMENT_COLOR.b, lumAlp));
     glVertex3f(pos[0].x, pos[0].y, z);
     glVertex3f(pos[1].x, pos[1].y, z);
   }

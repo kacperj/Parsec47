@@ -761,77 +761,92 @@ private:
   public override void draw()
   {
     float ap;
+    float retroZ = 0;
+
+    Color enemyRetroColor;
+    
     if (appCnt > 0)
     {
       // Appearance effect of the boss.
-      P47Screen.setRetroZ(z);
+      retroZ = z;
       ap = cast(float) appCnt / APPEARANCE_CNT;
       P47Screen.setRetroParam(1, type.retroSize * (1 + ap * 10));
-      P47Screen.setRetroColor(type.r, type.g, type.b, (1 - ap));
+      enemyRetroColor = Color(type.r, type.g, type.b, (1 - ap));
     }
     else if (dstCnt > 0)
     {
-      P47Screen.setRetroZ(z);
+      retroZ = z;
       ap = cast(float) dstCnt / DESTROYED_CNT / 2 + 0.5;
-      P47Screen.setRetroColor(type.r, type.g, type.b, ap);
+      enemyRetroColor = Color(type.r, type.g, type.b, ap);
     }
     else if (timeoutCnt > 0)
     {
-      P47Screen.setRetroZ(z);
+      retroZ = z;
       ap = cast(float) timeoutCnt / TIMEOUT_CNT;
-      P47Screen.setRetroColor(type.r, type.g, type.b, ap);
+      enemyRetroColor = Color(type.r, type.g, type.b, ap);
     }
     else
     {
       P47Screen.setRetroParam(1, type.retroSize);
       if (!damaged)
-        P47Screen.setRetroColor(type.r, type.g, type.b, 1);
+        enemyRetroColor = Color(type.r, type.g, type.b, 1);
       else
-        P47Screen.setRetroColor(1, 1, type.b, 1);
+        enemyRetroColor = Color(1, 1, type.b, 1);
     }
+
+    P47Screen.setRetroColor(enemyRetroColor);
     int ni = 1;
+
     for (int i = 0; i < EnemyType.BODY_SHAPE_POINT_NUM; i++, ni++)
     {
       if (ni >= EnemyType.BODY_SHAPE_POINT_NUM)
         ni = 0;
-      P47Screen.drawLineRetro(pos.x + type.bodyShapePos[i].x, pos.y + type.bodyShapePos[i].y,
-        pos.x + type.bodyShapePos[ni].x, pos.y + type.bodyShapePos[ni].y);
+      P47Screen.drawLineRetroWithZ(pos.x + type.bodyShapePos[i].x, pos.y + type.bodyShapePos[i].y,
+        pos.x + type.bodyShapePos[ni].x, pos.y + type.bodyShapePos[ni].y, retroZ);
     }
+
     if (type.type != EnemyType.SMALL)
     {
       glBegin(GL_TRIANGLE_FAN);
-      Renderer.setColor(P47Screen.retroR, P47Screen.retroG, P47Screen.retroB, 0);
+      Renderer.setColor(Color(P47Screen.retroR, P47Screen.retroG, P47Screen.retroB, 0));
       for (int i = 0; i < EnemyType.BODY_SHAPE_POINT_NUM; i++)
       {
         if (i == 2)
-          Renderer.setColor(P47Screen.retroR, P47Screen.retroG, P47Screen.retroB, P47Screen.retroA);
+          Renderer.setColor(Color(P47Screen.retroR, P47Screen.retroG, P47Screen.retroB, P47Screen.retroA));
         glVertex3f(pos.x + type.bodyShapePos[i].x, pos.y + type.bodyShapePos[i].y, z);
       }
       glEnd();
     }
+
     for (int i = 0; i < type.batteryNum; i++)
     {
       BatteryType* bt = &(type.batteryType[i]);
+
+      Color batteryRetroColor;
+
       if (appCnt > 0)
       {
-        P47Screen.setRetroColor(bt.r, bt.g, bt.b, (1 - ap));
+        batteryRetroColor = Color(bt.r, bt.g, bt.b, (1 - ap));
       }
       else if (dstCnt > 0 || timeoutCnt > 0)
       {
-        P47Screen.setRetroColor(bt.r, bt.g, bt.b, ap);
+        batteryRetroColor = Color(bt.r, bt.g, bt.b, ap);
       }
       else
       {
         if (!battery[i].damaged)
-          P47Screen.setRetroColor(bt.r, bt.g, bt.b, 1);
+          batteryRetroColor = Color(bt.r, bt.g, bt.b, 1);
         else
-          P47Screen.setRetroColor(1, 1, bt.b, 1);
+          batteryRetroColor = Color(1, 1, bt.b, 1);
       }
+
+      P47Screen.setRetroColor(batteryRetroColor);
+
       ni = 1;
       if (battery[i].shield <= 0)
       {
-        P47Screen.drawLineRetro(pos.x + bt.wingShapePos[0].x, pos.y + bt.wingShapePos[0].y,
-          pos.x + bt.wingShapePos[1].x, pos.y + bt.wingShapePos[1].y);
+        P47Screen.drawLineRetroWithZ(pos.x + bt.wingShapePos[0].x, pos.y + bt.wingShapePos[0].y,
+          pos.x + bt.wingShapePos[1].x, pos.y + bt.wingShapePos[1].y, retroZ);
       }
       else
       {
@@ -839,24 +854,23 @@ private:
         {
           if (ni >= BatteryType.WING_SHAPE_POINT_NUM)
             ni = 0;
-          P47Screen.drawLineRetro(pos.x + bt.wingShapePos[wi].x, pos.y + bt.wingShapePos[wi].y,
-            pos.x + bt.wingShapePos[ni].x, pos.y + bt.wingShapePos[ni].y);
+          P47Screen.drawLineRetroWithZ(pos.x + bt.wingShapePos[wi].x, pos.y + bt.wingShapePos[wi].y,
+            pos.x + bt.wingShapePos[ni].x, pos.y + bt.wingShapePos[ni].y, retroZ);
         }
         if (type.type != EnemyType.SMALL)
         {
           glBegin(GL_TRIANGLE_FAN);
-          Renderer.setColor(P47Screen.retroR, P47Screen.retroG, P47Screen.retroB, P47Screen.retroA);
+          Renderer.setColor(batteryRetroColor);
           for (int wi = 0; wi < BatteryType.WING_SHAPE_POINT_NUM; wi++)
           {
             if (wi == 2)
-              Renderer.setColor(P47Screen.retroR, P47Screen.retroG, P47Screen.retroB, 0);
+              Renderer.setColor(Color(batteryRetroColor.r, batteryRetroColor.g, batteryRetroColor.b, 0));
             glVertex3f(pos.x + bt.wingShapePos[wi].x, pos.y + bt.wingShapePos[wi].y, z);
           }
           glEnd();
         }
       }
     }
-    P47Screen.setRetroZ(0);
   }
 }
 

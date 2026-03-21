@@ -19,11 +19,6 @@ public class Rand
     rand_set_seed(cast(uint) MonoTime.currTime.ticks);
   }
 
-  public void setSeed(long n)
-  {
-    rand_set_seed(cast(uint) n);
-  }
-
   public int nextInt(int n)
   {
     return rand_next_int(n);

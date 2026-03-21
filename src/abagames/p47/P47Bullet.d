@@ -6,12 +6,12 @@
 module abagames.p47.P47Bullet;
 
 private:
-import abagames.p47.MorphBullet;
+import abagames.util.bulletml.Bullet;
 
 /**
  * Bullet with params of sppedRank, shape, color, size and the vertical reverse moving.
  */
-public class P47Bullet : MorphBullet
+public class P47Bullet : Bullet
 {
 public:
   float speedRank;

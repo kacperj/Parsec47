@@ -25,6 +25,14 @@ public:
   float speed;
   float rank;
   int id;
+  int morphNum;
+  int morphIdx;
+  int morphCnt;
+  int baseMorphIdx;
+  int baseMorphCnt;
+  bool isMorph;
+  BulletMLParser*[MORPH_MAX] morphParser;
+  static const int MORPH_MAX = 8;
 
 private:
   static Rand rand;
@@ -34,6 +42,39 @@ private:
   public static this()
   {
     rand = new Rand;
+  }
+
+  public this(int id)
+  {
+    pos = new Vector;
+    acc = new Vector;
+    this.id = id;
+  }
+
+  public void setMorph(BulletMLParser*[] mrp, int num, int idx, int cnt)
+  {
+    if (cnt <= 0)
+    {
+      isMorph = false;
+      return;
+    }
+    isMorph = true;
+    baseMorphCnt = morphCnt = cnt;
+    morphNum = num;
+    for (int i = 0; i < num; i++)
+    {
+      morphParser[i] = mrp[i];
+    }
+    morphIdx = idx;
+    if (morphIdx >= morphNum)
+      morphIdx = 0;
+    baseMorphIdx = morphIdx;
+  }
+
+  public void resetMorph()
+  {
+    morphIdx = baseMorphIdx;
+    morphCnt = baseMorphCnt;
   }
 
   public static void setBulletsManager(BulletsManager bm)
@@ -61,13 +102,6 @@ private:
   public static int getTurn()
   {
     return manager.getTurn();
-  }
-
-  public this(int id)
-  {
-    pos = new Vector;
-    acc = new Vector;
-    this.id = id;
   }
 
   public void set(float x, float y, float deg, float speed, float rank)

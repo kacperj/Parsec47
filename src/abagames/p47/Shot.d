@@ -12,6 +12,7 @@ import abagames.util.ActorInitializer;
 import abagames.util.Vector;
 import abagames.p47.Field;
 import abagames.p47.P47Screen;
+import abagames.p47.Renderer;
 
 /**
  * Player's shots.
@@ -24,6 +25,7 @@ public:
 private:
   static const float FIELD_SPACE = 1;
   static int displayListIdx;
+  static const Color SHOT_COLOR = Color(0.8, 0.8, 0.2, 0.8);
   Field field;
   Vector vel;
   float deg;
@@ -65,6 +67,8 @@ private:
 
   public override void draw()
   {
+    P47Screen.setRetroColor(SHOT_COLOR);
+
     float r;
     if (cnt > RETRO_CNT)
       r = 1;

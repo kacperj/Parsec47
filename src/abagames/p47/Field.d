@@ -110,7 +110,7 @@ private:
 
   public void draw()
   {
-    Renderer.setColor(r, g, b, 0.7);
+    Renderer.setColor(Color(r, g, b, 0.7));
     float d = -RING_NUM * RING_ANGLE_INT / 2 + roll;
     for (int i = 0; i < RING_NUM; i++)
     {

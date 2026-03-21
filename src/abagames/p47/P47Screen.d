@@ -102,7 +102,6 @@ private:
   // Draw the retro style lines.
   private static float retro, retroSize;
   public static float retroR, retroG, retroB, retroA;
-  private static float retroZ = 0;
 
   public static void setRetroParam(float r, float sz)
   {
@@ -110,33 +109,126 @@ private:
     retroSize = sz;
   }
 
-  public static void setRetroColor(float r, float g, float b, float a)
+  public static void setRetroColor(Color color)
   {
-    retroR = r;
-    retroG = g;
-    retroB = b;
-    retroA = a;
+    retroR = color.r;
+    retroG = color.g;
+    retroB = color.b;
+    retroA = color.a;
   }
 
-  public static void setRetroZ(float z)
-  {
-    retroZ = z;
-  }
-
-  public static void drawBoxRetro(float x, float y, float width, float height, float deg)
+  public static void drawBoxRetroWithZ(float x, float y, float width, float height, float deg, float z)
   {
     float w1, h1, w2, h2;
     w1 = width * cos(deg) - height * sin(deg);
     h1 = width * sin(deg) + height * cos(deg);
     w2 = -width * cos(deg) - height * sin(deg);
     h2 = -width * sin(deg) + height * cos(deg);
-    drawLineRetro(x + w2, y - h2, x + w1, y - h1);
-    drawLineRetro(x + w1, y - h1, x - w2, y + h2);
-    drawLineRetro(x - w2, y + h2, x - w1, y + h1);
-    drawLineRetro(x - w1, y + h1, x + w2, y - h2);
+    drawLineRetroWithZ(x + w2, y - h2, x + w1, y - h1, z);
+    drawLineRetroWithZ(x + w1, y - h1, x - w2, y + h2, z);
+    drawLineRetroWithZ(x - w2, y + h2, x - w1, y + h1, z);
+    drawLineRetroWithZ(x - w1, y + h1, x + w2, y - h2, z);
+  }
+
+  public static void drawBoxRetro(float x, float y, float width, float height, float deg)
+  {
+    drawBoxRetroWithZ(x, y, width, height, deg, 0);
   }
 
   public static void drawLineRetro(float x1, float y1, float x2, float y2)
+  {
+    drawLineRetroWithZ(x1, y1, x2, y2, 0);
+  }
+
+  public static void drawLineRetroWithZ(float x1, float y1, float x2, float y2, float z)
+  {
+    Renderer.setColor(mixRetroColor());
+
+    if (retro < 0.2f)
+    {
+      glBegin(GL_LINES);
+      glVertex3f(x1, y1, z);
+      glVertex3f(x2, y2, z);
+      glEnd();
+
+      return;
+    }
+    
+    float ds = retroSize * retro;
+
+    float lx = std.math.fabs(x2 - x1);
+    float ly = std.math.fabs(y2 - y1);
+    glBegin(GL_QUADS);
+    if (lx < ly)
+    {
+      int n = cast(int)(ly / ds);
+      if (n > 0)
+      {
+        float xo = (x2 - x1) / n, xos = 0;
+        float yo;
+        if (y2 < y1)
+          yo = -ds;
+        else
+          yo = ds;
+        float x = x1, y = y1;
+        for (int i = 0; i <= n; i++, xos += xo, y += yo)
+        {
+          if (xos >= ds)
+          {
+            x += ds;
+            xos -= ds;
+          }
+          else if (xos <= -ds)
+          {
+            x -= ds;
+            xos += ds;
+          }
+          drawSquareRetro(x, y, ds, z);
+        }
+      }
+    }
+    else
+    {
+      int n = cast(int)(lx / ds);
+      if (n > 0)
+      {
+        float yo = (y2 - y1) / n, yos = 0;
+        float xo;
+        if (x2 < x1)
+          xo = -ds;
+        else
+          xo = ds;
+        float x = x1, y = y1;
+        for (int i = 0; i <= n; i++, x += xo, yos += yo)
+        {
+          if (yos >= ds)
+          {
+            y += ds;
+            yos -= ds;
+          }
+          else if (yos <= -ds)
+          {
+            y -= ds;
+            yos += ds;
+          }
+
+          drawSquareRetro(x, y, ds, z);
+        }
+      }
+    }
+    glEnd();
+  }
+
+  private static void drawSquareRetro(float x, float y, float ds, float z)
+  {
+      float ds2 = ds / 2;
+      glVertex3f(x - ds2, y - ds2, z);
+      glVertex3f(x + ds2, y - ds2, z);
+      glVertex3f(x + ds2, y + ds2, z);
+      glVertex3f(x - ds2, y + ds2, z);
+  }
+
+  private static Color mixRetroColor()
   {
     float cf = (1 - retro) * 0.5;
     float r = retroR + (1 - retroR) * cf;
@@ -158,84 +250,6 @@ private:
       if (a > 1)
         a = 1;
     }
-    Renderer.setColor(r, g, b, a);
-    if (retro < 0.2f)
-    {
-      glBegin(GL_LINES);
-      glVertex3f(x1, y1, retroZ);
-      glVertex3f(x2, y2, retroZ);
-      glEnd();
-    }
-    else
-    {
-      float ds = retroSize * retro;
-      float ds2 = ds / 2;
-      float lx = std.math.fabs(x2 - x1);
-      float ly = std.math.fabs(y2 - y1);
-      glBegin(GL_QUADS);
-      if (lx < ly)
-      {
-        int n = cast(int)(ly / ds);
-        if (n > 0)
-        {
-          float xo = (x2 - x1) / n, xos = 0;
-          float yo;
-          if (y2 < y1)
-            yo = -ds;
-          else
-            yo = ds;
-          float x = x1, y = y1;
-          for (int i = 0; i <= n; i++, xos += xo, y += yo)
-          {
-            if (xos >= ds)
-            {
-              x += ds;
-              xos -= ds;
-            }
-            else if (xos <= -ds)
-            {
-              x -= ds;
-              xos += ds;
-            }
-            glVertex3f(x - ds2, y - ds2, retroZ);
-            glVertex3f(x + ds2, y - ds2, retroZ);
-            glVertex3f(x + ds2, y + ds2, retroZ);
-            glVertex3f(x - ds2, y + ds2, retroZ);
-          }
-        }
-      }
-      else
-      {
-        int n = cast(int)(lx / ds);
-        if (n > 0)
-        {
-          float yo = (y2 - y1) / n, yos = 0;
-          float xo;
-          if (x2 < x1)
-            xo = -ds;
-          else
-            xo = ds;
-          float x = x1, y = y1;
-          for (int i = 0; i <= n; i++, x += xo, yos += yo)
-          {
-            if (yos >= ds)
-            {
-              y += ds;
-              yos -= ds;
-            }
-            else if (yos <= -ds)
-            {
-              y -= ds;
-              yos += ds;
-            }
-            glVertex3f(x - ds2, y - ds2, retroZ);
-            glVertex3f(x + ds2, y - ds2, retroZ);
-            glVertex3f(x + ds2, y + ds2, retroZ);
-            glVertex3f(x - ds2, y + ds2, retroZ);
-          }
-        }
-      }
-      glEnd();
-    }
+    return Color(r, g, b, a);
   }
 }

@@ -265,9 +265,9 @@ private:
   {
     float rt = 1 - rtCnt / RETRO_CNT;
     P47Screen.setRetroParam(rt, 0.4 * bullet.bulletSize);
-    P47Screen.setRetroColor(bulletColor[bullet.color][0],
+    P47Screen.setRetroColor(Color(bulletColor[bullet.color][0],
       bulletColor[bullet.color][1],
-      bulletColor[bullet.color][2], 1);
+      bulletColor[bullet.color][2], 1));
     float x, y, tx, px, py, fx, fy;
     for (int i = 0; i < shapePos[bullet.shape].length; i++)
     {
@@ -335,9 +335,9 @@ private:
   }
 
   private static const float SHAPE_POINT_SIZE = 0.1;
-  private static const float SHAPE_BASE_COLOR_R = 1;
-  private static const float SHAPE_BASE_COLOR_G = 0.9;
-  private static const float SHAPE_BASE_COLOR_B = 0.7;
+
+  private static const Color SHAPE_BASE_COLOR = Color(1, 0.9, 0.7, 0.55);
+
   private static const float[3][BULLET_COLOR_NUM] bulletColor =
     [
       [1, 0, 0], [0.2, 1, 0.4], [0.3, 0.3, 1], [1, 1, 0],
@@ -360,7 +360,7 @@ private:
       for (int j = 0; j < BULLET_SHAPE_NUM + 1; j++)
       {
         glNewList(displayListIdx + idx, GL_COMPILE);
-        Renderer.setColor(r, g, b, 1);
+        Renderer.setColor(Color(r, g, b, 1));
         switch (j)
         {
         case 0:
@@ -380,11 +380,11 @@ private:
           glVertex3f(0, size, 0);
           glEnd();
           glEnable(GL_BLEND);
-          Renderer.setColor(r, g, b, 0.55);
+          Renderer.setColor(Color(r, g, b, 0.55));
           glBegin(GL_TRIANGLE_FAN);
           glVertex3f(-sz, -sz, 0);
           glVertex3f(sz, -sz, 0);
-          Renderer.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
+          Renderer.setColor(SHAPE_BASE_COLOR);
           glVertex3f(0, size, 0);
           glEnd();
           break;
@@ -398,11 +398,11 @@ private:
           glVertex3f(-sz, 0, 0);
           glEnd();
           glEnable(GL_BLEND);
-          Renderer.setColor(r, g, b, 0.7);
+          Renderer.setColor(Color(r, g, b, 0.7));
           glBegin(GL_TRIANGLE_FAN);
           glVertex3f(0, -size, 0);
           glVertex3f(sz, 0, 0);
-          Renderer.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
+          Renderer.setColor(SHAPE_BASE_COLOR);
           glVertex3f(0, size, 0);
           glVertex3f(-sz, 0, 0);
           glEnd();
@@ -418,11 +418,11 @@ private:
           glVertex3f(-sz, sz2, 0);
           glEnd();
           glEnable(GL_BLEND);
-          Renderer.setColor(r, g, b, 0.45);
+          Renderer.setColor(Color(r, g, b, 0.45));
           glBegin(GL_TRIANGLE_FAN);
           glVertex3f(-sz, -sz2, 0);
           glVertex3f(sz, -sz2, 0);
-          Renderer.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
+          Renderer.setColor(SHAPE_BASE_COLOR);
           glVertex3f(sz, sz2, 0);
           glVertex3f(-sz, sz2, 0);
           glEnd();
@@ -437,11 +437,11 @@ private:
           glVertex3f(-sz, sz, 0);
           glEnd();
           glEnable(GL_BLEND);
-          Renderer.setColor(r, g, b, 0.7);
+          Renderer.setColor(Color(r, g, b, 0.7));
           glBegin(GL_TRIANGLE_FAN);
           glVertex3f(-sz, -sz, 0);
           glVertex3f(sz, -sz, 0);
-          Renderer.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
+          Renderer.setColor(SHAPE_BASE_COLOR);
           glVertex3f(sz, sz, 0);
           glVertex3f(-sz, sz, 0);
           glEnd();
@@ -460,13 +460,13 @@ private:
           glVertex3f(-sz, -sz / 2, 0);
           glEnd();
           glEnable(GL_BLEND);
-          Renderer.setColor(r, g, b, 0.85);
+          Renderer.setColor(Color(r, g, b, 0.85));
           glBegin(GL_TRIANGLE_FAN);
           glVertex3f(-sz / 2, -sz, 0);
           glVertex3f(sz / 2, -sz, 0);
           glVertex3f(sz, -sz / 2, 0);
           glVertex3f(sz, sz / 2, 0);
-          Renderer.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
+          Renderer.setColor(SHAPE_BASE_COLOR);
           glVertex3f(sz / 2, sz, 0);
           glVertex3f(-sz / 2, sz, 0);
           glVertex3f(-sz, sz / 2, 0);
@@ -483,11 +483,11 @@ private:
           glVertex3f(sz, -sz + sz2, 0);
           glEnd();
           glEnable(GL_BLEND);
-          Renderer.setColor(r, g, b, 0.55);
+          Renderer.setColor(Color(r, g, b, 0.55));
           glBegin(GL_TRIANGLE_FAN);
           glVertex3f(-sz, -sz + sz2, 0);
           glVertex3f(sz, -sz + sz2, 0);
-          Renderer.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
+          Renderer.setColor(SHAPE_BASE_COLOR);
           glVertex3f(0, sz + sz2, 0);
           glEnd();
           break;
@@ -503,12 +503,12 @@ private:
           glVertex3f(-sz, 0, 0);
           glEnd();
           glEnable(GL_BLEND);
-          Renderer.setColor(r, g, b, 0.85);
+          Renderer.setColor(Color(r, g, b, 0.85));
           glBegin(GL_TRIANGLE_FAN);
           glVertex3f(-sz, -sz, 0);
           glVertex3f(0, -sz, 0);
           glVertex3f(sz, 0, 0);
-          Renderer.setColor(SHAPE_BASE_COLOR_R, SHAPE_BASE_COLOR_G, SHAPE_BASE_COLOR_B, 0.55);
+          Renderer.setColor(SHAPE_BASE_COLOR);
           glVertex3f(sz, sz, 0);
           glVertex3f(0, sz, 0);
           glVertex3f(-sz, 0, 0);

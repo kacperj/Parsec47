@@ -16,6 +16,9 @@ import abagames.p47.LetterRender;
 import abagames.p47.Field;
 import abagames.p47.Renderer;
 
+private extern (C) void renderer_draw_box_outlined(int x, int y, int w, int h);
+private extern (C) void renderer_draw_box_light(int x, int y, int w, int h);
+
 /**
  * Title.
  */
@@ -163,22 +166,6 @@ private:
     gameManager.startStage(curY, curX, getStartParsec(curY, curX), mode);
   }
 
-  private void drawBox(int x, int y, int w, int h)
-  {
-    Renderer.setColor(1, 1, 1, 1);
-    Renderer.drawBoxLine(x, y, w, h);
-    Renderer.setColor(1, 1, 1, 0.5);
-    Renderer.drawBoxSolid(x, y, w, h);
-  }
-
-  private void drawBoxLight(int x, int y, int w, int h)
-  {
-    Renderer.setColor(1, 1, 1, 0.7);
-    Renderer.drawBoxLine(x, y, w, h);
-    Renderer.setColor(1, 1, 1, 0.3);
-    Renderer.drawBoxSolid(x, y, w, h);
-  }
-
   private const int BOX_SMALL_SIZE = 24;
   private const string[] DIFFICULTY_SHORT_STR = ["P", "N", "H", "E", "Q"];
   private const string[] DIFFICULTY_STR = [
@@ -190,7 +177,7 @@ private:
   {
     glEnable(GL_TEXTURE_2D);
     titleTexture.bind();
-    Renderer.setColor(1, 1, 1, 1);
+    Renderer.setColor(Color(1, 1, 1, 1));
     glBegin(GL_TRIANGLE_FAN);
     glTexCoord2f(0, 0);
     glVertex3f(180, 20, 0);
@@ -228,7 +215,7 @@ private:
         if (x == curX && y == curY)
         {
           int bs = (BOX_COUNT - boxCnt) / 2;
-          drawBox(sx - bs, sy - bs, BOX_SMALL_SIZE + bs * 2, BOX_SMALL_SIZE + bs * 2);
+          renderer_draw_box_outlined(sx - bs, sy - bs, BOX_SMALL_SIZE + bs * 2, BOX_SMALL_SIZE + bs * 2);
           if (x == 0)
           {
             LetterRender.drawString(DIFFICULTY_SHORT_STR[y], sx + 13, sy + 13, 12, LetterRender
@@ -250,7 +237,7 @@ private:
         }
         else
         {
-          drawBoxLight(sx, sy, BOX_SMALL_SIZE, BOX_SMALL_SIZE);
+          renderer_draw_box_light(sx, sy, BOX_SMALL_SIZE, BOX_SMALL_SIZE);
         }
         sx += 28;
       }

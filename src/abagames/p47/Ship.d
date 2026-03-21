@@ -284,21 +284,21 @@ private:
   {
     displayListIdx = glGenLists(3);
     glNewList(displayListIdx, GL_COMPILE);
-    Renderer.setColor(0.5, 1, 0.5, 0.2);
+    Renderer.setColor(Color(0.5, 1, 0.5, 0.2));
     Renderer.drawBoxSolid(-0.1, -0.5, 0.2, 1);
-    Renderer.setColor(0.5, 1, 0.5, 0.4);
+    Renderer.setColor(Color(0.5, 1, 0.5, 0.4));
     Renderer.drawBoxLine(-0.1, -0.5, 0.2, 1);
     glEndList();
     glNewList(displayListIdx + 1, GL_COMPILE);
-    Renderer.setColor(1, 0.2, 0.2, 1);
+    Renderer.setColor(Color(1, 0.2, 0.2, 1));
     Renderer.drawBoxSolid(-0.2, -0.2, 0.4, 0.4);
-    Renderer.setColor(1, 0.5, 0.5, 1);
+    Renderer.setColor(Color(1, 0.5, 0.5, 1));
     Renderer.drawBoxLine(-0.2, -0.2, 0.4, 0.4);
     glEndList();
     glNewList(displayListIdx + 2, GL_COMPILE);
-    Renderer.setColor(0.7, 1, 0.5, 0.3);
+    Renderer.setColor(Color(0.7, 1, 0.5, 0.3));
     Renderer.drawBoxSolid(-0.15, -0.3, 0.3, 0.6);
-    Renderer.setColor(0.7, 1, 0.5, 0.6);
+    Renderer.setColor(Color(0.7, 1, 0.5, 0.6));
     Renderer.drawBoxLine(-0.15, -0.3, 0.3, 0.6);
     glEndList();
   }

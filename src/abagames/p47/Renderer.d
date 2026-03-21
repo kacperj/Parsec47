@@ -1,34 +1,39 @@
 module abagames.p47.Renderer;
 
-import std.math;
-import opengl;
+struct Color
+{
+  float r;
+  float g;
+  float b;
+  float a;
+}
+
+extern(C)
+{
+  void renderer_set_brightness(float b);
+  float renderer_get_brightness();
+  void renderer_set_color(float r, float g, float b, float a);
+  void renderer_draw_box_solid(float x, float y, float width, float height);
+  void renderer_draw_box_line(float x, float y, float width, float height);
+}
 
 public class Renderer
 {
-  static float brightness = 1;
+  static @property float brightness() { return renderer_get_brightness(); }
+  static @property void brightness(float b) { renderer_set_brightness(b); }
 
-  public static void setColor(float r, float g, float b, float a)
+  public static void setColor(Color color)
   {
-    glColor4f(r * brightness, g * brightness, b * brightness, a);
+    renderer_set_color(color.r, color.g, color.b, color.a);
   }
 
   public static void drawBoxSolid(float x, float y, float width, float height)
   {
-    glBegin(GL_TRIANGLE_FAN);
-    glVertex3f(x, y, 0);
-    glVertex3f(x + width, y, 0);
-    glVertex3f(x + width, y + height, 0);
-    glVertex3f(x, y + height, 0);
-    glEnd();
+    renderer_draw_box_solid(x, y, width, height);
   }
 
   public static void drawBoxLine(float x, float y, float width, float height)
   {
-    glBegin(GL_LINE_LOOP);
-    glVertex3f(x, y, 0);
-    glVertex3f(x + width, y, 0);
-    glVertex3f(x + width, y + height, 0);
-    glVertex3f(x, y + height, 0);
-    glEnd();
+    renderer_draw_box_line(x, y, width, height);
   }
 }

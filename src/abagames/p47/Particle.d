@@ -21,7 +21,7 @@ import abagames.p47.LuminousActor;
 public class Particle : LuminousActor
 {
 public:
-  static const float R = 1, G = 1, B = 0.5;
+  static const Color PARTICLE_COLOR = Color(1, 1, 0.5, 1);
 private:
   static Rand rand;
   Vector pos, ppos;
@@ -88,6 +88,7 @@ private:
 
   public override void draw()
   {
+    Renderer.setColor(PARTICLE_COLOR);
     glVertex3f(ppos.x, ppos.y, pz);
     glVertex3f(pos.x, pos.y, z);
   }
@@ -96,7 +97,7 @@ private:
   {
     if (lumAlp < 0.2)
       return;
-    Renderer.setColor(R, G, B, lumAlp);
+    Renderer.setColor(Color(PARTICLE_COLOR.r, PARTICLE_COLOR.g, PARTICLE_COLOR.b, lumAlp));
     glVertex3f(ppos.x, ppos.y, pz);
     glVertex3f(pos.x, pos.y, z);
   }

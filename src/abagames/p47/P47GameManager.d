@@ -42,6 +42,11 @@ import abagames.p47.Renderer;
 /**
  * Manage the game status and actor pools.
  */
+private extern (C) void renderer_draw_side_boards();
+private extern (C) void renderer_draw_box(int x, int y, int w, int h);
+private extern (C) void renderer_draw_side_info(int score, int bonusScore, int left, int parsec);
+private extern (C) void renderer_draw_score(int score, int bonusScore);
+
 public class P47GameManager : GameManager
 {
 public:
@@ -579,21 +584,17 @@ private:
   private void inGameDraw()
   {
     field.draw();
-    P47Screen.setRetroColor(0.2, 0.7, 0.5, 1);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     bonuses.draw();
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-    Renderer.setColor(Particle.R, Particle.G, Particle.B, 1);
+    
     glBegin(GL_LINES);
     particles.draw();
     glEnd();
-    P47Screen.setRetroColor(Fragment.R, Fragment.G, Fragment.B, 1);
     fragments.draw();
-    P47Screen.setRetroZ(0);
     ship.draw();
-    P47Screen.setRetroColor(0.8, 0.8, 0.2, 0.8);
     shots.draw();
-    P47Screen.setRetroColor(1.0, 0.8, 0.5, 1);
+    P47Screen.setRetroColor(Color(1.0, 0.8, 0.5, 1));
     if (mode == ROLL)
       rolls.draw();
     else
@@ -612,13 +613,10 @@ private:
   private void gameoverDraw()
   {
     field.draw();
-    Renderer.setColor(Particle.R, Particle.G, Particle.B, 1);
     glBegin(GL_LINES);
     particles.draw();
     glEnd();
-    P47Screen.setRetroColor(Fragment.R, Fragment.G, Fragment.B, 1);
     fragments.draw();
-    P47Screen.setRetroZ(0);
     enemies.draw();
     bullets.draw();
   }
@@ -639,75 +637,19 @@ private:
     glEnd();
   }
 
-  private void drawBoard(int x, int y, int width, int height)
-  {
-    glColor4f(0, 0, 0, 1);
-    glBegin(GL_QUADS);
-    glVertex2f(x, y);
-    glVertex2f(x + width, y);
-    glVertex2f(x + width, y + height);
-    glVertex2f(x, y + height);
-    glEnd();
-  }
-
-  private void drawSideBoards()
-  {
-    glDisable(GL_BLEND);
-    drawBoard(0, 0, 160, 480);
-    drawBoard(480, 0, 160, 480);
-    glEnable(GL_BLEND);
-  }
-
-  private void drawScore()
-  {
-    LetterRender.drawNum(score, 120, 28, 25, LetterRender.TO_UP);
-    LetterRender.drawNum(Bonus.bonusScore, 24, 20, 12, LetterRender.TO_UP);
-  }
-
-  private void drawLeft()
-  {
-    if (left < 0)
-      return;
-    LetterRender.drawString("LEFT", 520, 260, 25, LetterRender.TO_DOWN);
-    LetterRender.changeColor(LetterRender.RED);
-    LetterRender.drawNum(left, 520, 450, 25, LetterRender.TO_DOWN);
-    LetterRender.changeColor(LetterRender.WHITE);
-  }
-
-  private void drawParsec()
-  {
-    int ps = stageManager.parsec;
-    if (ps < 10)
-      LetterRender.drawNum(stageManager.parsec, 600, 26, 25, LetterRender.TO_DOWN);
-    else if (ps < 100)
-      LetterRender.drawNum(stageManager.parsec, 600, 68, 25, LetterRender.TO_DOWN);
-    else
-      LetterRender.drawNum(stageManager.parsec, 600, 110, 25, LetterRender.TO_DOWN);
-  }
-
-  private void drawBox(int x, int y, int w, int h)
-  {
-    if (w <= 0)
-      return;
-    Renderer.setColor(1, 1, 1, 0.5);
-    Renderer.drawBoxSolid(x, y, w, h);
-    Renderer.setColor(1, 1, 1, 1);
-    Renderer.drawBoxLine(x, y, w, h);
-  }
-
   private void drawBossShieldMeter()
   {
-    drawBox(165, 6, bossShield, 6);
+    renderer_draw_box(165, 6, bossShield, 6);
     int y = 24;
     for (int i = 0; i < BOSS_WING_NUM; i++)
     {
       switch (i % 2)
       {
       case 0:
-        drawBox(165, y, bossWingShield[i], 6);
+        renderer_draw_box(165, y, bossWingShield[i], 6);
         break;
       case 1:
-        drawBox(475 - bossWingShield[i], y, bossWingShield[i], 6);
+        renderer_draw_box(475 - bossWingShield[i], y, bossWingShield[i], 6);
         y += 12;
         break;
       default:
@@ -716,31 +658,23 @@ private:
     }
   }
 
-  private void drawSideInfo()
-  {
-    drawSideBoards();
-    drawScore();
-    drawLeft();
-    drawParsec();
-  }
-
   private void inGameDrawStatus()
   {
-    drawSideInfo();
+    renderer_draw_side_info(score, Bonus.bonusScore, left, stageManager.parsec);
     if (stageManager.bossSection)
       drawBossShieldMeter();
   }
 
   private void titleDrawStatus()
   {
-    drawSideBoards();
-    drawScore();
+    renderer_draw_side_boards();
+    renderer_draw_score(score, Bonus.bonusScore);
     title.draw();
   }
 
   private void gameoverDrawStatus()
   {
-    drawSideInfo();
+    renderer_draw_side_info(score, Bonus.bonusScore, left, stageManager.parsec);
     if (cnt > 64)
     {
       LetterRender.drawString("GAME OVER", 220, 200, 15, LetterRender.TO_RIGHT);
@@ -749,7 +683,7 @@ private:
 
   private void pauseDrawStatus()
   {
-    drawSideInfo();
+    renderer_draw_side_info(score, Bonus.bonusScore, left, stageManager.parsec);
     if ((pauseCnt % 60) < 30)
       LetterRender.drawString("PAUSE", 280, 220, 12, LetterRender.TO_RIGHT);
   }
