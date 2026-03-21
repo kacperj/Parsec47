@@ -14,28 +14,32 @@ import abagames.util.sdl.Pad;
 /**
  * Manage the lifecycle of the game.
  */
-public class GameManager {
- public:
+public class GameManager
+{
+public:
   int status;
 
- protected:
+protected:
   MainLoop mainLoop;
   Screen3D abstScreen;
   Pad input;
   P47PrefManager prefManager;
 
- private:
+private:
 
-  public void setMainLoop(MainLoop mainLoop) {
+  public void setMainLoop(MainLoop mainLoop)
+  {
     this.mainLoop = mainLoop;
   }
 
-  public void setUIs(Screen3D screen, Pad input) {
+  public void setUIs(Screen3D screen, Pad input)
+  {
     abstScreen = screen;
     this.input = input;
   }
 
-  public void setPrefManager(P47PrefManager prefManager) {
+  public void setPrefManager(P47PrefManager prefManager)
+  {
     this.prefManager = prefManager;
   }
 

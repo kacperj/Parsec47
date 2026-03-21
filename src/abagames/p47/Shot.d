@@ -16,11 +16,12 @@ import abagames.p47.P47Screen;
 /**
  * Player's shots.
  */
-public class Shot: Actor {
- public:
+public class Shot : Actor
+{
+public:
   Vector pos;
   static const float SPEED = 1;
- private:
+private:
   static const float FIELD_SPACE = 1;
   static int displayListIdx;
   Field field;
@@ -29,19 +30,23 @@ public class Shot: Actor {
   int cnt;
   const int RETRO_CNT = 4;
 
-  public override Actor newActor() {
+  public override Actor newActor()
+  {
     return new Shot;
   }
 
-  public override void init(ActorInitializer ini) {
-    ShotInitializer si = cast(ShotInitializer)ini;
+  public override void init(ActorInitializer ini)
+  {
+    ShotInitializer si = cast(ShotInitializer) ini;
     field = si.field;
     pos = new Vector;
     vel = new Vector;
   }
 
-  public void set(Vector p, float d) {
-    pos.x = p.x; pos.y = p.y;
+  public void set(Vector p, float d)
+  {
+    pos.x = p.x;
+    pos.y = p.y;
     deg = d;
     vel.x = sin(deg) * SPEED;
     vel.y = cos(deg) * SPEED;
@@ -49,7 +54,8 @@ public class Shot: Actor {
     isExist = true;
   }
 
-  public override void move() {
+  public override void move()
+  {
     pos.x += vel.x;
     pos.y += vel.y;
     if (field.checkHit(pos, FIELD_SPACE))
@@ -57,7 +63,8 @@ public class Shot: Actor {
     cnt++;
   }
 
-  public override void draw() {
+  public override void draw()
+  {
     float r;
     if (cnt > RETRO_CNT)
       r = 1;
@@ -68,11 +75,13 @@ public class Shot: Actor {
   }
 }
 
-public class ShotInitializer: ActorInitializer {
- public:
+public class ShotInitializer : ActorInitializer
+{
+public:
   Field field;
-  
-  public this(Field field) {
+
+  public this(Field field)
+  {
     this.field = field;
   }
 }

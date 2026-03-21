@@ -21,8 +21,9 @@ import abagames.p47.SoundManager;
 /**
  * My ship.
  */
-public class Ship {
- public:
+public class Ship
+{
+public:
   static bool isSlow = false;
   static int displayListIdx;
   Vector pos;
@@ -31,9 +32,15 @@ public class Ship {
   static const int RESTART_CNT = 300;
   static const int INVINCIBLE_CNT = 228;
   int cnt;
- private:
+private:
   static Rand _rand;
-  static @property Rand rand() { if (!_rand) _rand = new Rand; return _rand; }
+  static @property Rand rand()
+  {
+    if (!_rand)
+      _rand = new Rand;
+    return _rand;
+  }
+
   Pad pad;
   Field field;
   P47GameManager manager;
@@ -58,7 +65,8 @@ public class Ship {
   int rollLockCnt;
   bool rollCharged;
 
-  public void init(Pad pad, Field field, P47GameManager manager) {
+  public void init(Pad pad, Field field, P47GameManager manager)
+  {
     this.pad = pad;
     this.field = field;
     this.manager = manager;
@@ -71,7 +79,8 @@ public class Ship {
     fieldLimitY = field.size.y - FIELD_SPACE;
   }
 
-  public void start() {
+  public void start()
+  {
     ppos.x = pos.x = 0;
     ppos.y = pos.y = -field.size.y / 2;
     vel.x = vel.y = 0;
@@ -86,7 +95,8 @@ public class Ship {
     Bonus.resetBonusScore();
   }
 
-  public void setSpeedRate(float rate) {
+  public void setSpeedRate(float rate)
+  {
     if (!isSlow)
       baseSpeed = BASE_SPEED * rate;
     else
@@ -94,7 +104,8 @@ public class Ship {
     slowSpeed = SLOW_BASE_SPEED * rate;
   }
 
-  public void destroyed() {
+  public void destroyed()
+  {
     if (cnt <= 0)
       return;
     SoundManager.playSe(SoundManager.SHIP_DESTROYED);
@@ -106,42 +117,56 @@ public class Ship {
     cnt = -RESTART_CNT;
   }
 
-  public void move() {
+  public void move()
+  {
     cnt++;
-    if (cnt < -INVINCIBLE_CNT) {
+    if (cnt < -INVINCIBLE_CNT)
+    {
       return;
     }
     if (cnt == 0)
       restart = false;
     int btn = pad.getButtonState();
-    if (btn & Pad.PAD_BUTTON2) {
+    if (btn & Pad.PAD_BUTTON2)
+    {
       speed += (slowSpeed - speed) * 0.2;
       fireWideDeg += (FIRE_NARROW_BASE_DEG - fireWideDeg) * 0.1;
       rollLockCnt++;
-      if (manager.mode == P47GameManager.ROLL) {
-	if (rollLockCnt % 15 == 0) {
-	  manager.addRoll();
-	  SoundManager.playSe(SoundManager.ROLL_CHARGE);
-	  rollCharged = true;
-	}
-      } else {
-	if (rollLockCnt % 10 == 0) {
-	  manager.addLock();
-	}
+      if (manager.mode == P47GameManager.ROLL)
+      {
+        if (rollLockCnt % 15 == 0)
+        {
+          manager.addRoll();
+          SoundManager.playSe(SoundManager.ROLL_CHARGE);
+          rollCharged = true;
+        }
       }
-    } else {
+      else
+      {
+        if (rollLockCnt % 10 == 0)
+        {
+          manager.addLock();
+        }
+      }
+    }
+    else
+    {
       speed += (baseSpeed - speed) * 0.2;
       fireWideDeg += (FIRE_WIDE_BASE_DEG - fireWideDeg) * 0.1;
-      if (manager.mode == P47GameManager.ROLL) {
-	if (rollCharged) {
-	  rollLockCnt = 0;
-	  manager.releaseRoll();
-	  SoundManager.playSe(SoundManager.ROLL_RELEASE);
-	  rollCharged = false;
-	}
-      } else {
-	rollLockCnt = 0;
-	manager.releaseLock();
+      if (manager.mode == P47GameManager.ROLL)
+      {
+        if (rollCharged)
+        {
+          rollLockCnt = 0;
+          manager.releaseRoll();
+          SoundManager.playSe(SoundManager.ROLL_RELEASE);
+          rollCharged = false;
+        }
+      }
+      else
+      {
+        rollLockCnt = 0;
+        manager.releaseLock();
       }
     }
     int ps = pad.getPadState();
@@ -154,7 +179,8 @@ public class Ship {
       vel.x = speed;
     else if (ps & Pad.PAD_LEFT)
       vel.x = -speed;
-    if (vel.x != 0 && vel.y != 0) {
+    if (vel.x != 0 && vel.y != 0)
+    {
       vel.x *= 0.707;
       vel.y *= 0.707;
     }
@@ -171,30 +197,33 @@ public class Ship {
       pos.y = -fieldLimitY;
     else if (pos.y > fieldLimitY)
       pos.y = fieldLimitY;
-    if (btn & Pad.PAD_BUTTON1) {
+    if (btn & Pad.PAD_BUTTON1)
+    {
       float td;
-      switch (fireCnt % 4) {
+      switch (fireCnt % 4)
+      {
       case 0:
-	firePos.x = pos.x + TURRET_INTERVAL_LENGTH;
-	firePos.y = pos.y;
-	td = 0;
-	break;
+        firePos.x = pos.x + TURRET_INTERVAL_LENGTH;
+        firePos.y = pos.y;
+        td = 0;
+        break;
       case 1:
-	firePos.x = pos.x + TURRET_INTERVAL_LENGTH;
-	firePos.y = pos.y;
-	td = fireWideDeg * (fireCnt / 4 % 5) * 0.2;
-	break;
+        firePos.x = pos.x + TURRET_INTERVAL_LENGTH;
+        firePos.y = pos.y;
+        td = fireWideDeg * (fireCnt / 4 % 5) * 0.2;
+        break;
       case 2:
-	firePos.x = pos.x - TURRET_INTERVAL_LENGTH;
-	firePos.y = pos.y;
-	td = 0;
-	break;
+        firePos.x = pos.x - TURRET_INTERVAL_LENGTH;
+        firePos.y = pos.y;
+        td = 0;
+        break;
       case 3:
-	firePos.x = pos.x - TURRET_INTERVAL_LENGTH;
-	firePos.y = pos.y;
-	td = - fireWideDeg * (fireCnt / 4 % 5) * 0.2;
-	break;
-      default: break;
+        firePos.x = pos.x - TURRET_INTERVAL_LENGTH;
+        firePos.y = pos.y;
+        td = -fireWideDeg * (fireCnt / 4 % 5) * 0.2;
+        break;
+      default:
+        break;
       }
       manager.addShot(firePos, td);
       SoundManager.playSe(SoundManager.SHOT);
@@ -205,7 +234,8 @@ public class Ship {
     ttlCnt++;
   }
 
-  public void draw() {
+  public void draw()
+  {
     if (cnt < -INVINCIBLE_CNT || (cnt < 0 && (-cnt % 32) < 16))
       return;
     glPushMatrix();
@@ -229,7 +259,8 @@ public class Ship {
     glTranslatef(0, 0, -0.4);
     glCallList(displayListIdx);
     glPopMatrix();
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 6; i++)
+    {
       glPushMatrix();
       glTranslatef(pos.x - 0.7, pos.y - 0.3, 0);
       glRotatef(bank, 0, 1, 0);
@@ -249,7 +280,8 @@ public class Ship {
     }
   }
 
-  public static void createDisplayLists() {
+  public static void createDisplayLists()
+  {
     displayListIdx = glGenLists(3);
     glNewList(displayListIdx, GL_COMPILE);
     Renderer.setColor(0.5, 1, 0.5, 0.2);
@@ -271,7 +303,8 @@ public class Ship {
     glEndList();
   }
 
-  public static void deleteDisplayLists() {
+  public static void deleteDisplayLists()
+  {
     glDeleteLists(displayListIdx, 3);
   }
 }

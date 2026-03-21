@@ -14,86 +14,105 @@ import abagames.util.sdl.SDLInitFailedException;
 /**
  * BGM/SE.
  */
-public class Sound {
- public:
+public class Sound
+{
+public:
   static bool noSound = false;
   static int fadeOutSpeed = 1280;
   static string soundsDir = "sounds/";
   static string chunksDir = "sounds/";
 
-  public static void init() {
-    if (noSound) return;
+  public static void init()
+  {
+    if (noSound)
+      return;
 
     int audio_rate;
     Uint16 audio_format;
     int audio_channels;
     int audio_buffers;
 
-    if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
+    if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
+    {
       noSound = 1;
-      throw new SDLInitFailedException
-	("Unable to initialize SDL_AUDIO: " ~ std.string.fromStringz(SDL_GetError()).idup);
+      throw new SDLInitFailedException(
+        "Unable to initialize SDL_AUDIO: " ~ std.string.fromStringz(SDL_GetError()).idup);
     }
 
     audio_rate = 44100;
     audio_format = AUDIO_S16;
     audio_channels = 1;
     audio_buffers = 4096;
-    if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers) < 0) {
+    if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers) < 0)
+    {
       noSound = 1;
-      throw new SDLInitFailedException
-	("Couldn't open audio: " ~ std.string.fromStringz(SDL_GetError()).idup);
+      throw new SDLInitFailedException(
+        "Couldn't open audio: " ~ std.string.fromStringz(SDL_GetError()).idup);
     }
     Mix_QuerySpec(&audio_rate, &audio_format, &audio_channels);
   }
 
-  public static void close() {
-    if (noSound) return;
-    if (Mix_PlayingMusic()) {
+  public static void close()
+  {
+    if (noSound)
+      return;
+    if (Mix_PlayingMusic())
+    {
       Mix_HaltMusic();
     }
     Mix_CloseAudio();
   }
 
- protected:
+protected:
   Mix_Music* music;
   Mix_Chunk* chunk;
   int chunkChannel;
 
- private:
+private:
 
   // Load a sound or a chunk.
 
-  public void loadSound(string name) {
-    if (noSound) return;
+  public void loadSound(string name)
+  {
+    if (noSound)
+      return;
     string fileName = soundsDir ~ name;
-    music = Mix_LoadMUS(cast(char*)std.string.toStringz(fileName));
-    if (!music) {
+    music = Mix_LoadMUS(cast(char*) std.string.toStringz(fileName));
+    if (!music)
+    {
       noSound = true;
-      throw new SDLInitFailedException("Couldn't load: " ~ fileName ~ 
-				       " (" ~ std.string.fromStringz(Mix_GetError()).idup ~ ")");
+      throw new SDLInitFailedException(
+        "Couldn't load: " ~ fileName ~
+          " (" ~ std.string.fromStringz(Mix_GetError()).idup ~ ")");
     }
   }
-  
-  public void loadChunk(string name, int ch) {
-    if (noSound) return;
+
+  public void loadChunk(string name, int ch)
+  {
+    if (noSound)
+      return;
     string fileName = chunksDir ~ name;
-    chunk = Mix_LoadWAV(cast(char*)std.string.toStringz(fileName));
-    if (!chunk) {
+    chunk = Mix_LoadWAV(cast(char*) std.string.toStringz(fileName));
+    if (!chunk)
+    {
       noSound = true;
-      throw new SDLInitFailedException("Couldn't load: " ~ fileName ~ 
-				       " (" ~ std.string.fromStringz(Mix_GetError()).idup ~ ")");
+      throw new SDLInitFailedException(
+        "Couldn't load: " ~ fileName ~
+          " (" ~ std.string.fromStringz(Mix_GetError()).idup ~ ")");
     }
     chunkChannel = ch;
   }
 
   // Free a music or a chunk.
-  public void free() {
-    if (music) {
+  public void free()
+  {
+    if (music)
+    {
       stopMusic();
       Mix_FreeMusic(music);
     }
-    if (chunk) {
+    if (chunk)
+    {
       haltChunk();
       Mix_FreeChunk(chunk);
     }
@@ -101,30 +120,41 @@ public class Sound {
 
   // Play/Stop the music/chunk.
 
-  public void playMusic() {
-    if (noSound) return;
+  public void playMusic()
+  {
+    if (noSound)
+      return;
     Mix_PlayMusic(music, -1);
   }
 
-  public static void fadeMusic() {
-    if (noSound) return;
+  public static void fadeMusic()
+  {
+    if (noSound)
+      return;
     Mix_FadeOutMusic(fadeOutSpeed);
   }
 
-  public static void stopMusic() {
-    if (noSound) return;
-    if ( Mix_PlayingMusic() ) {
+  public static void stopMusic()
+  {
+    if (noSound)
+      return;
+    if (Mix_PlayingMusic())
+    {
       Mix_HaltMusic();
     }
   }
 
-  public void playChunk() {
-    if (noSound) return;
+  public void playChunk()
+  {
+    if (noSound)
+      return;
     Mix_PlayChannel(chunkChannel, chunk, 0);
   }
 
-  public void haltChunk() {
-    if (noSound) return;
+  public void haltChunk()
+  {
+    if (noSound)
+      return;
     Mix_HaltChannel(chunkChannel);
   }
 }

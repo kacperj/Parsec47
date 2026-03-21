@@ -29,37 +29,44 @@ P47GameManager gameManager;
 P47PrefManager prefManager;
 MainLoop mainLoop;
 
-private void usage(string args0) {
-  Logger.error
-    ("Usage: " ~ args0 ~ " [-brightness [0-100]] [-luminous [0-100]] [-nosound] [-window] [-reverse] [-lowres] [-slowship] [-nowait]");
+private void usage(string args0)
+{
+  Logger.error("Usage: " ~ args0 ~ " [-brightness [0-100]] [-luminous [0-100]] [-nosound] [-window] [-reverse] [-lowres] [-slowship] [-nowait]");
 }
 
-private void parseArgs(string[] args) {
-  for (int i = 1; i < args.length; i++) {
-    switch (args[i]) {
+private void parseArgs(string[] args)
+{
+  for (int i = 1; i < args.length; i++)
+  {
+    switch (args[i])
+    {
     case "-brightness":
-      if (i >= args.length - 1) {
-	usage(args[0]);
-	throw new Exception("Invalid options");
+      if (i >= args.length - 1)
+      {
+        usage(args[0]);
+        throw new Exception("Invalid options");
       }
       i++;
-      float b = cast(float)atoi(std.string.toStringz(args[i])) / 100;
-      if (b < 0 || b > 1) {
-	usage(args[0]);
-	throw new Exception("Invalid options");
+      float b = cast(float) atoi(std.string.toStringz(args[i])) / 100;
+      if (b < 0 || b > 1)
+      {
+        usage(args[0]);
+        throw new Exception("Invalid options");
       }
       Renderer.brightness = b;
       break;
     case "-luminous":
-      if (i >= args.length - 1) {
-	usage(args[0]);
-	throw new Exception("Invalid options");
+      if (i >= args.length - 1)
+      {
+        usage(args[0]);
+        throw new Exception("Invalid options");
       }
       i++;
-      float l = cast(float)atoi(std.string.toStringz(args[i])) / 100;
-      if (l < 0 || l > 1) {
-	usage(args[0]);
-	throw new Exception("Invalid options");
+      float l = cast(float) atoi(std.string.toStringz(args[i])) / 100;
+      if (l < 0 || l > 1)
+      {
+        usage(args[0]);
+        throw new Exception("Invalid options");
       }
       P47Screen.luminous = l;
       break;
@@ -91,57 +98,73 @@ private void parseArgs(string[] args) {
   }
 }
 
-public int boot(string[] args) {
+public int boot(string[] args)
+{
   screen = new P47Screen;
   pad = new Pad;
-  try {
+  try
+  {
     pad.openJoystick();
-  } catch (Exception e) {}
+  }
+  catch (Exception e)
+  {
+  }
   gameManager = new P47GameManager;
   prefManager = new P47PrefManager;
   mainLoop = new MainLoop(screen, pad, gameManager, prefManager);
-  try {
+  try
+  {
     parseArgs(args);
-  } catch (Exception e) {
+  }
+  catch (Exception e)
+  {
     return EXIT_FAILURE;
   }
   mainLoop.loop();
   return EXIT_SUCCESS;
 }
 
-version (Win32_release) {
+version (Win32_release)
+{
 
-// Boot as the Windows executable.
-import core.sys.windows.windows;
-import core.runtime;
+  // Boot as the Windows executable.
+  import core.sys.windows.windows;
+  import core.runtime;
 
-extern (Windows) public int WinMain(HINSTANCE hInstance,
-	    HINSTANCE hPrevInstance,
-	    LPSTR lpCmdLine,
-	    int nCmdShow) {
-  int result;
+  extern (Windows) public int WinMain(HINSTANCE hInstance,
+    HINSTANCE hPrevInstance,
+    LPSTR lpCmdLine,
+    int nCmdShow)
+  {
+    int result;
 
-  Runtime.initialize();
-  try {
-    char[4096] exe;
-    GetModuleFileNameA(null, exe.ptr, 4096);
-    string[1] prog;
-    prog[0] = exe.ptr.fromStringz.idup;
-    result = boot(prog ~ std.string.split(lpCmdLine.fromStringz.idup));
-  } catch (Throwable o) {
-    //Logger.error("Exception: " ~ o.toString());
-    Logger.info("Exception: " ~ o.toString());
-    result = EXIT_FAILURE;
+    Runtime.initialize();
+    try
+    {
+      char[4096] exe;
+      GetModuleFileNameA(null, exe.ptr, 4096);
+      string[1] prog;
+      prog[0] = exe.ptr.fromStringz.idup;
+      result = boot(prog ~ std.string.split(lpCmdLine.fromStringz.idup));
+    }
+    catch (Throwable o)
+    {
+      //Logger.error("Exception: " ~ o.toString());
+      Logger.info("Exception: " ~ o.toString());
+      result = EXIT_FAILURE;
+    }
+    Runtime.terminate();
+    return result;
   }
-  Runtime.terminate();
-  return result;
-}
 
-} else {
-
-// Boot as the general executable.
-public int main(string[] args) {
-  return boot(args);
 }
+else
+{
+
+  // Boot as the general executable.
+  public int main(string[] args)
+  {
+    return boot(args);
+  }
 
 }
