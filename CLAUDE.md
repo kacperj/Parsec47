@@ -4,7 +4,7 @@
 
 PARSEC47 (p47) — a retromodern hispeed shoot-'em-up originally by Kenta Cho. This fork modernizes the build toolchain and incrementally rewrites parts in Rust.
 
-The game is written primarily in **D** (42 source files under `src/`), with a **C++ BulletML** library (`bulletlib/`) and a growing **Rust** layer (`rust/` workspace with `mt` and `renderer` crates).
+The game is written primarily in **D** (42 source files under `src/`), with a **C++ BulletML** library (`bulletlib/`) and a growing **Rust** layer (`rust/` workspace with `mt`, `renderer`, and `sound` crates).
 
 ## Repository Layout
 
@@ -17,6 +17,7 @@ lib/              Pre-built Windows .lib files (SDL, SDL_mixer)
 rust/             Rust workspace (Cargo)
   mt/             Mersenne Twister RNG replacement
   renderer/       Letter/text rendering replacement
+  sound/          SDL2-based audio (BGM/SFX) — compiled to sound.dll
 bulletlib/        C++ BulletML library (compiled to bulletml.dll)
 resource/         Windows resources (.RES)
 sounds/           Sound assets
@@ -36,10 +37,12 @@ Run the build script using **Git Bash**:
 
 This will:
 1. Build a Docker image with LDC (D compiler), Rust toolchain, and LLVM/MinGW (C++ cross-compiler)
-2. Compile the Rust crates (`mt`, `renderer`) as Windows static libraries
-3. Compile `bulletlib` C++ sources into `bulletml.dll`
-4. Compile all D sources into `p47.exe`
-5. Extract `p47.exe` and `bulletml.dll` into the project root
+2. Download SDL2 + SDL2_mixer development packages for cross-compilation
+3. Compile the Rust crates (`mt`, `renderer`) as Windows static libraries
+4. Compile the Rust `sound` crate as `sound.dll` (uses SDL2 crate with mixer feature)
+5. Compile `bulletlib` C++ sources into `bulletml.dll`
+6. Compile all D sources into `p47.exe`
+7. Extract `p47.exe`, `bulletml.dll`, `sound.dll`, `SDL2.dll`, and `SDL2_mixer.dll` into the project root
 
 **Do not use PowerShell or CMD** to run `build.sh` — use Git Bash.
 
@@ -52,7 +55,7 @@ This will:
 
 ## Running
 
-After building, run `p47.exe` on Windows. Requires the DLLs in the project root (`SDL.dll`, `SDL_mixer.dll`, `bulletml.dll`, etc.) and the BulletML pattern directories.
+After building, run `p47.exe` on Windows. Requires the DLLs in the project root (`SDL.dll`, `SDL_mixer.dll`, `bulletml.dll`, `sound.dll`, `SDL2.dll`, `SDL2_mixer.dll`) and the BulletML pattern directories.
 
 Command-line options: `-window`, `-nosound`, `-lowres`, `-brightness N`, `-luminous N`, `-reverse`, `-slowship`, `-nowait`.
 
@@ -60,7 +63,7 @@ Command-line options: `-window`, `-nosound`, `-lowres`, `-brightness N`, `-lumin
 
 - D source uses module paths matching directory structure (e.g., `abagames.p47.Ship`)
 - Class names are PascalCase, methods are camelCase
-- The codebase is being incrementally ported: some D modules call into Rust static libs via C ABI (`extern(C)`)
+- The codebase is being incrementally ported: some D modules call into Rust via C ABI (`extern(C)`) — static libs for `mt`/`renderer`, DLL for `sound`
 - Commit messages are short (typically just "Work")
 
 ## Key Architecture

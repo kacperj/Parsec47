@@ -1,0 +1,11 @@
+[package]
+name = "sound"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies.sdl2]
+version = "0.37"
+features = ["mixer"]
