@@ -7,7 +7,7 @@ module abagames.util.bulletml.BulletsManager;
 
 private:
 import bulletml;
-import abagames.util.bulletml.Bullet;
+import abagames.p47.Bullet;
 
 /**
  * Interface for bullet's instances manager.
@@ -17,5 +17,5 @@ public interface BulletsManager
   public void addBullet(float deg, float speed);
   public void addBullet(BulletMLState* state, float deg, float speed);
   public int getTurn();
-  public void killMe(Bullet bullet);
+  public void killMe(int bulletId);
 }

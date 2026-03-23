@@ -1,5 +1,3 @@
-#![no_std]
-
 const N: usize = 624;
 const M: usize = 397;
 const MATRIX_A: u32 = 0x9908b0df;
@@ -94,9 +92,4 @@ pub extern "C" fn rand_next_float(n: f32) -> f32 {
 #[no_mangle]
 pub extern "C" fn rand_next_signed_float(n: f32) -> f32 {
     (genrand_real1() * (n as f64 * 2.0) - n as f64) as f32
-}
-
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {}
 }

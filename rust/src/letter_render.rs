@@ -1,10 +1,7 @@
 use core::ffi::c_float;
 
-use crate::{
-    draw_box_line, draw_box_solid, glCallList, glDeleteLists, glEndList, glGenLists, glNewList,
-    glPopMatrix, glPushMatrix, glRotatef, glScalef, glTranslatef, set_color, GLsizei, GLuint,
-    GL_COMPILE,
-};
+use crate::gl::*;
+use crate::renderer::*;
 
 const LETTER_NUM: i32 = 42;
 

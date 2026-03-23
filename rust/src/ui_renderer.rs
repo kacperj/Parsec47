@@ -1,78 +1,11 @@
-#![no_std]
-
-mod letter_render;
-
 use core::ffi::c_float;
-
-pub(crate) type GLenum = u32;
-pub(crate) type GLint = i32;
-pub(crate) type GLuint = u32;
-pub(crate) type GLsizei = i32;
-
-pub(crate) const GL_TRIANGLE_FAN: GLenum = 0x0006;
-pub(crate) const GL_LINE_LOOP: GLenum = 0x0002;
-pub(crate) const GL_COMPILE: GLenum = 0x1300;
-pub(crate) const GL_BLEND: GLenum = 0x0BE2;
-pub(crate) const GL_TEXTURE_2D: GLenum = 0x0DE1;
-pub(crate) const GL_BGR: GLenum = 0x80E0;
-pub(crate) const GL_UNSIGNED_BYTE: GLenum = 0x1401;
-pub(crate) const GL_TEXTURE_MIN_FILTER: GLenum = 0x2801;
-pub(crate) const GL_TEXTURE_MAG_FILTER: GLenum = 0x2800;
-pub(crate) const GL_LINEAR: GLint = 0x2601;
-
-#[link(name = "opengl32")]
-extern "system" {
-    pub(crate) fn glColor4f(red: c_float, green: c_float, blue: c_float, alpha: c_float);
-    pub(crate) fn glBegin(mode: GLenum);
-    pub(crate) fn glEnd();
-    pub(crate) fn glVertex3f(x: c_float, y: c_float, z: c_float);
-    pub(crate) fn glPushMatrix();
-    pub(crate) fn glPopMatrix();
-    pub(crate) fn glTranslatef(x: c_float, y: c_float, z: c_float);
-    pub(crate) fn glScalef(x: c_float, y: c_float, z: c_float);
-    pub(crate) fn glRotatef(angle: c_float, x: c_float, y: c_float, z: c_float);
-    pub(crate) fn glCallList(list: GLuint);
-    pub(crate) fn glGenLists(range: GLsizei) -> GLuint;
-    pub(crate) fn glNewList(list: GLuint, mode: GLenum);
-    pub(crate) fn glEndList();
-    pub(crate) fn glDeleteLists(list: GLuint, range: GLsizei);
-    pub(crate) fn glEnable(cap: GLenum);
-    pub(crate) fn glDisable(cap: GLenum);
-    pub(crate) fn glGenTextures(n: GLsizei, textures: *mut GLuint);
-    pub(crate) fn glBindTexture(target: GLenum, texture: GLuint);
-    pub(crate) fn glTexImage2D(target: GLenum, level: GLint, internalformat: GLint,
-        width: GLsizei, height: GLsizei, border: GLint,
-        format: GLenum, type_: GLenum, pixels: *const u8);
-    pub(crate) fn glTexParameteri(target: GLenum, pname: GLenum, param: GLint);
-    pub(crate) fn glDeleteTextures(n: GLsizei, textures: *const GLuint);
-    pub(crate) fn glTexCoord2f(s: c_float, t: c_float);
-}
-
-static mut BRIGHTNESS: c_float = 1.0;
-
-#[no_mangle]
-pub extern "C" fn renderer_set_brightness(b: c_float) {
-    unsafe {
-        BRIGHTNESS = b;
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn renderer_get_brightness() -> c_float {
-    unsafe { BRIGHTNESS }
-}
+use crate::gl::*;
+use crate::renderer::*;
+use crate::letter_render::*;
 
 #[no_mangle]
 pub extern "C" fn renderer_set_color(r: c_float, g: c_float, b: c_float, a: c_float) {
-    unsafe {
-        glColor4f(r * BRIGHTNESS, g * BRIGHTNESS, b * BRIGHTNESS, a);
-    }
-}
-
-pub(crate) fn set_color(r: c_float, g: c_float, b: c_float, a: c_float) {
-    unsafe {
-        glColor4f(r * BRIGHTNESS, g * BRIGHTNESS, b * BRIGHTNESS, a);
-    }
+    set_color(r, g, b, a);
 }
 
 #[no_mangle]
@@ -80,31 +13,10 @@ pub extern "C" fn renderer_draw_box_solid(x: c_float, y: c_float, width: c_float
     draw_box_solid(x, y, width, height);
 }
 
-pub(crate) fn draw_box_solid(x: c_float, y: c_float, width: c_float, height: c_float) {
-    unsafe {
-        glBegin(GL_TRIANGLE_FAN);
-        glVertex3f(x, y, 0.0);
-        glVertex3f(x + width, y, 0.0);
-        glVertex3f(x + width, y + height, 0.0);
-        glVertex3f(x, y + height, 0.0);
-        glEnd();
-    }
-}
 
 #[no_mangle]
 pub extern "C" fn renderer_draw_box_line(x: c_float, y: c_float, width: c_float, height: c_float) {
     draw_box_line(x, y, width, height);
-}
-
-pub(crate) fn draw_box_line(x: c_float, y: c_float, width: c_float, height: c_float) {
-    unsafe {
-        glBegin(GL_LINE_LOOP);
-        glVertex3f(x, y, 0.0);
-        glVertex3f(x + width, y, 0.0);
-        glVertex3f(x + width, y + height, 0.0);
-        glVertex3f(x, y + height, 0.0);
-        glEnd();
-    }
 }
 
 fn draw_board(x: i32, y: i32, width: i32, height: i32) {
@@ -149,10 +61,10 @@ fn renderer_draw_left(left: i32) {
         return;
     }
     let text = b"LEFT";
-    letter_render::letter_render_draw_string(text.as_ptr(), 4, 520.0, 260.0, 25.0, 1);
-    letter_render::letter_render_change_color(1);
-    letter_render::letter_render_draw_num(left, 520.0, 450.0, 25.0, 1);
-    letter_render::letter_render_change_color(0);
+    letter_render_draw_string(text.as_ptr(), 4, 520.0, 260.0, 25.0, 1);
+    letter_render_change_color(1);
+    letter_render_draw_num(left, 520.0, 450.0, 25.0, 1);
+    letter_render_change_color(0);
 }
 
 #[no_mangle]
@@ -165,8 +77,8 @@ pub extern "C" fn renderer_draw_side_info(score: i32, bonus_score: i32, left: i3
 
 #[no_mangle]
 pub extern "C" fn renderer_draw_score(score: i32, bonus_score: i32) {
-    letter_render::letter_render_draw_num(score, 120.0, 28.0, 25.0, 3);
-    letter_render::letter_render_draw_num(bonus_score, 24.0, 20.0, 12.0, 3);
+    letter_render_draw_num(score, 120.0, 28.0, 25.0, 3);
+    letter_render_draw_num(bonus_score, 24.0, 20.0, 12.0, 3);
 }
 
 fn renderer_draw_parsec(parsec: i32) {
@@ -177,10 +89,10 @@ fn renderer_draw_parsec(parsec: i32) {
     } else {
         110.0
     };
-    letter_render::letter_render_draw_num(parsec, 600.0, y, 25.0, 1);
+    letter_render_draw_num(parsec, 600.0, y, 25.0, 1);
 }
 
-static TITLE_BMP: &[u8] = include_bytes!("../../../assets/images/title.bmp");
+static TITLE_BMP: &[u8] = include_bytes!("../../assets/images/title.bmp");
 static mut TITLE_TEXTURE: GLuint = 0;
 
 fn load_bmp_from_bytes(data: &[u8]) -> (i32, i32, *const u8) {
@@ -230,11 +142,6 @@ pub extern "C" fn renderer_draw_title_board() {
         glEnd();
         glDisable(GL_TEXTURE_2D);
     }
-}
-
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {}
 }
 
 #[no_mangle]

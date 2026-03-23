@@ -11,9 +11,8 @@ import opengl;
 import bulletml;
 import abagames.util.Actor;
 import abagames.util.Vector;
-import abagames.util.bulletml.Bullet;
+import abagames.p47.Bullet;
 import abagames.p47.Field;
-import abagames.p47.P47Bullet;
 import abagames.p47.BulletActorPool;
 import abagames.p47.Ship;
 import abagames.p47.P47Screen;
@@ -25,7 +24,7 @@ import abagames.p47.Renderer;
 public class BulletActor : Actor
 {
 public:
-  P47Bullet bullet;
+  Bullet bullet;
   static float totalBulletsSpeed;
 private:
   static const float FIELD_SPACE = 0.5;
@@ -60,7 +59,7 @@ private:
   {
     this.field = field;
     this.ship = ship;
-    bullet = new P47Bullet(nextId);
+    bullet = new Bullet(nextId);
     ppos = new Vector;
     nextId++;
   }

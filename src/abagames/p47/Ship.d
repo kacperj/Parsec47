@@ -11,7 +11,7 @@ import opengl;
 import abagames.util.Vector;
 import abagames.util.Rand;
 import abagames.util.sdl.Pad;
-import abagames.util.bulletml.Bullet;
+import abagames.p47.Bullet;
 import abagames.p47.Field;
 import abagames.p47.Bonus;
 import abagames.p47.P47GameManager;

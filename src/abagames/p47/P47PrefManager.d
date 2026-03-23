@@ -5,112 +5,51 @@
  */
 module abagames.p47.P47PrefManager;
 
-private:
-import std.stdio;
+extern (C)
+{
+  void prefs_load();
+  void prefs_save();
+  int* prefs_hi_score_ptr();
+  int* prefs_reached_parsec_ptr();
+  int prefs_get_selected_difficulty();
+  void prefs_set_selected_difficulty(int val);
+  int prefs_get_selected_parsec_slot();
+  void prefs_set_selected_parsec_slot(int val);
+  int prefs_get_selected_mode();
+  void prefs_set_selected_mode(int val);
+}
 
 /**
  * Save/Load the high score.
+ * Data is owned by the Rust `prefs` crate (persisted as p47.json).
+ * This class is a pure proxy — it holds no state of its own.
  */
 public class P47PrefManager
 {
 public:
-  static const int PREV_VERSION_NUM = 10;
-  static const int VERSION_NUM = 20;
-  static const char[] PREF_FILE = "p47.prf";
   static const int MODE_NUM = 2;
   static const int DIFFICULTY_NUM = 4;
   static const int REACHED_PARSEC_SLOT_NUM = 10;
-  int[REACHED_PARSEC_SLOT_NUM][DIFFICULTY_NUM][MODE_NUM] hiScore;
-  int[DIFFICULTY_NUM][MODE_NUM] reachedParsec;
-  int selectedDifficulty, selectedParsecSlot, selectedMode;
 
-  private void init()
+  @property ref int[REACHED_PARSEC_SLOT_NUM][DIFFICULTY_NUM][MODE_NUM] hiScore()
   {
-    for (int k = 0; k < MODE_NUM; k++)
-    {
-      for (int i = 0; i < DIFFICULTY_NUM; i++)
-      {
-        reachedParsec[k][i] = 0;
-        for (int j = 0; j < REACHED_PARSEC_SLOT_NUM; j++)
-        {
-          hiScore[k][i][j] = 0;
-        }
-      }
-    }
-    selectedDifficulty = 1;
-    selectedParsecSlot = 0;
-    selectedMode = 0;
+    return *cast(int[REACHED_PARSEC_SLOT_NUM][DIFFICULTY_NUM][MODE_NUM]*) prefs_hi_score_ptr();
   }
 
-  private void loadPrevVersionData(File fd)
+  @property ref int[DIFFICULTY_NUM][MODE_NUM] reachedParsec()
   {
-    for (int i = 0; i < DIFFICULTY_NUM; i++)
-    {
-      fd.rawRead((&reachedParsec[0][i])[0 .. 1]);
-      for (int j = 0; j < REACHED_PARSEC_SLOT_NUM; j++)
-      {
-        fd.rawRead((&hiScore[0][i][j])[0 .. 1]);
-      }
-    }
-    fd.rawRead((&selectedDifficulty)[0 .. 1]);
-    fd.rawRead((&selectedParsecSlot)[0 .. 1]);
+    return *cast(int[DIFFICULTY_NUM][MODE_NUM]*) prefs_reached_parsec_ptr();
   }
 
-  public void load()
-  {
-    try
-    {
-      auto fd = File(PREF_FILE, "rb");
-      int ver;
-      fd.rawRead((&ver)[0 .. 1]);
-      if (ver == PREV_VERSION_NUM)
-      {
-        init();
-        loadPrevVersionData(fd);
-        return;
-      }
-      else if (ver != VERSION_NUM)
-      {
-        throw new Error("Wrong version num");
-      }
-      for (int k = 0; k < MODE_NUM; k++)
-      {
-        for (int i = 0; i < DIFFICULTY_NUM; i++)
-        {
-          fd.rawRead((&reachedParsec[k][i])[0 .. 1]);
-          for (int j = 0; j < REACHED_PARSEC_SLOT_NUM; j++)
-          {
-            fd.rawRead((&hiScore[k][i][j])[0 .. 1]);
-          }
-        }
-      }
-      fd.rawRead((&selectedDifficulty)[0 .. 1]);
-      fd.rawRead((&selectedParsecSlot)[0 .. 1]);
-      fd.rawRead((&selectedMode)[0 .. 1]);
-    }
-    catch (Error e)
-    {
-      init();
-    }
-  }
+  @property int selectedDifficulty() { return prefs_get_selected_difficulty(); }
+  @property void selectedDifficulty(int v) { prefs_set_selected_difficulty(v); }
 
-  public void save()
-  {
-    auto fd = File(PREF_FILE, "wb");
-    fd.rawWrite((&VERSION_NUM)[0 .. 1]);
-    for (int k = 0; k < MODE_NUM; k++)
-    {
-      for (int i = 0; i < DIFFICULTY_NUM; i++)
-      {
-        fd.rawWrite((&reachedParsec[k][i])[0 .. 1]);
-        for (int j = 0; j < REACHED_PARSEC_SLOT_NUM; j++)
-        {
-          fd.rawWrite((&hiScore[k][i][j])[0 .. 1]);
-        }
-      }
-    }
-    fd.rawWrite((&selectedDifficulty)[0 .. 1]);
-    fd.rawWrite((&selectedParsecSlot)[0 .. 1]);
-    fd.rawWrite((&selectedMode)[0 .. 1]);
-  }
+  @property int selectedParsecSlot() { return prefs_get_selected_parsec_slot(); }
+  @property void selectedParsecSlot(int v) { prefs_set_selected_parsec_slot(v); }
+
+  @property int selectedMode() { return prefs_get_selected_mode(); }
+  @property void selectedMode(int v) { prefs_set_selected_mode(v); }
+
+  void load() { prefs_load(); }
+  void save() { prefs_save(); }
 }

@@ -11,7 +11,7 @@ import bulletml;
 import abagames.util.Vector;
 import abagames.util.Rand;
 import abagames.p47.BarrageManager;
-import abagames.util.bulletml.Bullet;
+import abagames.p47.Bullet;
 
 /**
  * Barrage pattern.

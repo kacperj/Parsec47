@@ -117,10 +117,8 @@ RUN . "$HOME/.cargo/env" && \
     SDL2_LIB_DIR=/opt/sdl2/lib \
     LIBRARY_PATH=/opt/sdl2/lib \
     cargo build --release --target x86_64-pc-windows-gnu && \
-    cp target/x86_64-pc-windows-gnu/release/libmt.a /build/out/mt.lib && \
-    cp target/x86_64-pc-windows-gnu/release/librenderer.a /build/out/renderer.lib && \
-    cp target/x86_64-pc-windows-gnu/release/sound.dll /build/out/ && \
-    llvm-lib /DEF:sound/sound.def /OUT:/build/out/sound.lib /MACHINE:X64 && \
+    cp target/x86_64-pc-windows-gnu/release/p47rust.dll /build/out/ && \
+    llvm-lib /DEF:p47rust.def /OUT:/build/out/p47rust.lib /MACHINE:X64 && \
     cp /opt/sdl2/bin/SDL2.dll /build/out/ && \
     cp /opt/sdl2/bin/SDL2_mixer.dll /build/out/
 
@@ -166,8 +164,7 @@ RUN set -e && \
       -of=out/p47.exe out/p47.obj \
       -L=resource/p47.RES \
       -L=lib/SDL.lib \
-      -L=opengl32.lib -L=out/bulletml.lib -L=out/mt.lib -L=out/renderer.lib \
-      -L=out/sound.lib \
+      -L=opengl32.lib -L=out/bulletml.lib -L=out/p47rust.lib \
       -L=/SUBSYSTEM:WINDOWS \
       -L=/DEFAULTLIB:user32 && \
     rm -f out/p47.obj

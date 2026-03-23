@@ -11,10 +11,9 @@ import bulletml;
 import abagames.util.Actor;
 import abagames.util.ActorPool;
 import abagames.util.Vector;
-import abagames.util.bulletml.Bullet;
+import abagames.p47.Bullet;
 import abagames.util.bulletml.BulletsManager;
 import abagames.p47.BulletActor;
-import abagames.p47.P47Bullet;
 
 /**
  * Bullet actor pool that works as the BulletsManager.
@@ -37,20 +36,20 @@ private:
     BulletActor ba = cast(BulletActor) getInstance();
     if (!ba)
       return;
-    P47Bullet rb = cast(P47Bullet) Bullet.now;
+    Bullet rb = Bullet.now;
     if (rb.isMorph)
     {
       BulletMLRunner* runner = BulletMLRunner_new_parser(rb.morphParser[rb.morphIdx]);
       BulletActorPool.registFunctions(runner);
-      ba.set(runner, Bullet.now.pos.x, Bullet.now.pos.y, deg, speed,
-        Bullet.now.rank,
+      ba.set(runner, rb.pos.x, rb.pos.y, deg, speed,
+        rb.rank,
         rb.speedRank, rb.shape, rb.color, rb.bulletSize, rb.xReverse,
         rb.morphParser, rb.morphNum, rb.morphIdx + 1, rb.morphCnt - 1);
     }
     else
     {
-      ba.set(Bullet.now.pos.x, Bullet.now.pos.y, deg, speed,
-        Bullet.now.rank,
+      ba.set(rb.pos.x, rb.pos.y, deg, speed,
+        rb.rank,
         rb.speedRank, rb.shape, rb.color, rb.bulletSize, rb.xReverse);
     }
   }
@@ -62,15 +61,15 @@ private:
       return;
     BulletMLRunner* runner = BulletMLRunner_new_state(state);
     registFunctions(runner);
-    P47Bullet rb = cast(P47Bullet) Bullet.now;
+    Bullet rb = Bullet.now;
     if (rb.isMorph)
-      ba.set(runner, Bullet.now.pos.x, Bullet.now.pos.y, deg, speed,
-        Bullet.now.rank,
+      ba.set(runner, rb.pos.x, rb.pos.y, deg, speed,
+        rb.rank,
         rb.speedRank, rb.shape, rb.color, rb.bulletSize, rb.xReverse,
         rb.morphParser, rb.morphNum, rb.morphIdx, rb.morphCnt);
     else
-      ba.set(runner, Bullet.now.pos.x, Bullet.now.pos.y, deg, speed,
-        Bullet.now.rank,
+      ba.set(runner, rb.pos.x, rb.pos.y, deg, speed,
+        rb.rank,
         rb.speedRank, rb.shape, rb.color, rb.bulletSize, rb.xReverse);
   }
 
@@ -129,10 +128,10 @@ private:
     return cnt;
   }
 
-  public void killMe(Bullet bullet)
+  public void killMe(int bulletId)
   {
-    assert((cast(BulletActor) actor[bullet.id]).bullet.id == bullet.id);
-    (cast(BulletActor) actor[bullet.id]).remove();
+    assert((cast(BulletActor) actor[bulletId]).bullet.id == bulletId);
+    (cast(BulletActor) actor[bulletId]).remove();
   }
 
   public override void clear()
@@ -172,7 +171,7 @@ extern (C)
   {
     Vector b = Bullet.now.pos;
     Vector t = Bullet.target;
-    float xrev = (cast(P47Bullet) Bullet.now).xReverse;
+    float xrev = Bullet.now.xReverse;
     return rtod(std.math.atan2(t.x - b.x, t.y - b.y) * xrev);
   }
 }

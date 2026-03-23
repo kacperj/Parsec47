@@ -1,9 +1,7 @@
 /*
- * $Id: Bullet.d,v 1.2 2004/01/01 11:26:43 kenta Exp $
- *
  * Copyright 2003 Kenta Cho. All rights reserved.
  */
-module abagames.util.bulletml.Bullet;
+module abagames.p47.Bullet;
 
 private:
 import std.math;
@@ -13,7 +11,7 @@ import abagames.util.Rand;
 import abagames.util.bulletml.BulletsManager;
 
 /**
- * Bullet controled by BulletML.
+ * Bullet controlled by BulletML, with p47-specific params (speedRank, shape, color, size, xReverse).
  */
 public class Bullet
 {
@@ -33,6 +31,10 @@ public:
   bool isMorph;
   BulletMLParser*[MORPH_MAX] morphParser;
   static const int MORPH_MAX = 8;
+  float speedRank;
+  int shape, color;
+  float bulletSize;
+  float xReverse;
 
 private:
   static Rand rand;
@@ -49,6 +51,15 @@ private:
     pos = new Vector;
     acc = new Vector;
     this.id = id;
+  }
+
+  public void setParam(float sr, int sh, int cl, float sz, float xr)
+  {
+    speedRank = sr;
+    shape = sh;
+    color = cl;
+    bulletSize = sz;
+    xReverse = xr;
   }
 
   public void setMorph(BulletMLParser*[] mrp, int num, int idx, int cnt)
@@ -143,7 +154,7 @@ private:
 
   public void kill()
   {
-    manager.killMe(this);
+    manager.killMe(this.id);
   }
 
   public void remove()
