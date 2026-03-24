@@ -117,4 +117,5 @@ private:
   {
     SDL_WM_SetCaption(cast(char*) std.string.toStringz(name), null);
   }
+
 }

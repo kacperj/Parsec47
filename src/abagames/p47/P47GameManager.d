@@ -438,7 +438,7 @@ private:
     particles.move();
     fragments.move();
     moveScreenShake();
-    if (pad.keys[SDLK_p] == SDL_PRESSED)
+    if (pad.isPausePressed())
     {
       if (!pPrsd)
       {
@@ -480,8 +480,7 @@ private:
     }
     else
     {
-      int btn = pad.getButtonState();
-      if (btn & Pad.PAD_BUTTON1)
+      if (pad.isButton1())
       {
         if (!btnPrsd)
         {
@@ -493,7 +492,7 @@ private:
           return;
         }
       }
-      else if (btn & Pad.PAD_BUTTON2)
+      else if (pad.isButton2())
       {
         if (!btnPrsd)
         {
@@ -521,7 +520,7 @@ private:
     }
     else
     {
-      if (pad.getButtonState() & (Pad.PAD_BUTTON1 | Pad.PAD_BUTTON2))
+      if (pad.isButton1() || pad.isButton2())
       {
         if (!btnPrsd)
           gotoNextState = true;
@@ -549,7 +548,7 @@ private:
   private void pauseMove()
   {
     pauseCnt++;
-    if (pad.keys[SDLK_p] == SDL_PRESSED)
+    if (pad.isPausePressed())
     {
       if (!pPrsd)
       {
@@ -565,7 +564,7 @@ private:
 
   public void move()
   {
-    if (pad.keys[SDLK_ESCAPE] == SDL_PRESSED)
+    if (pad.isEscapePressed())
     {
       mainLoop.breakLoop();
       return;

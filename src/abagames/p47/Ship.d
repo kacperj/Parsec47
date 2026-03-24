@@ -126,8 +126,7 @@ private:
     }
     if (cnt == 0)
       restart = false;
-    int btn = pad.getButtonState();
-    if (btn & Pad.PAD_BUTTON2)
+    if (pad.isButton2())
     {
       speed += (slowSpeed - speed) * 0.2;
       fireWideDeg += (FIRE_NARROW_BASE_DEG - fireWideDeg) * 0.1;
@@ -169,15 +168,14 @@ private:
         manager.releaseLock();
       }
     }
-    int ps = pad.getPadState();
     vel.x = vel.y = 0;
-    if (ps & Pad.PAD_UP)
+    if (pad.isPadUp())
       vel.y = speed;
-    else if (ps & Pad.PAD_DOWN)
+    else if (pad.isPadDown())
       vel.y = -speed;
-    if (ps & Pad.PAD_RIGHT)
+    if (pad.isPadRight())
       vel.x = speed;
-    else if (ps & Pad.PAD_LEFT)
+    else if (pad.isPadLeft())
       vel.x = -speed;
     if (vel.x != 0 && vel.y != 0)
     {
@@ -197,7 +195,7 @@ private:
       pos.y = -fieldLimitY;
     else if (pos.y > fieldLimitY)
       pos.y = fieldLimitY;
-    if (btn & Pad.PAD_BUTTON1)
+    if (pad.isButton1())
     {
       float td;
       switch (fireCnt % 4)

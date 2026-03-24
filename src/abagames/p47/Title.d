@@ -93,10 +93,9 @@ private:
 
   public void move()
   {
-    int ps = pad.getPadState();
     if (!padPrsd)
     {
-      if (ps & Pad.PAD_DOWN)
+      if (pad.isPadDown())
       {
         curY++;
         if (curY >= slotNum[mode].length)
@@ -104,7 +103,7 @@ private:
         if (curX >= slotNum[mode][curY])
           curX = slotNum[mode][curY] - 1;
       }
-      else if (ps & Pad.PAD_UP)
+      else if (pad.isPadUp())
       {
         curY--;
         if (curY < 0)
@@ -112,19 +111,19 @@ private:
         if (curX >= slotNum[mode][curY])
           curX = slotNum[mode][curY] - 1;
       }
-      else if (ps & Pad.PAD_RIGHT)
+      else if (pad.isPadRight())
       {
         curX++;
         if (curX >= slotNum[mode][curY])
           curX = 0;
       }
-      else if (ps & Pad.PAD_LEFT)
+      else if (pad.isPadLeft())
       {
         curX--;
         if (curX < 0)
           curX = slotNum[mode][curY] - 1;
       }
-      if (ps != 0)
+      if (pad.isAnyDirectionPressed())
       {
         boxCnt = BOX_COUNT;
         padPrsd = true;
@@ -133,7 +132,7 @@ private:
     }
     else
     {
-      if (ps == 0)
+      if (!pad.isAnyDirectionPressed())
         padPrsd = false;
     }
     if (boxCnt >= 0)

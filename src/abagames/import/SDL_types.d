@@ -29,6 +29,3 @@ alias short	Sint16;
 alias uint	Uint32;
 alias int		Sint32;
 
-/* General keyboard/mouse state definitions */
-enum { SDL_PRESSED = 0x01, SDL_RELEASED = 0x00 };
-

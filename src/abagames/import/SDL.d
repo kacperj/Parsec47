@@ -23,11 +23,18 @@
 public import SDL_types;
 public import SDL_events;
 public import SDL_timer;
-public import SDL_input;
 public import SDL_video;
-public import SDL_keysym;
 
 extern(C):
+
+/*
+ * Toggle whether or not the cursor is shown on the screen.
+ * The cursor start off displayed, but can be turned off.
+ * SDL_ShowCursor() returns 1 if the cursor was being displayed
+ * before the call, or 0 if it was not.  You can query the current
+ * state by passing a 'toggle' value of -1.
+ */
+int SDL_ShowCursor(int toggle);
 
 /* As of version 0.5, SDL is loaded dynamically into the application */
 
@@ -44,12 +51,6 @@ const uint SDL_INIT_NOPARACHUTE	= 0x00100000;	/* Don't catch fatal signals */
  * signal handlers for some commonly ignored fatal signals (like SIGSEGV)
  */
 int SDL_Init(Uint32 flags);
-
-/* This function initializes specific SDL subsystems */
-int SDL_InitSubSystem(Uint32 flags);
-
-/* This function cleans up specific SDL subsystems */
-void SDL_QuitSubSystem(Uint32 flags);
 
 /* This function cleans up all initialized subsystems and unloads the
  * dynamically linked library.  You should call it upon all exit conditions.
