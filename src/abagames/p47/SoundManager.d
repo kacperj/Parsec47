@@ -7,7 +7,17 @@ module abagames.p47.SoundManager;
 
 private:
 import abagames.util.sdl.Sound;
+import abagames.util.sdl.SDLInitFailedException;
 import abagames.p47.P47GameManager;
+
+private extern (C)
+{
+  int sound_init();
+  void sound_close();
+  void sound_set_fade_out_speed(int speed);
+  void sound_fade_music();
+  void sound_stop_music();
+}
 
 /**
  * Manage BGMs/SEs.
@@ -32,6 +42,10 @@ public static:
   const int BGM_NUM = 4;
   const int SE_NUM = 11;
 
+  static bool noSound = false;
+
+  static int fadeOutSpeed = 1280;
+
 private static:
   P47GameManager manager;
   Sound[BGM_NUM] bgm;
@@ -52,40 +66,68 @@ private static:
   public static void init(P47GameManager mng)
   {
     manager = mng;
-    if (Sound.noSound)
+    if (noSound)
       return;
-    for (int i = 0; i < bgm.length; i++)
+    sound_set_fade_out_speed(fadeOutSpeed);
+    if (sound_init() < 0)
     {
-      bgm[i] = new Sound;
-      bgm[i].loadSound(bgmFileName[i]);
+      noSound = true;
+      return;
     }
-    for (int i = 0; i < se.length; i++)
+    try
     {
-      se[i] = new Sound;
-      se[i].loadChunk(seFileName[i], seChannel[i]);
+      for (int i = 0; i < bgm.length; i++)
+      {
+        bgm[i] = new Sound;
+        bgm[i].loadSound(bgmFileName[i]);
+      }
+      for (int i = 0; i < se.length; i++)
+      {
+        se[i] = new Sound;
+        se[i].loadChunk(seFileName[i], seChannel[i]);
+      }
+    }
+    catch (SDLInitFailedException e)
+    {
+      noSound = true;
     }
   }
 
   public static void close()
   {
-    if (Sound.noSound)
+    if (noSound)
       return;
     for (int i = 0; i < bgm.length; i++)
       bgm[i].free();
     for (int i = 0; i < se.length; i++)
       se[i].free();
+    sound_close();
+  }
+
+  public static void fadeMusic()
+  {
+    if (noSound)
+      return;
+    sound_fade_music();
+  }
+
+  public static void stopMusic()
+  {
+    if (noSound)
+      return;
+    sound_stop_music();
   }
 
   public static void playBgm(int n)
   {
-    if (Sound.noSound || manager.state != P47GameManager.IN_GAME)
+    if (noSound || manager.state != P47GameManager.IN_GAME)
       return;
     bgm[n].playMusic();
   }
 
   public static void playSe(int n)
   {
-    if (Sound.noSound || manager.state != P47GameManager.IN_GAME)
+    if (noSound || manager.state != P47GameManager.IN_GAME)
       return;
     se[n].playChunk();
   }

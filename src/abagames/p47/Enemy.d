@@ -58,9 +58,9 @@ private:
 
   Field field;
   BulletActorPool bullets;
-  ActorPool shots;
-  ActorPool rolls;
-  ActorPool locks;
+  ActorPool!Shot shots;
+  ActorPool!Roll rolls;
+  ActorPool!Lock locks;
   Ship ship;
   P47GameManager manager;
   int cnt;
@@ -87,8 +87,8 @@ private:
   bool damaged;
   int bossTimer;
 
-  public this(Field field, BulletActorPool bullets, ActorPool shots,
-    ActorPool rolls, ActorPool locks, Ship ship, P47GameManager manager)
+  public this(Field field, BulletActorPool bullets, ActorPool!Shot shots,
+    ActorPool!Roll rolls, ActorPool!Lock locks, Ship ship, P47GameManager manager)
   {
     this.field = field;
     this.bullets = bullets;
@@ -437,7 +437,7 @@ private:
     {
       if (!shots.actor[i].isExist)
         continue;
-      Vector sp = (cast(Shot) shots.actor[i]).pos;
+      Vector sp = shots.actor[i].pos;
       ch = checkHit(sp, 0.7, 0);
       if (ch >= HIT)
       {
@@ -458,7 +458,7 @@ private:
       {
         if (!rolls.actor[i].isExist)
           continue;
-        Roll rl = cast(Roll) rolls.actor[i];
+        Roll rl = rolls.actor[i];
         ch = checkHit(rl.pos[0], 1.0, 1.0);
         if (ch >= HIT)
         {
@@ -488,7 +488,7 @@ private:
       {
         if (!locks.actor[i].isExist)
           continue;
-        Lock lk = cast(Lock) locks.actor[i];
+        Lock lk = locks.actor[i];
         if (lk.state == Lock.SEARCH || lk.state == Lock.SEARCHED)
         {
           ch = checkLocked(lk.pos[0], 2.5, lk);
@@ -769,12 +769,14 @@ private:
     }
     else if (dstCnt > 0)
     {
+      P47Screen.setRetroParam(1, type.retroSize);
       retroZ = z;
       ap = cast(float) dstCnt / DESTROYED_CNT / 2 + 0.5;
       enemyRetroColor = Color(type.r, type.g, type.b, ap);
     }
     else if (timeoutCnt > 0)
     {
+      P47Screen.setRetroParam(1, type.retroSize);
       retroZ = z;
       ap = cast(float) timeoutCnt / TIMEOUT_CNT;
       enemyRetroColor = Color(type.r, type.g, type.b, ap);
@@ -802,11 +804,11 @@ private:
     if (type.type != EnemyType.SMALL)
     {
       glBegin(GL_TRIANGLE_FAN);
-      Renderer.setColor(Color(P47Screen.retroR, P47Screen.retroG, P47Screen.retroB, 0));
+      Renderer.setColor(Color(enemyRetroColor.r, enemyRetroColor.g, enemyRetroColor.b, 0));
       for (int i = 0; i < EnemyType.BODY_SHAPE_POINT_NUM; i++)
       {
         if (i == 2)
-          Renderer.setColor(Color(P47Screen.retroR, P47Screen.retroG, P47Screen.retroB, P47Screen.retroA));
+          Renderer.setColor(enemyRetroColor);
         glVertex3f(pos.x + type.bodyShapePos[i].x, pos.y + type.bodyShapePos[i].y, z);
       }
       glEnd();

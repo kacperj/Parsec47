@@ -13,6 +13,7 @@ import abagames.p47.Ship;
 import abagames.p47.Field;
 import abagames.p47.P47Screen;
 import abagames.p47.P47GameManager;
+import abagames.p47.Renderer;
 
 /**
  * Roll shot.
@@ -101,6 +102,8 @@ private:
 
   public override void draw()
   {
+    P47Screen.setRetroColor(Color(1.0, 0.8, 0.5, 1));
+
     if (released)
       P47Screen.setRetroParam(1, 0.2);
     else

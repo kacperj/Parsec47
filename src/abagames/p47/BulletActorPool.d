@@ -8,7 +8,6 @@ module abagames.p47.BulletActorPool;
 private:
 import std.math;
 import bulletml;
-import abagames.util.Actor;
 import abagames.util.ActorPool;
 import abagames.util.Vector;
 import abagames.p47.Bullet;
@@ -18,12 +17,12 @@ import abagames.p47.BulletActor;
 /**
  * Bullet actor pool that works as the BulletsManager.
  */
-public class BulletActorPool : ActorPool, BulletsManager
+public class BulletActorPool : ActorPool!BulletActor, BulletsManager
 {
 private:
   int cnt;
 
-  public this(int n, Actor delegate() factory)
+  public this(int n, BulletActor delegate() factory)
   {
     super(n, factory);
     Bullet.setBulletsManager(this);
@@ -33,7 +32,7 @@ private:
 
   public void addBullet(float deg, float speed)
   {
-    BulletActor ba = cast(BulletActor) getInstance();
+    BulletActor ba = getInstance();
     if (!ba)
       return;
     Bullet rb = Bullet.now;
@@ -56,7 +55,7 @@ private:
 
   public void addBullet(BulletMLState* state, float deg, float speed)
   {
-    BulletActor ba = cast(BulletActor) getInstance();
+    BulletActor ba = getInstance();
     if (!ba)
       return;
     BulletMLRunner* runner = BulletMLRunner_new_state(state);
@@ -78,7 +77,7 @@ private:
     float rank,
     float speedRank, int shape, int color, float size, float xReverse)
   {
-    BulletActor ba = cast(BulletActor) getInstance();
+    BulletActor ba = getInstance();
     if (!ba)
       return null;
     ba.set(runner, x, y, deg, speed, rank, speedRank, shape, color, size, xReverse);
@@ -107,7 +106,7 @@ private:
     float speedRank, int shape, int color, float size, float xReverse,
     BulletMLParser*[] morph, int morphNum, int morphCnt)
   {
-    BulletActor ba = cast(BulletActor) getInstance();
+    BulletActor ba = getInstance();
     if (!ba)
       return null;
     ba.set(runner, x, y, deg, speed, rank,
@@ -130,8 +129,8 @@ private:
 
   public void killMe(int bulletId)
   {
-    assert((cast(BulletActor) actor[bulletId]).bullet.id == bulletId);
-    (cast(BulletActor) actor[bulletId]).remove();
+    assert(actor[bulletId].bullet.id == bulletId);
+    actor[bulletId].remove();
   }
 
   public override void clear()
@@ -139,7 +138,7 @@ private:
     for (int i = 0; i < actor.length; i++)
     {
       if (actor[i].isExist)
-        (cast(BulletActor) actor[i]).remove();
+        actor[i].remove();
     }
   }
 

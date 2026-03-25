@@ -11,8 +11,7 @@ import core.stdc.stdlib;
 import abagames.util.Logger;
 import abagames.util.sdl.Pad;
 import abagames.util.sdl.MainLoop;
-import abagames.util.sdl.Screen3D;
-import abagames.util.sdl.Sound;
+import abagames.p47.SoundManager;
 import abagames.p47.P47Screen;
 import abagames.p47.P47GameManager;
 import abagames.p47.P47PrefManager;
@@ -71,16 +70,16 @@ private void parseArgs(string[] args)
       P47Screen.luminous = l;
       break;
     case "-nosound":
-      Sound.noSound = true;
+      SoundManager.noSound = true;
       break;
     case "-window":
-      Screen3D.windowMode = true;
+      P47Screen.windowMode = true;
       break;
     case "-reverse":
       pad.buttonReversed = true;
       break;
     case "-lowres":
-      Screen3D.lowres = true;
+      P47Screen.lowres = true;
       break;
     case "-slowship":
       Ship.isSlow = true;

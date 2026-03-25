@@ -1,7 +1,7 @@
 use std::ffi::CStr;
 use std::os::raw::{c_char, c_int};
 use std::path::Path;
-use std::sync::atomic::{AtomicBool, AtomicI32, AtomicPtr, Ordering};
+use std::sync::atomic::{AtomicI32, AtomicPtr, Ordering};
 
 use sdl2::mixer::{self, Channel, Chunk, InitFlag};
 
@@ -21,7 +21,6 @@ extern "C" {
     fn Mix_FadeOutChannel(which: c_int, ms: c_int) -> c_int;
 }
 
-static NO_SOUND: AtomicBool = AtomicBool::new(false);
 static FADE_OUT_SPEED: AtomicI32 = AtomicI32::new(1280);
 static SLOTS: AtomicPtr<Vec<SoundSlot>> = AtomicPtr::new(std::ptr::null_mut());
 
@@ -42,24 +41,14 @@ unsafe fn get_slots() -> Option<&'static mut Vec<SoundSlot>> {
 
 #[no_mangle]
 pub extern "C" fn sound_init() -> c_int {
-    if NO_SOUND.load(Ordering::Relaxed) {
-        return 0;
-    }
-
     let sdl = match sdl2::init() {
         Ok(s) => s,
-        Err(_) => {
-            NO_SOUND.store(true, Ordering::Relaxed);
-            return -1;
-        }
+        Err(_) => return -1,
     };
 
     let audio = match sdl.audio() {
         Ok(a) => a,
-        Err(_) => {
-            NO_SOUND.store(true, Ordering::Relaxed);
-            return -1;
-        }
+        Err(_) => return -1,
     };
 
     if let Ok(ctx) = mixer::init(InitFlag::OGG) {
@@ -70,7 +59,6 @@ pub extern "C" fn sound_init() -> c_int {
         Mix_OpenAudioDevice(44100, AUDIO_S16LSB, 1, 4096, std::ptr::null(), 0)
     };
     if result < 0 {
-        NO_SOUND.store(true, Ordering::Relaxed);
         return -1;
     }
 
@@ -88,9 +76,6 @@ pub extern "C" fn sound_init() -> c_int {
 
 #[no_mangle]
 pub extern "C" fn sound_close() {
-    if NO_SOUND.load(Ordering::Relaxed) {
-        return;
-    }
     Channel(MUSIC_CHANNEL).halt();
     let ptr = SLOTS.swap(std::ptr::null_mut(), Ordering::Relaxed);
     if !ptr.is_null() {
@@ -99,20 +84,6 @@ pub extern "C" fn sound_close() {
         }
     }
     mixer::close_audio();
-}
-
-#[no_mangle]
-pub extern "C" fn sound_set_no_sound(v: c_int) {
-    NO_SOUND.store(v != 0, Ordering::Relaxed);
-}
-
-#[no_mangle]
-pub extern "C" fn sound_get_no_sound() -> c_int {
-    if NO_SOUND.load(Ordering::Relaxed) {
-        1
-    } else {
-        0
-    }
 }
 
 #[no_mangle]
@@ -216,9 +187,6 @@ pub extern "C" fn sound_free_slot(slot: c_int) {
 
 #[no_mangle]
 pub extern "C" fn sound_play_music(slot: c_int) {
-    if NO_SOUND.load(Ordering::Relaxed) {
-        return;
-    }
     unsafe {
         if let Some(slots) = get_slots() {
             if let Some(s) = slots.get(slot as usize) {
@@ -232,9 +200,6 @@ pub extern "C" fn sound_play_music(slot: c_int) {
 
 #[no_mangle]
 pub extern "C" fn sound_fade_music() {
-    if NO_SOUND.load(Ordering::Relaxed) {
-        return;
-    }
     unsafe {
         Mix_FadeOutChannel(MUSIC_CHANNEL, FADE_OUT_SPEED.load(Ordering::Relaxed));
     }
@@ -242,37 +207,17 @@ pub extern "C" fn sound_fade_music() {
 
 #[no_mangle]
 pub extern "C" fn sound_stop_music() {
-    if NO_SOUND.load(Ordering::Relaxed) {
-        return;
-    }
     Channel(MUSIC_CHANNEL).halt();
 }
 
 #[no_mangle]
 pub extern "C" fn sound_play_chunk(slot: c_int) {
-    if NO_SOUND.load(Ordering::Relaxed) {
-        return;
-    }
     unsafe {
         if let Some(slots) = get_slots() {
             if let Some(s) = slots.get(slot as usize) {
                 if let Some(ref chunk) = s.chunk {
                     let _ = Channel(s.chunk_channel).play(chunk, 0);
                 }
-            }
-        }
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn sound_halt_chunk(slot: c_int) {
-    if NO_SOUND.load(Ordering::Relaxed) {
-        return;
-    }
-    unsafe {
-        if let Some(slots) = get_slots() {
-            if let Some(s) = slots.get(slot as usize) {
-                Channel(s.chunk_channel).halt();
             }
         }
     }

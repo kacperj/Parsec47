@@ -10,7 +10,6 @@ import std.math;
 import bulletml;
 import abagames.util.Rand;
 import abagames.util.Vector;
-import abagames.util.sdl.Sound;
 import abagames.p47.BarrageManager;
 import abagames.p47.P47GameManager;
 import abagames.p47.Field;
@@ -520,7 +519,7 @@ private:
     if (sectionCnt < sectionIntervalCnt)
     {
       if (section == 9 && sectionCnt == sectionIntervalCnt - 1)
-        Sound.fadeMusic();
+        SoundManager.fadeMusic();
       apNum = 0;
       if (sectionCnt <= 0)
         gotoNextSection();

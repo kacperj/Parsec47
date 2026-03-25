@@ -16,6 +16,7 @@ import abagames.p47.P47Screen;
 import abagames.p47.P47GameManager;
 import abagames.p47.Enemy;
 import abagames.p47.SoundManager;
+import abagames.p47.Renderer;
 
 /**
  * Lock laser.
@@ -215,6 +216,8 @@ private:
 
   public override void draw()
   {
+    P47Screen.setRetroColor(Color(1.0, 0.8, 0.5, 1));
+
     switch (state)
     {
     case LOCKING:

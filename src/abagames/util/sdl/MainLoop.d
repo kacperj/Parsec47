@@ -12,9 +12,7 @@ import abagames.util.Logger;
 import abagames.util.Rand;
 import abagames.p47.P47PrefManager;
 import abagames.p47.P47GameManager;
-import abagames.util.sdl.Screen3D;
-import abagames.util.sdl.Sound;
-import abagames.util.sdl.SDLInitFailedException;
+import abagames.p47.P47Screen;
 import abagames.util.sdl.Pad;
 
 /**
@@ -30,12 +28,12 @@ public:
   SDL_Event event;
 
 private:
-  Screen3D screen;
+  P47Screen screen;
   Pad input;
   P47GameManager gameManager;
   P47PrefManager prefManager;
 
-  public this(Screen3D screen, Pad input,
+  public this(P47Screen screen, Pad input,
     P47GameManager gameManager, P47PrefManager prefManager)
   {
     this.screen = screen;
@@ -51,14 +49,6 @@ private:
   private void initFirst()
   {
     prefManager.load();
-    try
-    {
-      Sound.init();
-    }
-    catch (SDLInitFailedException e)
-    {
-      Logger.error(e);
-    }
     gameManager.init();
   }
 
@@ -66,7 +56,6 @@ private:
   private void quitLast()
   {
     gameManager.close();
-    Sound.close();
     prefManager.save();
     screen.closeSDL();
     SDL_Quit();

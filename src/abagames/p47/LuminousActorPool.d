@@ -6,16 +6,15 @@
 module abagames.p47.LuminousActorPool;
 
 private:
-import abagames.util.Actor;
 import abagames.util.ActorPool;
 import abagames.p47.LuminousActor;
 
 /**
  * Actor pool for the LuminousActor.
  */
-public class LuminousActorPool : ActorPool
+public class LuminousActorPool : ActorPool!LuminousActor
 {
-  public this(int n, Actor delegate() factory)
+  public this(int n, LuminousActor delegate() factory)
   {
     super(n, factory);
   }
@@ -25,7 +24,7 @@ public class LuminousActorPool : ActorPool
     for (int i = 0; i < actor.length; i++)
     {
       if (actor[i].isExist)
-        (cast(LuminousActor) actor[i]).drawLuminous();
+        actor[i].drawLuminous();
     }
   }
 }

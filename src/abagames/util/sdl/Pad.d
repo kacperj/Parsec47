@@ -60,5 +60,4 @@ public:
   bool isAnyDirectionPressed(){ return pad_get_pad_state()                    != 0;  }
   bool isButton1()            { return (pad_get_button_state() & PAD_BUTTON1) != 0; }
   bool isButton2()            { return (pad_get_button_state() & PAD_BUTTON2) != 0; }
-  bool isAnyButtonPressed()   { return pad_get_button_state()                 != 0;  }
 }

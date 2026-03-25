@@ -14,9 +14,7 @@ import abagames.util.Rand;
 import abagames.util.Vector;
 import abagames.util.ActorPool;
 import abagames.util.sdl.MainLoop;
-import abagames.util.sdl.Screen3D;
 import abagames.util.sdl.Pad;
-import abagames.util.sdl.Sound;
 import abagames.p47.LuminousActorPool;
 import abagames.p47.P47PrefManager;
 import abagames.p47.P47Screen;
@@ -68,7 +66,7 @@ public:
   }
   int state;
   MainLoop mainLoop;
-  Screen3D abstScreen;
+  P47Screen abstScreen;
   P47PrefManager prefManager;
 
   public void setMainLoop(MainLoop mainLoop)
@@ -76,7 +74,7 @@ public:
     this.mainLoop = mainLoop;
   }
 
-  public void setUIs(Screen3D screen, Pad input)
+  public void setUIs(P47Screen screen, Pad input)
   {
     abstScreen = screen;
     this.input = input;
@@ -95,14 +93,14 @@ private:
   Rand rand;
   Field field;
   Ship ship;
-  ActorPool enemies;
+  ActorPool!Enemy enemies;
   LuminousActorPool particles;
   LuminousActorPool fragments;
   BulletActorPool bullets;
-  ActorPool shots;
-  ActorPool rolls;
-  ActorPool locks;
-  ActorPool bonuses;
+  ActorPool!Shot shots;
+  ActorPool!Roll rolls;
+  ActorPool!Lock locks;
+  ActorPool!Bonus bonuses;
   BarrageManager barrageManager;
   StageManager stageManager;
   const int FIRST_EXTEND = 200000;
@@ -123,7 +121,7 @@ private:
   public void init()
   {
     pad = cast(Pad) input;
-    screen = cast(P47Screen) abstScreen;
+    screen = abstScreen;
     rand = new Rand;
     Field.createDisplayLists();
     field = new Field;
@@ -136,13 +134,13 @@ private:
     BulletActor.createDisplayLists();
     bullets = new BulletActorPool(512, () => new BulletActor(field, ship));
     LetterRender.createDisplayLists();
-    shots = new ActorPool(32, () => new Shot(field));
+    shots = new ActorPool!Shot(32, () => new Shot(field));
     Lock.init();
-    rolls = new ActorPool(4, () => new Roll(ship, field, this));
-    locks = new ActorPool(4, () => new Lock(ship, field, this));
-    enemies = new ActorPool(ENEMY_MAX, () => new Enemy(field, bullets, shots, rolls, locks, ship, this));
+    rolls = new ActorPool!Roll(4, () => new Roll(ship, field, this));
+    locks = new ActorPool!Lock(4, () => new Lock(ship, field, this));
+    enemies = new ActorPool!Enemy(ENEMY_MAX, () => new Enemy(field, bullets, shots, rolls, locks, ship, this));
     Bonus.init();
-    bonuses = new ActorPool(128, () => new Bonus(field, ship, this));
+    bonuses = new ActorPool!Bonus(128, () => new Bonus(field, ship, this));
     barrageManager = new BarrageManager;
     barrageManager.loadBulletMLs();
     EnemyType.init(barrageManager);
@@ -382,7 +380,7 @@ private:
     ship.cnt = 0;
     startStage(difficulty, parsecSlot, title.getStartParsec(difficulty, parsecSlot), mode);
     cnt = 0;
-    Sound.stopMusic();
+    SoundManager.stopMusic();
   }
 
   private void startGameover()
@@ -400,7 +398,7 @@ private:
       prefManager.hiScore[mode][difficulty][parsecSlot] = score;
     if (stageManager.parsec > prefManager.reachedParsec[mode][difficulty])
       prefManager.reachedParsec[mode][difficulty] = stageManager.parsec;
-    Sound.fadeMusic();
+    SoundManager.fadeMusic();
   }
 
   private void startPause()
@@ -601,7 +599,7 @@ private:
     fragments.draw();
     ship.draw();
     shots.draw();
-    P47Screen.setRetroColor(Color(1.0, 0.8, 0.5, 1));
+    
     if (mode == ROLL)
       rolls.draw();
     else

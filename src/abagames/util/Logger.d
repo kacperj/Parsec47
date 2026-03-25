@@ -11,8 +11,6 @@ import std.stdio;
 /**
  * Logger(error/info).
  */
-import std.conv : to;
-
 public class Logger
 {
 

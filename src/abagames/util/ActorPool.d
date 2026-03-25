@@ -11,16 +11,16 @@ import abagames.util.Actor;
 /**
  * Object pooling for actors.
  */
-public class ActorPool
+public class ActorPool(T : Actor)
 {
 public:
-  Actor[] actor;
+  T[] actor;
 protected:
   int actorIdx;
 
-  public this(int n, Actor delegate() factory)
+  public this(int n, T delegate() factory)
   {
-    actor = new Actor[n];
+    actor = new T[n];
     for (int i = 0; i < actor.length; i++)
     {
       actor[i] = factory();
@@ -29,7 +29,7 @@ protected:
     actorIdx = n;
   }
 
-  public Actor getInstance()
+  public T getInstance()
   {
     for (int i = 0; i < actor.length; i++)
     {
@@ -42,7 +42,7 @@ protected:
     return null;
   }
 
-  public Actor getInstanceForced()
+  public T getInstanceForced()
   {
     actorIdx--;
     if (actorIdx < 0)
