@@ -1,7 +1,7 @@
 use std::ffi::CStr;
 use std::os::raw::{c_char, c_int};
 use std::path::Path;
-use std::sync::atomic::{AtomicI32, AtomicPtr, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI32, AtomicPtr, Ordering};
 
 use sdl2::mixer::{self, Channel, Chunk, InitFlag};
 
@@ -221,4 +221,167 @@ pub extern "C" fn sound_play_chunk(slot: c_int) {
             }
         }
     }
+}
+
+// ── SoundManager layer ────────────────────────────────────────────────────
+
+static SM_NO_SOUND: AtomicBool = AtomicBool::new(false);
+static SM_IS_IN_GAME: AtomicBool = AtomicBool::new(false);
+
+const BGM_COUNT: usize = 4;
+const SE_COUNT: usize = 11;
+
+const BGM_FILES: [&str; BGM_COUNT] = [
+    "assets/sounds/ptn0.ogg",
+    "assets/sounds/ptn1.ogg",
+    "assets/sounds/ptn2.ogg",
+    "assets/sounds/ptn3.ogg",
+];
+
+const SE_FILES: [&str; SE_COUNT] = [
+    "assets/sounds/shot.wav",
+    "assets/sounds/rollchg.wav",
+    "assets/sounds/rollrls.wav",
+    "assets/sounds/shipdst.wav",
+    "assets/sounds/getbonus.wav",
+    "assets/sounds/extend.wav",
+    "assets/sounds/enemydst.wav",
+    "assets/sounds/largedst.wav",
+    "assets/sounds/bossdst.wav",
+    "assets/sounds/lock.wav",
+    "assets/sounds/laser.wav",
+];
+
+const SE_CHANNELS: [i32; SE_COUNT] = [0, 1, 2, 1, 3, 4, 5, 6, 7, 1, 2];
+
+static SM_BGM_SLOTS: [AtomicI32; BGM_COUNT] = [
+    AtomicI32::new(-1),
+    AtomicI32::new(-1),
+    AtomicI32::new(-1),
+    AtomicI32::new(-1),
+];
+
+static SM_SE_SLOTS: [AtomicI32; SE_COUNT] = [
+    AtomicI32::new(-1),
+    AtomicI32::new(-1),
+    AtomicI32::new(-1),
+    AtomicI32::new(-1),
+    AtomicI32::new(-1),
+    AtomicI32::new(-1),
+    AtomicI32::new(-1),
+    AtomicI32::new(-1),
+    AtomicI32::new(-1),
+    AtomicI32::new(-1),
+    AtomicI32::new(-1),
+];
+
+#[no_mangle]
+pub extern "C" fn sound_manager_set_no_sound(v: c_int) {
+    SM_NO_SOUND.store(v != 0, Ordering::Relaxed);
+}
+
+#[no_mangle]
+pub extern "C" fn sound_manager_set_in_game(v: c_int) {
+    SM_IS_IN_GAME.store(v != 0, Ordering::Relaxed);
+}
+
+#[no_mangle]
+pub extern "C" fn sound_manager_init() -> c_int {
+    if SM_NO_SOUND.load(Ordering::Relaxed) {
+        return 0;
+    }
+    sound_set_fade_out_speed(1280);
+    if sound_init() < 0 {
+        SM_NO_SOUND.store(true, Ordering::Relaxed);
+        return -1;
+    }
+    for i in 0..BGM_COUNT {
+        let slot = sound_alloc_slot();
+        if slot < 0 {
+            SM_NO_SOUND.store(true, Ordering::Relaxed);
+            return -1;
+        }
+        let path = std::ffi::CString::new(BGM_FILES[i]).unwrap();
+        if sound_load_music(slot, path.as_ptr()) < 0 {
+            SM_NO_SOUND.store(true, Ordering::Relaxed);
+            return -1;
+        }
+        SM_BGM_SLOTS[i].store(slot, Ordering::Relaxed);
+    }
+    for i in 0..SE_COUNT {
+        let slot = sound_alloc_slot();
+        if slot < 0 {
+            SM_NO_SOUND.store(true, Ordering::Relaxed);
+            return -1;
+        }
+        let path = std::ffi::CString::new(SE_FILES[i]).unwrap();
+        if sound_load_chunk(slot, path.as_ptr(), SE_CHANNELS[i]) < 0 {
+            SM_NO_SOUND.store(true, Ordering::Relaxed);
+            return -1;
+        }
+        SM_SE_SLOTS[i].store(slot, Ordering::Relaxed);
+    }
+    0
+}
+
+#[no_mangle]
+pub extern "C" fn sound_manager_close() {
+    if SM_NO_SOUND.load(Ordering::Relaxed) {
+        return;
+    }
+    for slot_atom in &SM_BGM_SLOTS {
+        let slot = slot_atom.swap(-1, Ordering::Relaxed);
+        if slot >= 0 {
+            sound_free_slot(slot);
+        }
+    }
+    for slot_atom in &SM_SE_SLOTS {
+        let slot = slot_atom.swap(-1, Ordering::Relaxed);
+        if slot >= 0 {
+            sound_free_slot(slot);
+        }
+    }
+    sound_close();
+}
+
+#[no_mangle]
+pub extern "C" fn sound_manager_play_bgm(n: c_int) {
+    if SM_NO_SOUND.load(Ordering::Relaxed) || !SM_IS_IN_GAME.load(Ordering::Relaxed) {
+        return;
+    }
+    if let Some(slot_atom) = SM_BGM_SLOTS.get(n as usize) {
+        let slot = slot_atom.load(Ordering::Relaxed);
+        if slot >= 0 {
+            sound_play_music(slot);
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn sound_manager_play_se(n: c_int) {
+    if SM_NO_SOUND.load(Ordering::Relaxed) || !SM_IS_IN_GAME.load(Ordering::Relaxed) {
+        return;
+    }
+    if let Some(slot_atom) = SM_SE_SLOTS.get(n as usize) {
+        let slot = slot_atom.load(Ordering::Relaxed);
+        if slot >= 0 {
+            sound_play_chunk(slot);
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn sound_manager_fade_music() {
+    if SM_NO_SOUND.load(Ordering::Relaxed) {
+        return;
+    }
+    sound_fade_music();
+}
+
+#[no_mangle]
+pub extern "C" fn sound_manager_stop_music() {
+    if SM_NO_SOUND.load(Ordering::Relaxed) {
+        return;
+    }
+    sound_stop_music();
 }

@@ -8,6 +8,15 @@ module abagames.util.Vector;
 private:
 import std.math;
 
+public struct Vector2
+{
+  float x, y;
+
+  Vector2 opBinary(string op)(Vector2 rhs) if (op == "+") {
+      return Vector2(x + rhs.x, y + rhs.y);
+  }
+}
+
 /**
  * Vector.
  */

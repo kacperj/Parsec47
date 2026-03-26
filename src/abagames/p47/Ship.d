@@ -300,9 +300,4 @@ private:
     Renderer.drawBoxLine(-0.15, -0.3, 0.3, 0.6);
     glEndList();
   }
-
-  public static void deleteDisplayLists()
-  {
-    glDeleteLists(displayListIdx, 3);
-  }
 }

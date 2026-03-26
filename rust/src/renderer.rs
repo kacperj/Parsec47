@@ -1,5 +1,26 @@
-use core::ffi::c_float;
+use core::ffi::{c_float, c_int};
 use crate::gl::*;
+use crate::rand::rand_next_float;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct Color {
+    r: c_float,
+    g: c_float,
+    b: c_float,
+    a: c_float,
+}
+
+#[no_mangle]
+pub extern "C" fn create_enemy_color(variant: c_int) -> Color {
+    let (r, g, b) = match variant {
+        0 => (1.0, rand_next_float(0.7) + 0.3, rand_next_float(0.7) + 0.3),
+        1 => (rand_next_float(0.7) + 0.3, 1.0, rand_next_float(0.7) + 0.3),
+        2 => (rand_next_float(0.7) + 0.3, rand_next_float(0.7) + 0.3, 1.0),
+        _ => (0.0, 0.0, 0.0),
+    };
+    Color { r, g, b, a: 1.0 }
+}
 
 pub fn draw_box_solid(x: c_float, y: c_float, width: c_float, height: c_float) {
     unsafe {
@@ -32,12 +53,12 @@ pub fn set_color(r: c_float, g: c_float, b: c_float, a: c_float) {
 }
 
 #[no_mangle]
-pub extern "C" fn mix_retro_color(retro: c_float, r: c_float, g: c_float, b: c_float, a: c_float) {
+pub extern "C" fn mix_retro_color(retro: c_float, color: Color) {
     let cf = (1.0 - retro) * 0.5;
-    let mut mr = r + (1.0 - r) * cf;
-    let mut mg = g + (1.0 - g) * cf;
-    let mut mb = b + (1.0 - b) * cf;
-    let mut ma = a * (cf + 0.5);
+    let mut mr = color.r + (1.0 - color.r) * cf;
+    let mut mg = color.g + (1.0 - color.g) * cf;
+    let mut mb = color.b + (1.0 - color.b) * cf;
+    let mut ma = color.a * (cf + 0.5);
     if crate::rand::rand_next_int(7) == 0 {
         mr = (mr * 1.5).min(1.0);
         mg = (mg * 1.5).min(1.0);
@@ -61,9 +82,9 @@ fn draw_square_retro(x: c_float, y: c_float, ds: c_float, z: c_float) {
 pub extern "C" fn draw_line_retro_with_z(
     x1: c_float, y1: c_float, x2: c_float, y2: c_float, z: c_float,
     retro: c_float, retro_size: c_float,
-    r: c_float, g: c_float, b: c_float, a: c_float,
+    color: Color,
 ) {
-    mix_retro_color(retro, r, g, b, a);
+    mix_retro_color(retro, color);
 
     if retro < 0.2 {
         unsafe {
@@ -126,6 +147,22 @@ pub extern "C" fn draw_line_retro_with_z(
         }
         glEnd();
     }
+}
+
+#[no_mangle]
+pub extern "C" fn draw_box_retro(
+    x: c_float, y: c_float, width: c_float, height: c_float, deg: c_float,
+    color: Color,
+    retro: c_float, retro_size: c_float,
+) {
+    let w1 = width * deg.cos() - height * deg.sin();
+    let h1 = width * deg.sin() + height * deg.cos();
+    let w2 = -width * deg.cos() - height * deg.sin();
+    let h2 = -width * deg.sin() + height * deg.cos();
+    draw_line_retro_with_z(x + w2, y - h2, x + w1, y - h1, 0.0, retro, retro_size, color);
+    draw_line_retro_with_z(x + w1, y - h1, x - w2, y + h2, 0.0, retro, retro_size, color);
+    draw_line_retro_with_z(x - w2, y + h2, x - w1, y + h1, 0.0, retro, retro_size, color);
+    draw_line_retro_with_z(x - w1, y + h1, x + w2, y - h2, 0.0, retro, retro_size, color);
 }
 
 #[no_mangle]

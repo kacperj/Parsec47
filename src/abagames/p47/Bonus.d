@@ -14,7 +14,6 @@ import abagames.util.Actor;
 import abagames.p47.Field;
 import abagames.p47.Ship;
 import abagames.p47.P47GameManager;
-import abagames.p47.P47Screen;
 import abagames.p47.SoundManager;
 import abagames.p47.Renderer;
 
@@ -174,7 +173,6 @@ private:
 
   public override void draw()
   {
-    P47Screen.setRetroColor(BONUS_COLOR);
     float retro;
     if (cnt < RETRO_CNT)
       retro = 1 - cast(float) cnt / RETRO_CNT;
@@ -185,11 +183,11 @@ private:
     float oy = cos(d) * 0.3;
     if (retro > 0)
     {
-      P47Screen.setRetroParam(retro, 0.2);
-      P47Screen.drawBoxRetro(pos.x - ox, pos.y - oy, BOX_SIZE / 2, BOX_SIZE / 2, 0);
-      P47Screen.drawBoxRetro(pos.x + ox, pos.y + oy, BOX_SIZE / 2, BOX_SIZE / 2, 0);
-      P47Screen.drawBoxRetro(pos.x - oy, pos.y + ox, BOX_SIZE / 2, BOX_SIZE / 2, 0);
-      P47Screen.drawBoxRetro(pos.x + oy, pos.y - ox, BOX_SIZE / 2, BOX_SIZE / 2, 0);
+      RetroParam param = RetroParam(retro, 0.2);
+      Renderer.drawBoxRetro(pos.x - ox, pos.y - oy, BOX_SIZE / 2, BOX_SIZE / 2, 0, BONUS_COLOR, param);
+      Renderer.drawBoxRetro(pos.x + ox, pos.y + oy, BOX_SIZE / 2, BOX_SIZE / 2, 0, BONUS_COLOR, param);
+      Renderer.drawBoxRetro(pos.x - oy, pos.y + ox, BOX_SIZE / 2, BOX_SIZE / 2, 0, BONUS_COLOR, param);
+      Renderer.drawBoxRetro(pos.x + oy, pos.y - ox, BOX_SIZE / 2, BOX_SIZE / 2, 0, BONUS_COLOR, param);
     }
     else
     {

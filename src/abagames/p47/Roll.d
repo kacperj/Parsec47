@@ -11,7 +11,6 @@ import abagames.util.Vector;
 import abagames.util.Actor;
 import abagames.p47.Ship;
 import abagames.p47.Field;
-import abagames.p47.P47Screen;
 import abagames.p47.P47GameManager;
 import abagames.p47.Renderer;
 
@@ -30,6 +29,7 @@ private:
   static const float BASE_LENGTH = 1.0, BASE_RESISTANCE = 0.8, BASE_SPRING = 0.2;
   static const float BASE_SIZE = 0.2, BASE_DIST = 3;
   static const float SPEED = 0.75;
+  static const Color ROLL_COLOR = Color(1.0, 0.8, 0.5, 1);
   Vector[LENGTH] vel;
   Ship ship;
   Field field;
@@ -102,17 +102,19 @@ private:
 
   public override void draw()
   {
-    P47Screen.setRetroColor(Color(1.0, 0.8, 0.5, 1));
-
+    RetroParam param;
     if (released)
-      P47Screen.setRetroParam(1, 0.2);
+      param = RetroParam(1, 0.2);
     else
-      P47Screen.setRetroParam(0.5, 0.2);
+      param = RetroParam(0.5, 0.2);
+
     for (int i = 0; i < LENGTH; i++)
     {
-      P47Screen.drawBoxRetro(pos[i].x, pos[i].y,
+      Renderer.drawBoxRetro(pos[i].x, pos[i].y,
         BASE_SIZE * (LENGTH - i), BASE_SIZE * (LENGTH - i),
-        cnt * 0.1);
+        cnt * 0.1, 
+        ROLL_COLOR,
+        param);
     }
   }
 }

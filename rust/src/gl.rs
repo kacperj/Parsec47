@@ -6,6 +6,7 @@ pub type GLuint = u32;
 pub type GLsizei = i32;
 
 pub const GL_LINES: GLenum = 0x0001;
+pub const GL_LINE_STRIP: GLenum = 0x0003;
 pub const GL_LINE_LOOP: GLenum = 0x0002;
 pub const GL_QUADS: GLenum = 0x0007;
 pub const GL_TRIANGLE_FAN: GLenum = 0x0006;

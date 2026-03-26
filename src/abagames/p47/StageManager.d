@@ -194,14 +194,6 @@ private:
   {
     ap.type = middleType[rand.nextInt(middleType.length)];
     int mt;
-    // Appearance from the backward is disabled.
-    /*if (rand.nextFloat(1) > 0.1) {
-      ap.point = TOP;
-      mt = BarrageManager.MIDDLEMOVE;
-    } else {
-      ap.point = BACK;
-      mt = BarrageManager.MIDDLEBACKMOVE;
-      }*/
     ap.point = TOP;
     mt = BarrageManager.MIDDLEMOVE;
     ap.moveParser = barrageManager.parser[mt][rand.nextInt(barrageManager.parserNum[mt])];

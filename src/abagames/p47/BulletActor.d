@@ -15,7 +15,6 @@ import abagames.p47.Bullet;
 import abagames.p47.Field;
 import abagames.p47.BulletActorPool;
 import abagames.p47.Ship;
-import abagames.p47.P47Screen;
 import abagames.p47.Renderer;
 
 /**
@@ -256,10 +255,13 @@ private:
   private void drawRetro(float d)
   {
     float rt = 1 - rtCnt / RETRO_CNT;
-    P47Screen.setRetroParam(rt, 0.4 * bullet.bulletSize);
-    P47Screen.setRetroColor(Color(bulletColor[bullet.color][0],
+
+    RetroParam param = RetroParam(rt, 0.4 * bullet.bulletSize);
+
+    Color bulletColor = Color(bulletColor[bullet.color][0],
       bulletColor[bullet.color][1],
-      bulletColor[bullet.color][2], 1));
+      bulletColor[bullet.color][2], 1);
+
     float x, y, tx, px, py, fx, fy;
     for (int i = 0; i < shapePos[bullet.shape].length; i++)
     {
@@ -271,7 +273,7 @@ private:
       y = tx * sin(d) + y * cos(d);
       if (i > 0)
       {
-        P47Screen.drawLineRetro(px, py, x, y);
+        Renderer.drawLineRetro(px, py, x, y, 0, bulletColor, param);
       }
       else
       {
@@ -279,7 +281,7 @@ private:
         fy = y;
       }
     }
-    P47Screen.drawLineRetro(x, y, fx, fy);
+    Renderer.drawLineRetro(x, y, fx, fy, 0, bulletColor, param);
   }
 
   public override void draw()
@@ -513,11 +515,6 @@ private:
         idx++;
       }
     }
-  }
-
-  public static void deleteDisplayLists()
-  {
-    glDeleteLists(displayListIdx, BULLET_COLOR_NUM * (BULLET_SHAPE_NUM + 1));
   }
 }
 

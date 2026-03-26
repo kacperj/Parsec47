@@ -10,7 +10,6 @@ import std.math;
 import abagames.util.Actor;
 import abagames.util.Vector;
 import abagames.p47.Field;
-import abagames.p47.P47Screen;
 import abagames.p47.Renderer;
 
 /**
@@ -60,15 +59,13 @@ private:
 
   public override void draw()
   {
-    P47Screen.setRetroColor(SHOT_COLOR);
-
     float r;
     if (cnt > RETRO_CNT)
       r = 1;
     else
       r = cnt / RETRO_CNT;
-    P47Screen.setRetroParam(r, 0.2);
-    P47Screen.drawBoxRetro(pos.x, pos.y, 0.2, 1, deg);
+
+    Renderer.drawBoxRetro(pos.x, pos.y, 0.2, 1, deg, SHOT_COLOR, RetroParam(r, 0.2));
   }
 }
 

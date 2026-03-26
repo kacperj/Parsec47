@@ -11,6 +11,8 @@ import opengl;
 import abagames.util.Vector;
 import abagames.p47.Renderer;
 
+extern(C) uint field_create_ring_display_list();
+
 // Mode constants (mirrored from P47GameManager to avoid cyclic import)
 private enum : int
 {
@@ -145,62 +147,8 @@ private:
     return false;
   }
 
-  private static const int RING_POS_NUM = 16;
-  private static Vector[RING_POS_NUM] ringPos;
-  private static const float RING_DEG = std.math.PI / 3 / (cast(float)(RING_POS_NUM / 2) + 0.5);
-  private static const float RING_RADIUS = 10;
-  private static const float RING_SIZE = 0.5;
-
-  private static void writeOneRing()
-  {
-    glBegin(GL_LINE_STRIP);
-    for (int i = 0; i <= RING_POS_NUM / 2 - 2; i++)
-    {
-      glVertex3f(ringPos[i].x, RING_SIZE, ringPos[i].y);
-    }
-    for (int i = RING_POS_NUM / 2 - 2; i >= 0; i--)
-    {
-      glVertex3f(ringPos[i].x, -RING_SIZE, ringPos[i].y);
-    }
-    glVertex3f(ringPos[0].x, RING_SIZE, ringPos[0].y);
-    glEnd();
-    glBegin(GL_LINE_STRIP);
-    glVertex3f(ringPos[RING_POS_NUM / 2 - 1].x, RING_SIZE, ringPos[RING_POS_NUM / 2 - 1].y);
-    glVertex3f(ringPos[RING_POS_NUM / 2].x, RING_SIZE, ringPos[RING_POS_NUM / 2].y);
-    glVertex3f(ringPos[RING_POS_NUM / 2].x, -RING_SIZE, ringPos[RING_POS_NUM / 2].y);
-    glVertex3f(ringPos[RING_POS_NUM / 2 - 1].x, -RING_SIZE, ringPos[RING_POS_NUM / 2 - 1].y);
-    glVertex3f(ringPos[RING_POS_NUM / 2 - 1].x, RING_SIZE, ringPos[RING_POS_NUM / 2 - 1].y);
-    glEnd();
-    glBegin(GL_LINE_STRIP);
-    for (int i = RING_POS_NUM / 2 + 1; i <= RING_POS_NUM - 1; i++)
-    {
-      glVertex3f(ringPos[i].x, RING_SIZE, ringPos[i].y);
-    }
-    for (int i = RING_POS_NUM - 1; i >= RING_POS_NUM / 2 + 1; i--)
-    {
-      glVertex3f(ringPos[i].x, -RING_SIZE, ringPos[i].y);
-    }
-    glVertex3f(ringPos[RING_POS_NUM / 2 + 1].x, RING_SIZE, ringPos[RING_POS_NUM / 2 + 1].y);
-    glEnd();
-  }
-
   public static void createDisplayLists()
   {
-    float d = -RING_DEG * (cast(float)(RING_POS_NUM / 2) - 0.5);
-    for (int i = 0; i < RING_POS_NUM; i++, d += RING_DEG)
-    {
-      ringPos[i] = new Vector;
-      ringPos[i].x = sin(d) * RING_RADIUS;
-      ringPos[i].y = cos(d) * RING_RADIUS;
-    }
-    displayListIdx = glGenLists(1);
-    glNewList(displayListIdx, GL_COMPILE);
-    writeOneRing();
-    glEndList();
-  }
-
-  public static void deleteDisplayLists()
-  {
-    glDeleteLists(displayListIdx, 1);
+    displayListIdx = field_create_ring_display_list();
   }
 }

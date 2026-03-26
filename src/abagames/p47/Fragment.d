@@ -14,7 +14,6 @@ import abagames.util.Actor;
 import abagames.p47.Renderer;
 import abagames.p47.LuminousActor;
 import abagames.p47.Field;
-import abagames.p47.P47Screen;
 
 /**
  * Enemys' fragments.
@@ -92,9 +91,7 @@ private:
 
   public override void draw()
   {
-    P47Screen.setRetroColor(FRAGMENT_COLOR);
-    P47Screen.setRetroParam(retro, 0.2);
-    P47Screen.drawLineRetroWithZ(pos[0].x, pos[0].y, pos[1].x, pos[1].y, z);
+    Renderer.drawLineRetro(pos[0].x, pos[0].y, pos[1].x, pos[1].y, z, FRAGMENT_COLOR, RetroParam(retro, 0.2));
   }
 
   public override void drawLuminous()

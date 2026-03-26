@@ -1,3 +1,4 @@
+pub mod field;
 pub mod gl;
 pub mod letter_render;
 pub mod pad;

@@ -20,7 +20,6 @@ import abagames.p47.Shot;
 import abagames.p47.Roll;
 import abagames.p47.Lock;
 import abagames.p47.P47GameManager;
-import abagames.p47.P47Screen;
 import abagames.p47.BulletActor;
 import abagames.p47.BulletActorPool;
 import abagames.p47.EnemyType;
@@ -758,47 +757,47 @@ private:
     float retroZ = 0;
 
     Color enemyRetroColor;
+    RetroParam retroParam;
     
     if (appCnt > 0)
     {
       // Appearance effect of the boss.
       retroZ = z;
       ap = cast(float) appCnt / APPEARANCE_CNT;
-      P47Screen.setRetroParam(1, type.retroSize * (1 + ap * 10));
-      enemyRetroColor = Color(type.r, type.g, type.b, (1 - ap));
+      retroParam = RetroParam(1, type.retroSize * (1 + ap * 10));
+      enemyRetroColor = Color(type.enemyColor.r, type.enemyColor.g, type.enemyColor.b, (1 - ap));
     }
     else if (dstCnt > 0)
     {
-      P47Screen.setRetroParam(1, type.retroSize);
+      retroParam = RetroParam(1, type.retroSize);
       retroZ = z;
       ap = cast(float) dstCnt / DESTROYED_CNT / 2 + 0.5;
-      enemyRetroColor = Color(type.r, type.g, type.b, ap);
+      enemyRetroColor = Color(type.enemyColor.r, type.enemyColor.g, type.enemyColor.b, ap);
     }
     else if (timeoutCnt > 0)
     {
-      P47Screen.setRetroParam(1, type.retroSize);
+      retroParam = RetroParam(1, type.retroSize);
       retroZ = z;
       ap = cast(float) timeoutCnt / TIMEOUT_CNT;
-      enemyRetroColor = Color(type.r, type.g, type.b, ap);
+      enemyRetroColor = Color(type.enemyColor.r, type.enemyColor.g, type.enemyColor.b, ap);
     }
     else
     {
-      P47Screen.setRetroParam(1, type.retroSize);
+      retroParam = RetroParam(1, type.retroSize);
       if (!damaged)
-        enemyRetroColor = Color(type.r, type.g, type.b, 1);
+        enemyRetroColor = Color(type.enemyColor.r, type.enemyColor.g, type.enemyColor.b, 1);
       else
-        enemyRetroColor = Color(1, 1, type.b, 1);
+        enemyRetroColor = Color(1, 1, type.enemyColor.b, 1);
     }
 
-    P47Screen.setRetroColor(enemyRetroColor);
     int ni = 1;
 
     for (int i = 0; i < EnemyType.BODY_SHAPE_POINT_NUM; i++, ni++)
     {
       if (ni >= EnemyType.BODY_SHAPE_POINT_NUM)
         ni = 0;
-      P47Screen.drawLineRetroWithZ(pos.x + type.bodyShapePos[i].x, pos.y + type.bodyShapePos[i].y,
-        pos.x + type.bodyShapePos[ni].x, pos.y + type.bodyShapePos[ni].y, retroZ);
+      Renderer.drawLineRetro(pos.x + type.bodyShapePos[i].x, pos.y + type.bodyShapePos[i].y,
+        pos.x + type.bodyShapePos[ni].x, pos.y + type.bodyShapePos[ni].y, retroZ, enemyRetroColor, retroParam);
     }
 
     if (type.type != EnemyType.SMALL)
@@ -836,13 +835,11 @@ private:
           batteryRetroColor = Color(1, 1, bt.b, 1);
       }
 
-      P47Screen.setRetroColor(batteryRetroColor);
-
       ni = 1;
       if (battery[i].shield <= 0)
       {
-        P47Screen.drawLineRetroWithZ(pos.x + bt.wingShapePos[0].x, pos.y + bt.wingShapePos[0].y,
-          pos.x + bt.wingShapePos[1].x, pos.y + bt.wingShapePos[1].y, retroZ);
+        Renderer.drawLineRetro(pos.x + bt.wingShapePos[0].x, pos.y + bt.wingShapePos[0].y,
+          pos.x + bt.wingShapePos[1].x, pos.y + bt.wingShapePos[1].y, retroZ, batteryRetroColor, retroParam);
       }
       else
       {
@@ -850,8 +847,8 @@ private:
         {
           if (ni >= BatteryType.WING_SHAPE_POINT_NUM)
             ni = 0;
-          P47Screen.drawLineRetroWithZ(pos.x + bt.wingShapePos[wi].x, pos.y + bt.wingShapePos[wi].y,
-            pos.x + bt.wingShapePos[ni].x, pos.y + bt.wingShapePos[ni].y, retroZ);
+          Renderer.drawLineRetro(pos.x + bt.wingShapePos[wi].x, pos.y + bt.wingShapePos[wi].y,
+            pos.x + bt.wingShapePos[ni].x, pos.y + bt.wingShapePos[ni].y, retroZ, batteryRetroColor, retroParam);
         }
         if (type.type != EnemyType.SMALL)
         {

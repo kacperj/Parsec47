@@ -44,6 +44,7 @@ private extern (C) void renderer_draw_side_boards();
 private extern (C) void renderer_draw_box(int x, int y, int w, int h);
 private extern (C) void renderer_draw_side_info(int score, int bonusScore, int left, int parsec);
 private extern (C) void renderer_draw_score(int score, int bonusScore);
+private extern (C) void sound_manager_stop_music();
 
 public class P47GameManager
 {
@@ -149,7 +150,7 @@ private:
     title = new Title;
     title.init(pad, this, prefManager, field);
     interval = mainLoop.INTERVAL_BASE;
-    SoundManager.init(this);
+    SoundManager.init();
   }
 
   public void start()
@@ -162,10 +163,6 @@ private:
     barrageManager.unloadBulletMLs();
     title.close();
     SoundManager.close();
-    LetterRender.deleteDisplayLists();
-    Field.deleteDisplayLists();
-    Ship.deleteDisplayLists();
-    BulletActor.deleteDisplayLists();
   }
 
   public void addScore(int sc)
@@ -367,6 +364,7 @@ private:
   private void startInGame()
   {
     state = IN_GAME;
+    SoundManager.isInGame = (state == IN_GAME);
     initShipState();
     startStage(difficulty, parsecSlot, title.getStartParsec(difficulty, parsecSlot), mode);
   }
@@ -380,7 +378,7 @@ private:
     ship.cnt = 0;
     startStage(difficulty, parsecSlot, title.getStartParsec(difficulty, parsecSlot), mode);
     cnt = 0;
-    SoundManager.stopMusic();
+    sound_manager_stop_music();
   }
 
   private void startGameover()
@@ -567,6 +565,7 @@ private:
       mainLoop.breakLoop();
       return;
     }
+    SoundManager.isInGame = (state == IN_GAME);
     switch (state)
     {
     case IN_GAME:

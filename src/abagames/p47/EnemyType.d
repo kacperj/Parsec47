@@ -12,6 +12,10 @@ import abagames.util.Vector;
 import abagames.util.Rand;
 import abagames.p47.BarrageManager;
 import abagames.p47.Bullet;
+import abagames.p47.Renderer;
+
+extern(C) Color create_enemy_color(int variant);
+
 
 /**
  * Barrage pattern.
@@ -37,11 +41,13 @@ public:
   static const int WING_SHAPE_POINT_NUM = 3;
   static const int WING_BATTERY_MAX = 3;
   static const int BARRAGE_PATTERN_MAX = 8;
-  Vector[WING_SHAPE_POINT_NUM] wingShapePos;
+  Vector2[WING_SHAPE_POINT_NUM] wingShapePos;
   Vector collisionPos, collisionSize;
   Vector[WING_BATTERY_MAX] batteryPos;
   int batteryNum;
-  float r, g, b;
+  float b;  
+  float g;
+  float r;
   Barrage[BARRAGE_PATTERN_MAX] barrage;
   bool xReverseAlternate;
   int shield;
@@ -51,10 +57,6 @@ public:
     for (int i = 0; i < BARRAGE_PATTERN_MAX; i++)
     {
       barrage[i] = new Barrage;
-    }
-    for (int i = 0; i < WING_SHAPE_POINT_NUM; i++)
-    {
-      wingShapePos[i] = new Vector;
     }
     collisionPos = new Vector;
     collisionSize = new Vector;
@@ -78,10 +80,10 @@ public:
   // Whether each type of the enemy is exist or not.
   static bool[ENEMY_TYPE_MAX] isExist;
   Barrage[BARRAGE_PATTERN_MAX] barrage;
-  Vector[BODY_SHAPE_POINT_NUM] bodyShapePos;
+  Vector2[BODY_SHAPE_POINT_NUM] bodyShapePos;
   Vector collisionSize;
   bool wingCollision;
-  float r, g, b;
+  Color enemyColor;
   float retroSize;
   BatteryType[BATTERY_MAX] batteryType;
   int batteryNum;
@@ -123,10 +125,6 @@ private:
 
   public this()
   {
-    for (int i = 0; i < BODY_SHAPE_POINT_NUM; i++)
-    {
-      bodyShapePos[i] = new Vector;
-    }
     collisionSize = new Vector;
     for (int i = 0; i < BARRAGE_PATTERN_MAX; i++)
     {
@@ -243,39 +241,17 @@ private:
     br.bulletSize = (1.0 + rand.nextSignedFloat(0.1)) * size;
   }
 
-  private float er, eg, eb;
-  private int ect;
-
-  private void setEnemyColorType()
+  private int getEnemyColorType()
   {
-    ect = rand.nextInt(3);
+    return rand.nextInt(3);
   }
 
-  private void createEnemyColor()
+  private Color createEnemyColor(int variant)
   {
-    switch (ect)
-    {
-    case 0:
-      er = 1;
-      eg = rand.nextFloat(0.7) + 0.3;
-      eb = rand.nextFloat(0.7) + 0.3;
-      break;
-    case 1:
-      er = rand.nextFloat(0.7) + 0.3;
-      eg = 1;
-      eb = rand.nextFloat(0.7) + 0.3;
-      break;
-    case 2:
-      er = rand.nextFloat(0.7) + 0.3;
-      eg = rand.nextFloat(0.7) + 0.3;
-      eb = 1;
-      break;
-    default:
-      break;
-    }
+    return create_enemy_color(variant);
   }
 
-  private static const float[][] enemySize =
+  private static const float[][] enemySizes =
     [
       [0.3, 0.3, 0.3, 0.1, 0.1, 1.0, 0.4, 0.6, 0.9],
       [0.4, 0.2, 0.4, 0.1, 0.15, 2.2, 0.2, 1.6, 1.0],
@@ -286,23 +262,24 @@ private:
   // Set the shepe of the BatteryType.
   private void setEnemyShapeAndWings(int size)
   {
-    createEnemyColor();
-    r = er;
-    g = eg;
-    b = eb;
-    float x1 = enemySize[size][0] + rand.nextSignedFloat(enemySize[size][1]);
-    float y1 = enemySize[size][2] + rand.nextSignedFloat(enemySize[size][3]);
-    float x2 = enemySize[size][0] + rand.nextSignedFloat(enemySize[size][1]);
-    float y2 = enemySize[size][2] + rand.nextSignedFloat(enemySize[size][3]);
-    bodyShapePos[0].x = -x1;
-    bodyShapePos[0].y = y1;
-    bodyShapePos[1].x = x1;
-    bodyShapePos[1].y = y1;
-    bodyShapePos[2].x = x2;
-    bodyShapePos[2].y = -y2;
-    bodyShapePos[3].x = -x2;
-    bodyShapePos[3].y = -y2;
-    retroSize = enemySize[size][4];
+    int colorType = getEnemyColorType();
+    enemyColor = createEnemyColor(colorType);
+
+    const float[] enemySize = EnemyType.enemySizes[size];
+
+    float x1 = enemySize[0] + rand.nextSignedFloat(enemySize[1]);
+    float y1 = enemySize[2] + rand.nextSignedFloat(enemySize[3]);
+    float x2 = enemySize[0] + rand.nextSignedFloat(enemySize[1]);
+    float y2 = enemySize[2] + rand.nextSignedFloat(enemySize[3]);
+
+    bodyShapePos = [
+      Vector2(-x1, y1), 
+      Vector2(x1, y1), 
+      Vector2(x2, -y2), 
+      Vector2(-x2, -y2)
+    ];
+    
+    retroSize = enemySize[4];
     switch (size)
     {
     case SMALL:
@@ -327,26 +304,31 @@ private:
       collisionSize.y = y1;
     else
       collisionSize.y = y2;
+
+
+    Color batteryColor;
+    
     for (int i = 0; i < batteryNum; i++)
     {
       BatteryType bt = batteryType[i];
       int wrl = 1;
+
       if (i % 2 == 0)
       {
-        px = enemySize[size][5] + rand.nextFloat(enemySize[size][6]);
+        px = enemySize[5] + rand.nextFloat(enemySize[6]);
         if (batteryNum <= 2)
         {
-          py = rand.nextSignedFloat(enemySize[size][7]);
+          py = rand.nextSignedFloat(enemySize[7]);
         }
         else
         {
           if (i < 2)
           {
-            py = rand.nextFloat(enemySize[size][7] / 2) + enemySize[size][7] / 2;
+            py = rand.nextFloat(enemySize[7] / 2) + enemySize[7] / 2;
           }
           else
           {
-            py = -rand.nextFloat(enemySize[size][7] / 2) - enemySize[size][7] / 2;
+            py = -rand.nextFloat(enemySize[7] / 2) - enemySize[7] / 2;
           }
         }
         float md;
@@ -354,8 +336,8 @@ private:
           md = rand.nextFloat(std.math.PI / 2) - std.math.PI / 4;
         else
           md = rand.nextFloat(std.math.PI / 2) + std.math.PI / 4 * 3;
-        mpx = px / 2 + sin(md) * (enemySize[size][8] / 2 + rand.nextFloat(enemySize[size][8] / 2));
-        mpy = py / 2 + cos(md) * (enemySize[size][8] / 2 + rand.nextFloat(enemySize[size][8] / 2));
+        mpx = px / 2 + sin(md) * (enemySize[8] / 2 + rand.nextFloat(enemySize[8] / 2));
+        mpy = py / 2 + cos(md) * (enemySize[8] / 2 + rand.nextFloat(enemySize[8] / 2));
         switch (size)
         {
         case SMALL:
@@ -372,7 +354,7 @@ private:
         default:
           break;
         }
-        createEnemyColor();
+        batteryColor = createEnemyColor(colorType);
         wrl = -1;
         if (!wingCollision)
         {
@@ -386,27 +368,8 @@ private:
             collisionSize.y = cpy;
         }
       }
-      switch (wrl)
-      {
-      case 1:
-        bt.wingShapePos[0].x = px / 4 * wrl;
-        bt.wingShapePos[0].y = py / 4;
-        bt.wingShapePos[1].x = px * wrl;
-        bt.wingShapePos[1].y = py;
-        bt.wingShapePos[2].x = mpx * wrl;
-        bt.wingShapePos[2].y = mpy;
-        break;
-      case -1:
-        bt.wingShapePos[0].x = px / 4 * wrl;
-        bt.wingShapePos[0].y = py / 4;
-        bt.wingShapePos[1].x = px * wrl;
-        bt.wingShapePos[1].y = py;
-        bt.wingShapePos[2].x = mpx * wrl;
-        bt.wingShapePos[2].y = mpy;
-        break;
-      default:
-        break;
-      }
+      bt.wingShapePos = createWings(px, py, mpx, mpy, wrl);
+
       bt.collisionPos.x = (px + px / 4) / 2 * wrl;
       bt.collisionPos.y = (py + mpy + py / 4) / 3;
       bt.collisionSize.x = px / 4 * 3 / 2;
@@ -416,11 +379,20 @@ private:
         bt.collisionSize.y = sy1;
       else
         bt.collisionSize.y = sy2;
-      bt.r = er;
-      bt.g = eg;
-      bt.b = eb;
+      bt.r = batteryColor.r;
+      bt.g = batteryColor.g;
+      bt.b = batteryColor.b;
       bt.shield = bsl;
     }
+  }
+
+  private static Vector2[BatteryType.WING_SHAPE_POINT_NUM] createWings(float px, float py, float mpx, float mpy, int wrl)
+  {
+    return [
+      Vector2(px / 4 * wrl, py / 4), 
+      Vector2(px * wrl, py), 
+      Vector2(mpx * wrl, mpy)
+    ];
   }
 
   // Set the barrage of the BatteryType.
@@ -472,7 +444,6 @@ private:
     type = SMALL;
     barragePatternNum = 1;
     wingCollision = false;
-    setEnemyColorType();
     Barrage br = barrage[0];
     if (mode == ROLL)
       setBarrageType(br, BarrageManager.SMALL, mode);
@@ -495,7 +466,6 @@ private:
     type = MIDDLE;
     barragePatternNum = 1;
     wingCollision = false;
-    setEnemyColorType();
     Barrage br = barrage[0];
     setBarrageType(br, BarrageManager.MIDDLE, mode);
     float cr, sr;
@@ -569,7 +539,6 @@ private:
     type = LARGE;
     barragePatternNum = 1;
     wingCollision = false;
-    setEnemyColorType();
     Barrage br = barrage[0];
     setBarrageType(br, BarrageManager.LARGE, mode);
     float cr, sr1, sr2;
@@ -666,7 +635,6 @@ private:
     type = MIDDLEBOSS;
     barragePatternNum = 2 + rand.nextInt(2);
     wingCollision = true;
-    setEnemyColorType();
     int bn = 1 + rand.nextInt(2);
     for (int i = 0; i < barragePatternNum; i++)
     {
@@ -708,7 +676,6 @@ private:
     type = LARGEBOSS;
     barragePatternNum = 2 + rand.nextInt(3);
     wingCollision = true;
-    setEnemyColorType();
     int bn1 = 1 + rand.nextInt(3);
     int bn2 = 1 + rand.nextInt(3);
     for (int i = 0; i < barragePatternNum; i++)

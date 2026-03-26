@@ -15,10 +15,6 @@ import abagames.util.sdl.SDLInitFailedException;
 import abagames.p47.LuminousScreen;
 import abagames.p47.Renderer;
 
-extern(C) void draw_line_retro_with_z(float x1, float y1, float x2, float y2, float z,
-                                      float retro, float retroSize,
-                                      float r, float g, float b, float a);
-
 /**
  * SDL screen handler and OpenGL setup for PARSEC47.
  */
@@ -181,44 +177,4 @@ private:
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
   }
-
-  // Draw the retro style lines.
-  private static float retro, retroSize;
-  private static Color retroColor;
-
-  public static void setRetroParam(float r, float sz)
-  {
-    retro = r;
-    retroSize = sz;
-  }
-
-  public static void setRetroColor(Color color)
-  {
-    retroColor = color;
-  }
-
-  public static void drawBoxRetro(float x, float y, float width, float height, float deg)
-  {
-    float w1, h1, w2, h2;
-    w1 = width * cos(deg) - height * sin(deg);
-    h1 = width * sin(deg) + height * cos(deg);
-    w2 = -width * cos(deg) - height * sin(deg);
-    h2 = -width * sin(deg) + height * cos(deg);
-    drawLineRetro(x + w2, y - h2, x + w1, y - h1);
-    drawLineRetro(x + w1, y - h1, x - w2, y + h2);
-    drawLineRetro(x - w2, y + h2, x - w1, y + h1);
-    drawLineRetro(x - w1, y + h1, x + w2, y - h2);
-  }
-
-  public static void drawLineRetro(float x1, float y1, float x2, float y2)
-  {
-    drawLineRetroWithZ(x1, y1, x2, y2, 0);
-  }
-
-  public static void drawLineRetroWithZ(float x1, float y1, float x2, float y2, float z)
-  {
-    draw_line_retro_with_z(x1, y1, x2, y2, z, retro, retroSize,
-                           retroColor.r, retroColor.g, retroColor.b, retroColor.a);
-  }
-
 }

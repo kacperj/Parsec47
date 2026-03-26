@@ -425,13 +425,6 @@ pub extern "C" fn letter_render_create_display_lists() {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn letter_render_delete_display_lists() {
-    unsafe {
-        glDeleteLists(DISPLAY_LIST_IDX, LETTER_NUM as GLsizei * 2);
-    }
-}
-
 pub fn letter_render_change_color(c: i32) {
     unsafe {
         COLOR_IDX = c * LETTER_NUM;

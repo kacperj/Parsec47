@@ -17,6 +17,8 @@ private extern (C) void renderer_draw_box_light(int x, int y, int w, int h);
 private extern (C) void renderer_title_texture_init();
 private extern (C) void renderer_title_texture_delete();
 private extern (C) void renderer_draw_title_board();
+private extern (C) void letter_render_draw_num(int num, float lx, float y, float s, int d);
+
 
 /**
  * Title.
@@ -185,10 +187,10 @@ private:
     if (curX > 0)
     {
       LetterRender.drawString("START AT PARSEC", 290, 180, 6, LetterRender.TO_RIGHT);
-      LetterRender.drawNum(getStartParsec(curY, curX), 470, 180, 6, LetterRender.TO_RIGHT);
+      letter_render_draw_num(getStartParsec(curY, curX), 470, 180, 6, LetterRender.TO_RIGHT);
     }
     if (curY < P47PrefManager.DIFFICULTY_NUM)
-      LetterRender.drawNum(prefManager.hiScore[mode][curY][curX], 470, 210, 10, LetterRender
+      letter_render_draw_num(prefManager.hiScore[mode][curY][curX], 470, 210, 10, LetterRender
           .TO_RIGHT);
     sy = 260;
     for (int y = 0; y < P47PrefManager.DIFFICULTY_NUM + 1; y++)
@@ -215,7 +217,7 @@ private:
             }
             else
             {
-              LetterRender.drawNum(x, sx + 22, sy + 13, 12, LetterRender.TO_RIGHT);
+              letter_render_draw_num(x, sx + 22, sy + 13, 12, LetterRender.TO_RIGHT);
             }
           }
         }

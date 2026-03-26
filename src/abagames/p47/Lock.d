@@ -12,7 +12,6 @@ import abagames.util.Actor;
 import abagames.util.Rand;
 import abagames.p47.Ship;
 import abagames.p47.Field;
-import abagames.p47.P47Screen;
 import abagames.p47.P47GameManager;
 import abagames.p47.Enemy;
 import abagames.p47.SoundManager;
@@ -98,6 +97,7 @@ private:
 
   private static const float SPEED = 0.01;
   private static const int LOCK_CNT = 8;
+  private static const Color LOCK_COLOR = Color(1.0, 0.8, 0.5, 1);
 
   public override void move()
   {
@@ -216,20 +216,22 @@ private:
 
   public override void draw()
   {
-    P47Screen.setRetroColor(Color(1.0, 0.8, 0.5, 1));
-
     switch (state)
     {
     case LOCKING:
       float y = lockedPos.y - (LOCK_CNT - cnt) * 0.5;
       float d = (LOCK_CNT - cnt) * 0.1;
       float r = (LOCK_CNT - cnt) * 0.5 + 0.8;
-      P47Screen.setRetroParam((LOCK_CNT - cnt) / LOCK_CNT, 0.2);
+
+      RetroParam param = RetroParam((LOCK_CNT - cnt) / LOCK_CNT, 0.2);
+
       for (int i = 0; i < 3; i++, d += 6.28 / 3)
       {
-        P47Screen.drawBoxRetro(lockedPos.x + sin(d) * r,
+        Renderer.drawBoxRetro(lockedPos.x + sin(d) * r,
           y + cos(d) * r,
-          0.2, 1, d + 3.14 / 2);
+          0.2, 1, d + 3.14 / 2, 
+          LOCK_COLOR,
+          param);
       }
       break;
     case LOCKED:
@@ -238,12 +240,15 @@ private:
     case HIT:
       float d = 0;
       float r = 0.8;
-      P47Screen.setRetroParam(0, 0.2);
+
+      RetroParam param = RetroParam(0, 0.2);
       for (int i = 0; i < 3; i++, d += 6.28 / 3)
       {
-        P47Screen.drawBoxRetro(lockedPos.x + sin(d) * r,
+        Renderer.drawBoxRetro(lockedPos.x + sin(d) * r,
           lockedPos.y + cos(d) * r,
-          0.2, 1, d + 3.14 / 2);
+          0.2, 1, d + 3.14 / 2,
+          LOCK_COLOR,
+          param);
       }
       r = cnt * 0.1;
       for (int i = 0; i < LENGTH - 1; i++, r -= 0.1)
@@ -253,8 +258,9 @@ private:
           rr = 0;
         else if (rr > 1)
           rr = 1;
-        P47Screen.setRetroParam(rr, 0.33);
-        P47Screen.drawLineRetro(pos[i].x, pos[i].y, pos[i + 1].x, pos[i + 1].y);
+        param = RetroParam(rr, 0.33);
+
+        Renderer.drawLineRetro(pos[i].x, pos[i].y, pos[i + 1].x, pos[i + 1].y, 0, LOCK_COLOR, param);
       }
       break;
     default:
