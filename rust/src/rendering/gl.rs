@@ -39,9 +39,17 @@ extern "system" {
     pub fn glDisable(cap: GLenum);
     pub fn glGenTextures(n: GLsizei, textures: *mut GLuint);
     pub fn glBindTexture(target: GLenum, texture: GLuint);
-    pub fn glTexImage2D(target: GLenum, level: GLint, internalformat: GLint,
-        width: GLsizei, height: GLsizei, border: GLint,
-        format: GLenum, type_: GLenum, pixels: *const u8);
+    pub fn glTexImage2D(
+        target: GLenum,
+        level: GLint,
+        internalformat: GLint,
+        width: GLsizei,
+        height: GLsizei,
+        border: GLint,
+        format: GLenum,
+        type_: GLenum,
+        pixels: *const u8,
+    );
     pub fn glTexParameteri(target: GLenum, pname: GLenum, param: GLint);
     pub fn glDeleteTextures(n: GLsizei, textures: *const GLuint);
     pub fn glTexCoord2f(s: c_float, t: c_float);

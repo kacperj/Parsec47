@@ -1,0 +1,2 @@
+cd rust
+cargo-fmt

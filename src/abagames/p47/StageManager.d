@@ -299,7 +299,7 @@ private:
       // Set the middle boss.
       Vector pos = new Vector;
       pos.x = 0;
-      pos.y = field.size.y / 4 * 3;
+      pos.y = field.box.halfHeight() / 4 * 3;
       gameManager.addBoss(pos, std.math.PI, middleBossType);
       bossSection = true;
       sectionIntervalCnt = sectionCnt = 2 * 60;
@@ -311,7 +311,7 @@ private:
       // Set the large boss.
       Vector pos = new Vector;
       pos.x = 0;
-      pos.y = field.size.y / 4 * 3;
+      pos.y = field.box.halfHeight() / 4 * 3;
       gameManager.addBoss(pos, std.math.PI, largeBossType);
       bossSection = true;
       sectionIntervalCnt = sectionCnt = 3 * 60;
@@ -448,39 +448,39 @@ private:
         switch (ap.pattern)
         {
         case BOTH_SIDES:
-          apos.x = (p - 0.5) * field.size.x * 1.8;
+          apos.x = (p - 0.5) * field.box.halfWidth() * 1.8;
           break;
         default:
-          apos.x = (p * 0.6 + 0.2) * field.size.x * ap.side;
+          apos.x = (p * 0.6 + 0.2) * field.box.halfWidth() * ap.side;
           break;
         }
-        apos.y = field.size.y - Enemy.FIELD_SPACE;
+        apos.y = field.box.halfHeight() - Enemy.FIELD_SPACE;
         d = std.math.PI;
         break;
       case BACK:
         switch (ap.pattern)
         {
         case BOTH_SIDES:
-          apos.x = (p - 0.5) * field.size.x * 1.8;
+          apos.x = (p - 0.5) * field.box.halfWidth() * 1.8;
           break;
         default:
-          apos.x = (p * 0.6 + 0.2) * field.size.x * ap.side;
+          apos.x = (p * 0.6 + 0.2) * field.box.halfWidth() * ap.side;
           break;
         }
-        apos.y = -field.size.y + Enemy.FIELD_SPACE;
+        apos.y = -field.box.halfHeight() + Enemy.FIELD_SPACE;
         d = 0;
         break;
       case SIDE:
         switch (ap.pattern)
         {
         case BOTH_SIDES:
-          apos.x = (field.size.x - Enemy.FIELD_SPACE) * (rand.nextInt(2) * 2 - 1);
+          apos.x = (field.box.halfWidth() - Enemy.FIELD_SPACE) * (rand.nextInt(2) * 2 - 1);
           break;
         default:
-          apos.x = (field.size.x - Enemy.FIELD_SPACE) * ap.side;
+          apos.x = (field.box.halfWidth() - Enemy.FIELD_SPACE) * ap.side;
           break;
         }
-        apos.y = (p * 0.4 + 0.4) * field.size.y;
+        apos.y = (p * 0.4 + 0.4) * field.box.halfHeight();
         if (apos.x < 0)
           d = std.math.PI / 2;
         else

@@ -103,8 +103,8 @@ private:
     }
     vel = new Vector;
     velCnt = 0;
-    fieldLimitX = field.size.x / 4 * 3;
-    fieldLimitY = field.size.y / 4 * 3;
+    fieldLimitX = field.box.halfWidth() / 4 * 3;
+    fieldLimitY = field.box.halfHeight() / 4 * 3;
   }
 
   public void set(Vector p, float d, EnemyType type, BulletMLParser* moveParser)
@@ -142,9 +142,9 @@ private:
     moveBullet = null;
 
     // Set the moving patterns.
-    float wx = rand.nextFloat(field.size.x / 4) + field.size.x / 4;
-    float wy = rand.nextFloat(field.size.y / 9) + field.size.y / 7;
-    float cy = field.size.y / 7 * 4;
+    float wx = rand.nextFloat(field.box.halfWidth() / 4) + field.box.halfWidth() / 4;
+    float wy = rand.nextFloat(field.box.halfHeight() / 9) + field.box.halfHeight() / 7;
+    float cy = field.box.halfHeight() / 7 * 4;
     movePointNum = rand.nextInt(3) + 2;
     for (int i = 0; i < movePointNum / 2; i++)
     {
@@ -685,7 +685,7 @@ private:
         remove();
         return;
       }
-      if (pos.y < -field.size.y / 4)
+      if (pos.y < -field.box.halfHeight() / 4)
       {
         removeTopBullets();
       }

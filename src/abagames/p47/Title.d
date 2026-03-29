@@ -29,7 +29,6 @@ private:
   Pad pad;
   P47GameManager gameManager;
   P47PrefManager prefManager;
-  Field field;
   int[P47PrefManager.DIFFICULTY_NUM + 1][P47PrefManager.MODE_NUM] slotNum;
   int[P47PrefManager.DIFFICULTY_NUM][P47PrefManager.MODE_NUM] startReachedParsec;
   int curX, curY;
@@ -37,12 +36,11 @@ private:
   static const int BOX_COUNT = 16;
   int boxCnt;
 
-  public void init(Pad p, P47GameManager gm, P47PrefManager pm, Field fl)
+  public void init(Pad p, P47GameManager gm, P47PrefManager pm)
   {
     pad = p;
     gameManager = gm;
     prefManager = pm;
-    field = fl;
     gameManager.difficulty = prefManager.selectedDifficulty;
     gameManager.parsecSlot = prefManager.selectedParsecSlot;
     gameManager.mode = prefManager.selectedMode;
@@ -71,7 +69,6 @@ private:
     curY = gameManager.difficulty;
     mode = gameManager.mode;
     boxCnt = BOX_COUNT;
-    field.setColor(mode);
   }
 
   public int getStartParsec(int dif, int psl)
@@ -161,7 +158,6 @@ private:
       mode = 0;
     if (curX >= slotNum[mode][curY])
       curX = slotNum[mode][curY] - 1;
-    field.setColor(mode);
     gameManager.startStage(curY, curX, getStartParsec(curY, curX), mode);
   }
 

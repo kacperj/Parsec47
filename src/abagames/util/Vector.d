@@ -15,6 +15,10 @@ public struct Vector2
   Vector2 opBinary(string op)(Vector2 rhs) if (op == "+") {
       return Vector2(x + rhs.x, y + rhs.y);
   }
+
+  Vector2 opBinary(string op)(float a) if (op == "*") {
+      return Vector2(x * a, y * a);
+  }
 }
 
 /**

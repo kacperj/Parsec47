@@ -18,7 +18,7 @@ extern(C)
 {
   void renderer_set_brightness(float b);
   float renderer_get_brightness();
-  void renderer_set_color(float r, float g, float b, float a);
+  void renderer_set_color_params(float r, float g, float b, float a);
   void renderer_draw_box_solid(float x, float y, float width, float height);
   void renderer_draw_box_line(float x, float y, float width, float height);
   void draw_line_retro_with_z(float x1, float y1, float x2, float y2, float z,
@@ -36,7 +36,7 @@ public class Renderer
 
   public static void setColor(Color color)
   {
-    renderer_set_color(color.r, color.g, color.b, color.a);
+    renderer_set_color_params(color.r, color.g, color.b, color.a);
   }
 
   public static void drawBoxSolid(float x, float y, float width, float height)

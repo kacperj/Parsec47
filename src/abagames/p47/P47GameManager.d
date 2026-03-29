@@ -15,7 +15,6 @@ import abagames.util.Vector;
 import abagames.util.ActorPool;
 import abagames.util.sdl.MainLoop;
 import abagames.util.sdl.Pad;
-import abagames.p47.LuminousActorPool;
 import abagames.p47.P47PrefManager;
 import abagames.p47.P47Screen;
 import abagames.p47.LetterRender;
@@ -23,8 +22,6 @@ import abagames.p47.Ship;
 import abagames.p47.Field;
 import abagames.p47.Enemy;
 import abagames.p47.EnemyType;
-import abagames.p47.Particle;
-import abagames.p47.Fragment;
 import abagames.p47.BulletActor;
 import abagames.p47.BulletActorPool;
 import abagames.p47.BarrageManager;
@@ -32,6 +29,7 @@ import abagames.p47.Shot;
 import abagames.p47.Roll;
 import abagames.p47.Lock;
 import abagames.p47.Bonus;
+import abagames.p47.BonusState;
 import abagames.p47.StageManager;
 import abagames.p47.Title;
 import abagames.p47.SoundManager;
@@ -40,11 +38,33 @@ import abagames.p47.Renderer;
 /**
  * Manage the game status and actor pools.
  */
-private extern (C) void renderer_draw_side_boards();
-private extern (C) void renderer_draw_box(int x, int y, int w, int h);
-private extern (C) void renderer_draw_side_info(int score, int bonusScore, int left, int parsec);
-private extern (C) void renderer_draw_score(int score, int bonusScore);
-private extern (C) void sound_manager_stop_music();
+private extern (C) {
+  void renderer_draw_side_boards();
+  void renderer_draw_side_info(int parsec);
+  void renderer_draw_box(int x, int y, int w, int h);
+  void renderer_draw_score();
+  void sound_manager_stop_music();
+  void renderer_draw_pause_status(int parsec, int pauseCnt);
+  void renderer_draw_gameover_status(int parsec, int cnt);
+
+  void particles_draw();
+  void particles_draw_luminous();
+  void particles_update();
+  void particles_init_new(float x, float y, float deg, float ofs, float speed);
+
+  void fragments_draw();
+  void fragments_draw_luminous();
+  void fragments_update();
+  void fragments_init_new(float x1, float y1, float x2, float y2, float z, float speed, float deg);
+
+  void score_set_initial();
+  void life_decrease();
+  int life_get();
+  int score_get();
+  void score_increase(int sc);
+}
+
+
 
 public class P47GameManager
 {
@@ -95,8 +115,6 @@ private:
   Field field;
   Ship ship;
   ActorPool!Enemy enemies;
-  LuminousActorPool particles;
-  LuminousActorPool fragments;
   BulletActorPool bullets;
   ActorPool!Shot shots;
   ActorPool!Roll rolls;
@@ -104,11 +122,6 @@ private:
   ActorPool!Bonus bonuses;
   BarrageManager barrageManager;
   StageManager stageManager;
-  const int FIRST_EXTEND = 200000;
-  const int EVERY_EXTEND = 500000;
-  const int LEFT_MAX = 4;
-  int left;
-  int score, extendScore;
   int cnt;
   int pauseCnt;
   const int BOSS_WING_NUM = 4;
@@ -130,8 +143,6 @@ private:
     Ship.createDisplayLists();
     ship = new Ship;
     ship.init(pad, field, this);
-    particles = new LuminousActorPool(128, () => new Particle);
-    fragments = new LuminousActorPool(128, () => new Fragment);
     BulletActor.createDisplayLists();
     bullets = new BulletActorPool(512, () => new BulletActor(field, ship));
     LetterRender.createDisplayLists();
@@ -148,7 +159,7 @@ private:
     stageManager = new StageManager;
     stageManager.init(this, barrageManager, field);
     title = new Title;
-    title.init(pad, this, prefManager, field);
+    title.init(pad, this, prefManager);
     interval = mainLoop.INTERVAL_BASE;
     SoundManager.init();
   }
@@ -167,19 +178,7 @@ private:
 
   public void addScore(int sc)
   {
-    score += sc;
-    if (score > extendScore)
-    {
-      if (left < LEFT_MAX)
-      {
-        SoundManager.playSe(SoundManager.EXTEND);
-        left++;
-      }
-      if (extendScore <= FIRST_EXTEND)
-        extendScore = EVERY_EXTEND;
-      else
-        extendScore += EVERY_EXTEND;
-    }
+    score_increase(sc);
   }
 
   public void shipDestroyed()
@@ -189,16 +188,14 @@ private:
     else
       releaseLock();
     clearBullets();
-    left--;
-    if (left < 0)
+    life_decrease();
+    if (life_get() < 0)
       startGameover();
   }
 
   public void addParticle(Vector pos, float deg, float ofs, float speed)
   {
-    Particle pt = cast(Particle) particles.getInstanceForced();
-    assert(pt);
-    pt.set(pos, deg, ofs, speed);
+    particles_init_new(pos.x, pos.y, deg, ofs, speed);
   }
 
   public void addFragments(int n, float x1, float y1, float x2, float y2, float z,
@@ -206,15 +203,13 @@ private:
   {
     for (int i = 0; i < n; i++)
     {
-      Fragment ft = cast(Fragment) fragments.getInstanceForced();
-      assert(ft);
-      ft.set(x1, y1, x2, y2, z, speed, deg);
+      fragments_init_new(x1, y1, x2, y2, z, speed, deg);
     }
   }
 
   public void addEnemy(Vector pos, float d, EnemyType type, BulletMLParser* moveParser)
   {
-    Enemy en = cast(Enemy) enemies.getInstance();
+    Enemy en = enemies.getInstance();
     if (!en)
       return;
     en.set(pos, d, type, moveParser);
@@ -232,7 +227,7 @@ private:
 
   public void addBoss(Vector pos, float d, EnemyType type)
   {
-    Enemy en = cast(Enemy) enemies.getInstance();
+    Enemy en = enemies.getInstance();
     if (!en)
       return;
     en.setBoss(pos, d, type);
@@ -240,7 +235,7 @@ private:
 
   public void addShot(Vector pos, float deg)
   {
-    Shot shot = cast(Shot) shots.getInstance();
+    Shot shot = shots.getInstance();
     if (!shot)
       return;
     shot.set(pos, deg);
@@ -248,7 +243,7 @@ private:
 
   public void addRoll()
   {
-    Roll roll = cast(Roll) rolls.getInstance();
+    Roll roll = rolls.getInstance();
     if (!roll)
       return;
     roll.set();
@@ -256,7 +251,7 @@ private:
 
   public void addLock()
   {
-    Lock lock = cast(Lock) locks.getInstance();
+    Lock lock = locks.getInstance();
     if (!lock)
       return;
     lock.set();
@@ -286,7 +281,7 @@ private:
   {
     for (int i = 0; i < num; i++)
     {
-      Bonus bonus = cast(Bonus) bonuses.getInstance();
+      Bonus bonus = bonuses.getInstance();
       if (!bonus)
         return;
       bonus.set(pos, ofs);
@@ -355,9 +350,7 @@ private:
 
   private void initShipState()
   {
-    left = 2;
-    score = 0;
-    extendScore = FIRST_EXTEND;
+    score_set_initial();
     ship.start();
   }
 
@@ -373,6 +366,7 @@ private:
   {
     state = TITLE;
     title.start();
+    field.setColor(mode);
     initShipState();
     bullets.clear();
     ship.cnt = 0;
@@ -392,8 +386,8 @@ private:
     interval = mainLoop.INTERVAL_BASE;
     mainLoop.interval = mainLoop.INTERVAL_BASE;
     cnt = 0;
-    if (score > prefManager.hiScore[mode][difficulty][parsecSlot])
-      prefManager.hiScore[mode][difficulty][parsecSlot] = score;
+    if (score_get() > prefManager.hiScore[mode][difficulty][parsecSlot])
+      prefManager.hiScore[mode][difficulty][parsecSlot] = score_get();
     if (stageManager.parsec > prefManager.reachedParsec[mode][difficulty])
       prefManager.reachedParsec[mode][difficulty] = stageManager.parsec;
     SoundManager.fadeMusic();
@@ -431,8 +425,8 @@ private:
       locks.move();
     BulletActor.resetTotalBulletsSpeed();
     bullets.move();
-    particles.move();
-    fragments.move();
+    particles_update();
+    fragments_update();
     moveScreenShake();
     if (pad.isPausePressed())
     {
@@ -493,6 +487,7 @@ private:
         if (!btnPrsd)
         {
           title.changeMode();
+          field.setColor(mode);
           btnPrsd = true;
         }
       }
@@ -537,8 +532,8 @@ private:
     field.move();
     enemies.move();
     bullets.move();
-    particles.move();
-    fragments.move();
+    particles_update();
+    fragments_update();
   }
 
   private void pauseMove()
@@ -593,9 +588,9 @@ private:
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     
     glBegin(GL_LINES);
-    particles.draw();
+    particles_draw();
     glEnd();
-    fragments.draw();
+    fragments_draw();
     ship.draw();
     shots.draw();
     
@@ -618,9 +613,9 @@ private:
   {
     field.draw();
     glBegin(GL_LINES);
-    particles.draw();
+    particles_draw();
     glEnd();
-    fragments.draw();
+    fragments_draw();
     enemies.draw();
     bullets.draw();
   }
@@ -628,16 +623,8 @@ private:
   private void inGameDrawLuminous()
   {
     glBegin(GL_LINES);
-    particles.drawLuminous();
-    fragments.drawLuminous();
-    glEnd();
-  }
-
-  private void gameoverDrawLuminous()
-  {
-    glBegin(GL_LINES);
-    particles.drawLuminous();
-    fragments.drawLuminous();
+    particles_draw_luminous();
+    fragments_draw_luminous();
     glEnd();
   }
 
@@ -664,7 +651,7 @@ private:
 
   private void inGameDrawStatus()
   {
-    renderer_draw_side_info(score, Bonus.bonusScore, left, stageManager.parsec);
+    renderer_draw_side_info(stageManager.parsec);
     if (stageManager.bossSection)
       drawBossShieldMeter();
   }
@@ -672,24 +659,8 @@ private:
   private void titleDrawStatus()
   {
     renderer_draw_side_boards();
-    renderer_draw_score(score, Bonus.bonusScore);
+    renderer_draw_score();
     title.draw();
-  }
-
-  private void gameoverDrawStatus()
-  {
-    renderer_draw_side_info(score, Bonus.bonusScore, left, stageManager.parsec);
-    if (cnt > 64)
-    {
-      LetterRender.drawString("GAME OVER", 220, 200, 15, LetterRender.TO_RIGHT);
-    }
-  }
-
-  private void pauseDrawStatus()
-  {
-    renderer_draw_side_info(score, Bonus.bonusScore, left, stageManager.parsec);
-    if ((pauseCnt % 60) < 30)
-      LetterRender.drawString("PAUSE", 280, 220, 12, LetterRender.TO_RIGHT);
   }
 
   private int screenShakeCnt;
@@ -734,10 +705,8 @@ private:
     {
     case IN_GAME:
     case PAUSE:
-      inGameDrawLuminous();
-      break;
     case GAMEOVER:
-      gameoverDrawLuminous();
+      inGameDrawLuminous();
       break;
     default:
     }
@@ -775,10 +744,10 @@ private:
       titleDrawStatus();
       break;
     case GAMEOVER:
-      gameoverDrawStatus();
+      renderer_draw_gameover_status(stageManager.parsec, cnt);
       break;
     case PAUSE:
-      pauseDrawStatus();
+      renderer_draw_pause_status(stageManager.parsec, pauseCnt);
       break;
     default:
     }

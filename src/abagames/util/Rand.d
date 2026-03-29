@@ -3,7 +3,7 @@ module abagames.util.Rand;
 private:
 import core.time;
 
-extern (C)
+public extern (C)
 {
   void rand_set_seed(uint s);
   int rand_next_int(int n);

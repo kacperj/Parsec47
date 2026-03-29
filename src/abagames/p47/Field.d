@@ -10,6 +10,7 @@ import std.math;
 import opengl;
 import abagames.util.Vector;
 import abagames.p47.Renderer;
+import abagames.util.BoxCollision;
 
 extern(C) uint field_create_ring_display_list();
 
@@ -27,7 +28,7 @@ public class Field
 {
 public:
   static const int TYPE_NUM = 4;
-  Vector size;
+  Box box;
   float eyeZ;
   float aimZ;
   float aimSpeed;
@@ -40,13 +41,11 @@ private:
   float speed;
   float yawYBase, yawZBase;
   float aimYawYBase, aimYawZBase;
-  float r, g, b;
+  Color color;
 
   public void init()
   {
-    size = new Vector;
-    size.x = 11;
-    size.y = 16;
+    box = Box.createWithHalfExtents(11, 16);
     eyeZ = 20;
     roll = yaw = 0;
     z = aimZ = 10;
@@ -59,14 +58,10 @@ private:
     switch (mode)
     {
     case ROLL:
-      r = 0.2;
-      g = 0.2;
-      b = 0.7;
+      color = Color(0.2, 0.2, 0.7, 0.7);
       break;
     case LOCK:
-      r = 0.5;
-      g = 0.3;
-      b = 0.6;
+      color = Color(0.5, 0.3, 0.6, 0.7);
       break;
     default:
       break;
@@ -112,7 +107,7 @@ private:
 
   public void draw()
   {
-    Renderer.setColor(Color(r, g, b, 0.7));
+    Renderer.setColor(color);
     float d = -RING_NUM * RING_ANGLE_INT / 2 + roll;
     for (int i = 0; i < RING_NUM; i++)
     {
@@ -134,17 +129,12 @@ private:
 
   public bool checkHit(Vector p)
   {
-    if (p.x < -size.x || p.x > size.x || p.y < -size.y || p.y > size.y)
-      return true;
-    return false;
+    return box.checkHit(p.x, p.y);
   }
 
   public bool checkHit(Vector p, float space)
   {
-    if (p.x < -size.x + space || p.x > size.x - space ||
-      p.y < -size.y + space || p.y > size.y - space)
-      return true;
-    return false;
+    return box.checkHit(p.x, p.y, space);
   }
 
   public static void createDisplayLists()

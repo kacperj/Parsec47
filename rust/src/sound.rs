@@ -55,9 +55,7 @@ pub extern "C" fn sound_init() -> c_int {
         std::mem::forget(ctx);
     }
 
-    let result = unsafe {
-        Mix_OpenAudioDevice(44100, AUDIO_S16LSB, 1, 4096, std::ptr::null(), 0)
-    };
+    let result = unsafe { Mix_OpenAudioDevice(44100, AUDIO_S16LSB, 1, 4096, std::ptr::null(), 0) };
     if result < 0 {
         return -1;
     }

@@ -14,6 +14,7 @@ import abagames.util.sdl.Pad;
 import abagames.p47.Bullet;
 import abagames.p47.Field;
 import abagames.p47.Bonus;
+import abagames.p47.BonusState;
 import abagames.p47.P47GameManager;
 import abagames.p47.Renderer;
 import abagames.p47.SoundManager;
@@ -75,14 +76,14 @@ private:
     vel = new Vector;
     firePos = new Vector;
     ttlCnt = 0;
-    fieldLimitX = field.size.x - FIELD_SPACE;
-    fieldLimitY = field.size.y - FIELD_SPACE;
+    fieldLimitX = field.box.halfWidth() - FIELD_SPACE;
+    fieldLimitY = field.box.halfHeight() - FIELD_SPACE;
   }
 
   public void start()
   {
     ppos.x = pos.x = 0;
-    ppos.y = pos.y = -field.size.y / 2;
+    ppos.y = pos.y = -field.box.halfHeight() / 2;
     vel.x = vel.y = 0;
     speed = BASE_SPEED;
     fireWideDeg = FIRE_WIDE_BASE_DEG;
@@ -92,7 +93,7 @@ private:
     rollLockCnt = 0;
     bank = 0;
     rollCharged = false;
-    Bonus.resetBonusScore();
+    BonusState.resetBonusScore();
   }
 
   public void setSpeedRate(float rate)

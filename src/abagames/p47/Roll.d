@@ -67,7 +67,7 @@ private:
     if (released)
     {
       pos[0].y += SPEED;
-      if (pos[0].y > field.size.y)
+      if (pos[0].y > field.box.halfHeight())
       {
         isExist = false;
         return;

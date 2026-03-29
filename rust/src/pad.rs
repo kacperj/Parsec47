@@ -1,6 +1,6 @@
 use std::os::raw::{c_int, c_void};
-use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
 use std::ptr::null_mut;
+use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
 
 extern "C" {
     fn SDL_InitSubSystem(flags: u32) -> c_int;
@@ -14,35 +14,35 @@ const JOYSTICK_AXIS: i16 = 16384;
 
 // SDL_KEYDOWN / SDL_KEYUP event type bytes (SDL1)
 const SDL_KEYDOWN: u8 = 2;
-const SDL_KEYUP:   u8 = 3;
+const SDL_KEYUP: u8 = 3;
 
 // SDL1 SDLKey keysym values (indices into KEY_STATE)
-const SK_RIGHT:  usize = 275;
-const SK_LEFT:   usize = 276;
-const SK_DOWN:   usize = 274;
-const SK_UP:     usize = 273;
-const SK_KP_6:   usize = 262;
-const SK_KP_4:   usize = 260;
-const SK_KP_2:   usize = 258;
-const SK_KP_8:   usize = 264;
-const SK_Z:      usize = 122;
-const SK_X:      usize = 120;
-const SK_LCTRL:  usize = 306;
-const SK_LALT:   usize = 308;
+const SK_RIGHT: usize = 275;
+const SK_LEFT: usize = 276;
+const SK_DOWN: usize = 274;
+const SK_UP: usize = 273;
+const SK_KP_6: usize = 262;
+const SK_KP_4: usize = 260;
+const SK_KP_2: usize = 258;
+const SK_KP_8: usize = 264;
+const SK_Z: usize = 122;
+const SK_X: usize = 120;
+const SK_LCTRL: usize = 306;
+const SK_LALT: usize = 308;
 const SK_LSHIFT: usize = 304;
 
 // Pad state bitmasks (must match D-side constants)
-const PAD_UP:      c_int = 1;
-const PAD_DOWN:    c_int = 2;
-const PAD_LEFT:    c_int = 4;
-const PAD_RIGHT:   c_int = 8;
+const PAD_UP: c_int = 1;
+const PAD_DOWN: c_int = 2;
+const PAD_LEFT: c_int = 4;
+const PAD_RIGHT: c_int = 8;
 const PAD_BUTTON1: c_int = 16;
 const PAD_BUTTON2: c_int = 32;
 
 // Key state table indexed by SDL1 SDLKey value (SDLK_LAST = 323, so 512 is safe)
 static mut KEY_STATE: [u8; 512] = [0u8; 512];
 
-static JOYSTICK:        AtomicPtr<c_void> = AtomicPtr::new(null_mut());
+static JOYSTICK: AtomicPtr<c_void> = AtomicPtr::new(null_mut());
 static BUTTON_REVERSED: AtomicBool = AtomicBool::new(false);
 
 /// Initialize SDL2 joystick subsystem and open the first joystick.
@@ -98,14 +98,30 @@ fn key_pressed(sk: usize) -> bool {
 #[no_mangle]
 pub extern "C" fn pad_get_pad_state() -> c_int {
     let joy = JOYSTICK.load(Ordering::Relaxed);
-    let x: i16 = if !joy.is_null() { unsafe { SDL_JoystickGetAxis(joy, 0) } } else { 0 };
-    let y: i16 = if !joy.is_null() { unsafe { SDL_JoystickGetAxis(joy, 1) } } else { 0 };
+    let x: i16 = if !joy.is_null() {
+        unsafe { SDL_JoystickGetAxis(joy, 0) }
+    } else {
+        0
+    };
+    let y: i16 = if !joy.is_null() {
+        unsafe { SDL_JoystickGetAxis(joy, 1) }
+    } else {
+        0
+    };
 
     let mut pad: c_int = 0;
-    if key_pressed(SK_RIGHT) || key_pressed(SK_KP_6) || x > JOYSTICK_AXIS  { pad |= PAD_RIGHT; }
-    if key_pressed(SK_LEFT)  || key_pressed(SK_KP_4) || x < -JOYSTICK_AXIS { pad |= PAD_LEFT; }
-    if key_pressed(SK_DOWN)  || key_pressed(SK_KP_2) || y > JOYSTICK_AXIS  { pad |= PAD_DOWN; }
-    if key_pressed(SK_UP)    || key_pressed(SK_KP_8) || y < -JOYSTICK_AXIS { pad |= PAD_UP; }
+    if key_pressed(SK_RIGHT) || key_pressed(SK_KP_6) || x > JOYSTICK_AXIS {
+        pad |= PAD_RIGHT;
+    }
+    if key_pressed(SK_LEFT) || key_pressed(SK_KP_4) || x < -JOYSTICK_AXIS {
+        pad |= PAD_LEFT;
+    }
+    if key_pressed(SK_DOWN) || key_pressed(SK_KP_2) || y > JOYSTICK_AXIS {
+        pad |= PAD_DOWN;
+    }
+    if key_pressed(SK_UP) || key_pressed(SK_KP_8) || y < -JOYSTICK_AXIS {
+        pad |= PAD_UP;
+    }
     pad
 }
 
@@ -114,26 +130,32 @@ pub extern "C" fn pad_get_pad_state() -> c_int {
 pub extern "C" fn pad_get_button_state() -> c_int {
     let joy = JOYSTICK.load(Ordering::Relaxed);
 
-    let btn1_joy = !joy.is_null() && unsafe {
-        SDL_JoystickGetButton(joy, 0) != 0
-            || SDL_JoystickGetButton(joy, 3) != 0
-            || SDL_JoystickGetButton(joy, 4) != 0
-            || SDL_JoystickGetButton(joy, 7) != 0
-    };
-    let btn2_joy = !joy.is_null() && unsafe {
-        SDL_JoystickGetButton(joy, 1) != 0
-            || SDL_JoystickGetButton(joy, 2) != 0
-            || SDL_JoystickGetButton(joy, 5) != 0
-            || SDL_JoystickGetButton(joy, 6) != 0
-    };
+    let btn1_joy = !joy.is_null()
+        && unsafe {
+            SDL_JoystickGetButton(joy, 0) != 0
+                || SDL_JoystickGetButton(joy, 3) != 0
+                || SDL_JoystickGetButton(joy, 4) != 0
+                || SDL_JoystickGetButton(joy, 7) != 0
+        };
+    let btn2_joy = !joy.is_null()
+        && unsafe {
+            SDL_JoystickGetButton(joy, 1) != 0
+                || SDL_JoystickGetButton(joy, 2) != 0
+                || SDL_JoystickGetButton(joy, 5) != 0
+                || SDL_JoystickGetButton(joy, 6) != 0
+        };
 
     let press1 = key_pressed(SK_Z) || key_pressed(SK_LCTRL) || btn1_joy;
     let press2 = key_pressed(SK_X) || key_pressed(SK_LALT) || key_pressed(SK_LSHIFT) || btn2_joy;
 
     let reversed = BUTTON_REVERSED.load(Ordering::Relaxed);
     let mut btn: c_int = 0;
-    if press1 { btn |= if !reversed { PAD_BUTTON1 } else { PAD_BUTTON2 }; }
-    if press2 { btn |= if !reversed { PAD_BUTTON2 } else { PAD_BUTTON1 }; }
+    if press1 {
+        btn |= if !reversed { PAD_BUTTON1 } else { PAD_BUTTON2 };
+    }
+    if press2 {
+        btn |= if !reversed { PAD_BUTTON2 } else { PAD_BUTTON1 };
+    }
     btn
 }
 
@@ -144,7 +166,11 @@ pub extern "C" fn pad_set_button_reversed(v: c_int) {
 
 #[no_mangle]
 pub extern "C" fn pad_get_button_reversed() -> c_int {
-    if BUTTON_REVERSED.load(Ordering::Relaxed) { 1 } else { 0 }
+    if BUTTON_REVERSED.load(Ordering::Relaxed) {
+        1
+    } else {
+        0
+    }
 }
 
 /// Check whether a given SDL1 SDLKey keysym is currently pressed.
@@ -153,5 +179,9 @@ pub extern "C" fn pad_is_key_pressed(sk: c_int) -> c_int {
     if sk < 0 || (sk as usize) >= 512 {
         return 0;
     }
-    if key_pressed(sk as usize) { 1 } else { 0 }
+    if key_pressed(sk as usize) {
+        1
+    } else {
+        0
+    }
 }

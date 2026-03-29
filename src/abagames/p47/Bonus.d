@@ -16,6 +16,12 @@ import abagames.p47.Ship;
 import abagames.p47.P47GameManager;
 import abagames.p47.SoundManager;
 import abagames.p47.Renderer;
+import abagames.p47.BonusState;
+
+
+private extern (C) {
+  void bonus_collected();
+}
 
 /**
  * Bonus items.
@@ -24,7 +30,6 @@ public class Bonus : Actor
 {
 public:
   static float rate;
-  static int bonusScore;
 private:
   static const float BASE_SPEED = 0.1;
   static const Color BONUS_COLOR = Color(0.2, 0.7, 0.5, 1);
@@ -50,11 +55,6 @@ private:
     rand = new Rand;
   }
 
-  public static void resetBonusScore()
-  {
-    bonusScore = 10;
-  }
-
   public static void setSpeedRate(float r)
   {
     rate = r;
@@ -68,8 +68,8 @@ private:
     this.manager = manager;
     pos = new Vector;
     vel = new Vector;
-    fieldLimitX = field.size.x / 6 * 5;
-    fieldLimitY = field.size.y / 10 * 9;
+    fieldLimitX = field.box.halfWidth() / 6 * 5;
+    fieldLimitY = field.box.halfHeight() / 10 * 9;
   }
 
   public void set(Vector p, Vector ofs)
@@ -92,15 +92,7 @@ private:
 
   private void missBonus()
   {
-    resetBonusScore();
-  }
-
-  private void getBonus()
-  {
-    SoundManager.playSe(SoundManager.GET_BONUS);
-    manager.addScore(bonusScore);
-    if (bonusScore < 1000)
-      bonusScore += 10;
+    BonusState.resetBonusScore();
   }
 
   public override void move()
@@ -146,7 +138,7 @@ private:
     float d = pos.dist(ship.pos);
     if (d < ACQUIRE_WIDTH * (1 + cast(float) inhaleCnt * 0.2) && ship.cnt >= -Ship.INVINCIBLE_CNT)
     {
-      getBonus();
+      bonus_collected();
       isExist = false;
       return;
     }

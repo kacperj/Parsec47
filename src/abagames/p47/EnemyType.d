@@ -32,6 +32,7 @@ public:
   float xReverse;
 }
 
+
 /**
  * Enemys' wing with batteries.
  */

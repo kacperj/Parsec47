@@ -84,7 +84,7 @@ private:
   {
     reset();
     state = SEARCH;
-    lockMinY = field.size.y * 2;
+    lockMinY = field.box.halfHeight() * 2;
     released = false;
     isExist = true;
   }
@@ -161,7 +161,7 @@ private:
       }
       else
       {
-        vel.y += (field.size.y * 2 - pos[0].y) * SPEED;
+        vel.y += (field.box.halfHeight() * 2 - pos[0].y) * SPEED;
       }
       for (int i = LENGTH - 1; i > 0; i--)
       {
@@ -170,7 +170,7 @@ private:
       }
       pos[0].x += vel.x;
       pos[0].y += vel.y;
-      if (pos[0].y > field.size.y + 5)
+      if (pos[0].y > field.box.halfHeight() + 5)
       {
         if (state == CANCELED)
         {

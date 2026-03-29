@@ -36,43 +36,36 @@ protected:
       actorIdx--;
       if (actorIdx < 0)
         actorIdx = cast(int)(actor.length - 1);
+      
       if (!actor[actorIdx].isExist)
         return actor[actorIdx];
     }
     return null;
   }
 
-  public T getInstanceForced()
-  {
-    actorIdx--;
-    if (actorIdx < 0)
-      actorIdx = cast(int)(actor.length - 1);
-    return actor[actorIdx];
-  }
-
   public void move()
   {
-    for (int i = 0; i < actor.length; i++)
+    foreach (T a; actor)
     {
-      if (actor[i].isExist)
-        actor[i].move();
+      if (a.isExist)
+        a.move();
     }
   }
 
   public void draw()
   {
-    for (int i = 0; i < actor.length; i++)
+    foreach (T a; actor)
     {
-      if (actor[i].isExist)
-        actor[i].draw();
+      if (a.isExist)
+        a.draw();
     }
   }
 
   public void clear()
   {
-    for (int i = 0; i < actor.length; i++)
+    foreach (T a; actor)
     {
-      actor[i].isExist = false;
+      a.isExist = false;
     }
   }
 }

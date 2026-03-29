@@ -1,7 +1,7 @@
 use core::ffi::c_float;
 
-use crate::gl::*;
 use crate::renderer::*;
+use crate::rendering::gl::*;
 
 const LETTER_NUM: i32 = 42;
 
@@ -348,9 +348,9 @@ fn draw_glyph_box(
     g: c_float,
     b: c_float,
 ) {
-    set_color(r, g, b, 0.5);
+    set_color_params(r, g, b, 0.5);
     draw_box_solid(x - width, y - height, width * 2.0, height * 2.0);
-    set_color(r, g, b, 1.0);
+    set_color_params(r, g, b, 1.0);
     draw_box_line(x - width, y - height, width * 2.0, height * 2.0);
 }
 
@@ -363,8 +363,8 @@ fn draw_letter_glyph(idx: usize, r: c_float, g: c_float, b: c_float) {
         }
         let x = stroke[0];
         let y = -stroke[1];
-        let mut size = stroke[2] * 0.66;
-        let mut length = stroke[3] * 0.6;
+        let size = stroke[2] * 0.66;
+        let length = stroke[3] * 0.6;
         let deg_mod = deg % 180;
         if deg_mod <= 45 || deg_mod > 135 {
             draw_glyph_box(x, y, size, length, r, g, b);
@@ -418,7 +418,10 @@ pub extern "C" fn letter_render_create_display_lists() {
             glEndList();
         }
         for i in 0..LETTER_NUM {
-            glNewList(DISPLAY_LIST_IDX + LETTER_NUM as GLuint + i as GLuint, GL_COMPILE);
+            glNewList(
+                DISPLAY_LIST_IDX + LETTER_NUM as GLuint + i as GLuint,
+                GL_COMPILE,
+            );
             draw_letter_glyph(i as usize, 1.0, 0.7, 0.7);
             glEndList();
         }
@@ -461,13 +464,7 @@ pub extern "C" fn letter_render_draw_string(
 }
 
 #[no_mangle]
-pub extern "C" fn letter_render_draw_num(
-    num: i32,
-    lx: c_float,
-    y: c_float,
-    s: c_float,
-    d: i32,
-) {
+pub extern "C" fn letter_render_draw_num(num: i32, lx: c_float, y: c_float, s: c_float, d: i32) {
     let ld = direction_to_angle(d);
     let mut x = lx;
     let mut y = y;
