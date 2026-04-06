@@ -152,7 +152,6 @@ RUN set -e && mkdir -p out && \
 
 # ── p47 (D → Windows EXE) ──
 COPY src/       src/
-COPY lib/       lib/
 COPY resource/  resource/
 
 RUN set -e && \
@@ -163,7 +162,6 @@ RUN set -e && \
     ldc2 --mtriple=x86_64-windows-msvc \
       -of=out/p47.exe out/p47.obj \
       -L=resource/p47.RES \
-      -L=lib/SDL.lib \
       -L=opengl32.lib -L=out/bulletml.lib -L=out/p47rust.lib \
       -L=/SUBSYSTEM:WINDOWS \
       -L=/DEFAULTLIB:user32 && \

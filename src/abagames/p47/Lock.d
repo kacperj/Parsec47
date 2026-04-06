@@ -5,17 +5,22 @@
  */
 module abagames.p47.Lock;
 
+private extern (C) {
+  float ship_get_pos_x();
+  float ship_get_pos_y();
+  Box field_get_collision_box();
+}
+
 private:
 import std.math;
 import abagames.util.Vector;
 import abagames.util.Actor;
 import abagames.util.Rand;
-import abagames.p47.Ship;
-import abagames.p47.Field;
-import abagames.p47.P47GameManager;
+import abagames.util.BoxCollision;
 import abagames.p47.Enemy;
 import abagames.p47.SoundManager;
 import abagames.p47.Renderer;
+import abagames.p47.Effects;
 
 /**
  * Lock laser.
@@ -46,20 +51,14 @@ public:
 private:
   static Rand rand;
   Vector vel;
-  Ship ship;
-  Field field;
-  P47GameManager manager;
 
   public static void init()
   {
     rand = new Rand;
   }
 
-  public this(Ship ship, Field field, P47GameManager manager)
+  public this()
   {
-    this.ship = ship;
-    this.field = field;
-    this.manager = manager;
     for (int i = 0; i < LENGTH; i++)
     {
       pos[i] = new Vector;
@@ -72,8 +71,8 @@ private:
   {
     for (int i = 0; i < LENGTH; i++)
     {
-      pos[i].x = ship.pos.x;
-      pos[i].y = ship.pos.y;
+      pos[i].x = ship_get_pos_x();
+      pos[i].y = ship_get_pos_y();
     }
     vel.x = rand.nextSignedFloat(1.5);
     vel.y = -2;
@@ -84,7 +83,7 @@ private:
   {
     reset();
     state = SEARCH;
-    lockMinY = field.box.halfHeight() * 2;
+    lockMinY = field_get_collision_box().halfHeight() * 2;
     released = false;
     isExist = true;
   }
@@ -161,7 +160,7 @@ private:
       }
       else
       {
-        vel.y += (field.box.halfHeight() * 2 - pos[0].y) * SPEED;
+        vel.y += (field_get_collision_box().halfHeight() * 2 - pos[0].y) * SPEED;
       }
       for (int i = LENGTH - 1; i > 0; i--)
       {
@@ -170,7 +169,7 @@ private:
       }
       pos[0].x += vel.x;
       pos[0].y += vel.y;
-      if (pos[0].y > field.box.halfHeight() + 5)
+      if (pos[0].y > field_get_collision_box().halfHeight() + 5)
       {
         if (state == CANCELED)
         {
@@ -185,7 +184,7 @@ private:
         }
       }
       float d = atan2(pos[1].x - pos[0].x, pos[1].y - pos[0].y);
-      manager.addParticle(pos[0], d, 0, SPEED * 32);
+      Effects.addParticle(pos[0], d, 0, SPEED * 32);
       break;
     case HIT:
       for (int i = 1; i < LENGTH; i++)

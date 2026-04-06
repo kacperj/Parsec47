@@ -23,9 +23,4 @@ public class Logger
   {
     stderr.writeln("Error: " ~ msg);
   }
-
-  public static void error(Exception e)
-  {
-    stderr.writeln("Error: " ~ e.toString());
-  }
 }

@@ -8,28 +8,34 @@ module abagames.p47.P47Screen;
 private:
 import std.string;
 import std.math;
-import SDL;
 import opengl;
 import abagames.util.Logger;
-import abagames.util.sdl.SDLInitFailedException;
-import abagames.p47.LuminousScreen;
 import abagames.p47.Renderer;
+import abagames.p47.LuminousScreen;
+
+private extern(C):
+int  window_init(int width, int height, int fullscreen, const(char)* title);
+void window_close();
+void window_gl_swap();
+void window_show_cursor(int show);
 
 /**
  * SDL screen handler and OpenGL setup for PARSEC47.
  */
 public class P47Screen
 {
-public:
-  static const string CAPTION = "PARSEC47";
-  static float luminous = 0;
-  static int width = 640;
-  static int height = 480;
-  static bool lowres = false;
-  static bool windowMode = false;
+
+private:
   static float nearPlane = 0.1;
   static float farPlane = 1000;
-private:
+  static const string CAPTION = "PARSEC47";
+  static int width = 640;
+  static int height = 480;
+
+public:
+  static bool lowres = false;
+  static bool windowMode = false;
+  static float luminous = 0;
   LuminousScreen luminousScreen;
 
   public void initSDL()
@@ -39,34 +45,19 @@ private:
       width /= 2;
       height /= 2;
     }
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+    int fullscreen = windowMode ? 0 : 1;
+    if (window_init(width, height, fullscreen, std.string.toStringz(CAPTION)) < 0)
     {
-      throw new SDLInitFailedException(
-        "Unable to initialize SDL: " ~ std.string.fromStringz(SDL_GetError()).idup);
-    }
-    Uint32 videoFlags;
-    if (windowMode)
-    {
-      videoFlags = SDL_OPENGL | SDL_RESIZABLE;
-    }
-    else
-    {
-      videoFlags = SDL_OPENGL | SDL_FULLSCREEN;
-    }
-    if (SDL_SetVideoMode(width, height, 0, videoFlags) == null)
-    {
-      throw new SDLInitFailedException(
-        "Unable to create SDL screen: " ~ std.string.fromStringz(SDL_GetError()).idup);
+      throw new Exception("Unable to create window");
     }
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     resized(width, height);
-    SDL_ShowCursor(SDL_DISABLE);
+    window_show_cursor(0);
     init();
   }
 
   private void init()
   {
-    SDL_WM_SetCaption(cast(char*) std.string.toStringz(CAPTION), null);
     glLineWidth(1);
     glEnable(GL_LINE_SMOOTH);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -118,27 +109,19 @@ private:
   public void closeSDL()
   {
     close();
-    SDL_ShowCursor(SDL_ENABLE);
+    window_show_cursor(1);
+    window_close();
   }
 
   public void flip()
   {
     handleError();
-    SDL_GL_SwapBuffers();
+    window_gl_swap();
   }
 
   public void clear()
   {
     glClear(GL_COLOR_BUFFER_BIT);
-  }
-
-  public void handleError()
-  {
-    GLenum error = glGetError();
-    if (error == GL_NO_ERROR)
-      return;
-    closeSDL();
-    throw new Exception("OpenGL error");
   }
 
   public void startRenderToTexture()
@@ -157,6 +140,15 @@ private:
   {
     if (luminousScreen)
       luminousScreen.draw();
+  }
+
+  public void handleError()
+  {
+    GLenum error = glGetError();
+    if (error == GL_NO_ERROR)
+      return;
+    closeSDL();
+    throw new Exception("OpenGL error");
   }
 
   public void viewOrthoFixed()

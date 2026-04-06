@@ -1,11 +1,14 @@
 pub mod actors;
+pub mod collision;
 pub mod core;
 pub mod field;
 pub mod letter_render;
 pub mod pad;
+pub mod platform;
 pub mod prefs;
 pub mod renderer;
 pub mod rendering;
+pub mod ship;
 pub mod sound;
 pub mod state;
 pub mod ui_renderer;

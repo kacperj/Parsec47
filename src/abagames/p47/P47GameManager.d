@@ -8,7 +8,6 @@ module abagames.p47.P47GameManager;
 private:
 import std.math;
 import opengl;
-import SDL;
 import bulletml;
 import abagames.util.Rand;
 import abagames.util.Vector;
@@ -25,8 +24,7 @@ import abagames.p47.EnemyType;
 import abagames.p47.BulletActor;
 import abagames.p47.BulletActorPool;
 import abagames.p47.BarrageManager;
-import abagames.p47.Shot;
-import abagames.p47.Roll;
+import abagames.p47.Shot;  // kept for Shot.SPEED constant
 import abagames.p47.Lock;
 import abagames.p47.Bonus;
 import abagames.p47.BonusState;
@@ -34,6 +32,7 @@ import abagames.p47.StageManager;
 import abagames.p47.Title;
 import abagames.p47.SoundManager;
 import abagames.p47.Renderer;
+import abagames.util.BoxCollision;
 
 /**
  * Manage the game status and actor pools.
@@ -50,18 +49,27 @@ private extern (C) {
   void particles_draw();
   void particles_draw_luminous();
   void particles_update();
-  void particles_init_new(float x, float y, float deg, float ofs, float speed);
 
   void fragments_draw();
   void fragments_draw_luminous();
   void fragments_update();
-  void fragments_init_new(float x1, float y1, float x2, float y2, float z, float speed, float deg);
 
   void score_set_initial();
   void life_decrease();
   int life_get();
   int score_get();
   void score_increase(int sc);
+
+  void shots_update();
+  void shots_draw();
+  void shots_clear();
+  void shots_init_new(float x, float y, float deg, float bx1, float by1, float bx2, float by2);
+
+  void rolls_clear();
+  void rolls_draw();
+  void rolls_init_new();
+  void rolls_update();
+  void rolls_release_all();
 }
 
 
@@ -116,8 +124,6 @@ private:
   Ship ship;
   ActorPool!Enemy enemies;
   BulletActorPool bullets;
-  ActorPool!Shot shots;
-  ActorPool!Roll rolls;
   ActorPool!Lock locks;
   ActorPool!Bonus bonuses;
   BarrageManager barrageManager;
@@ -139,20 +145,18 @@ private:
     rand = new Rand;
     Field.createDisplayLists();
     field = new Field;
-    field.init();
+    field.init(Box.createWithHalfExtents(11, 16));
     Ship.createDisplayLists();
     ship = new Ship;
     ship.init(pad, field, this);
     BulletActor.createDisplayLists();
     bullets = new BulletActorPool(512, () => new BulletActor(field, ship));
     LetterRender.createDisplayLists();
-    shots = new ActorPool!Shot(32, () => new Shot(field));
     Lock.init();
-    rolls = new ActorPool!Roll(4, () => new Roll(ship, field, this));
-    locks = new ActorPool!Lock(4, () => new Lock(ship, field, this));
-    enemies = new ActorPool!Enemy(ENEMY_MAX, () => new Enemy(field, bullets, shots, rolls, locks, ship, this));
+    locks = new ActorPool!Lock(4, () => new Lock());
+    enemies = new ActorPool!Enemy(ENEMY_MAX, () => new Enemy(field, bullets, locks, ship, this));
     Bonus.init();
-    bonuses = new ActorPool!Bonus(128, () => new Bonus(field, ship, this));
+    bonuses = new ActorPool!Bonus(128, () => new Bonus(ship));
     barrageManager = new BarrageManager;
     barrageManager.loadBulletMLs();
     EnemyType.init(barrageManager);
@@ -193,20 +197,6 @@ private:
       startGameover();
   }
 
-  public void addParticle(Vector pos, float deg, float ofs, float speed)
-  {
-    particles_init_new(pos.x, pos.y, deg, ofs, speed);
-  }
-
-  public void addFragments(int n, float x1, float y1, float x2, float y2, float z,
-    float speed, float deg)
-  {
-    for (int i = 0; i < n; i++)
-    {
-      fragments_init_new(x1, y1, x2, y2, z, speed, deg);
-    }
-  }
-
   public void addEnemy(Vector pos, float d, EnemyType type, BulletMLParser* moveParser)
   {
     Enemy en = enemies.getInstance();
@@ -235,18 +225,12 @@ private:
 
   public void addShot(Vector pos, float deg)
   {
-    Shot shot = shots.getInstance();
-    if (!shot)
-      return;
-    shot.set(pos, deg);
+    shots_init_new(pos.x, pos.y, deg, field.box.x1, field.box.y1, field.box.x2, field.box.y2);
   }
 
   public void addRoll()
   {
-    Roll roll = rolls.getInstance();
-    if (!roll)
-      return;
-    roll.set();
+    rolls_init_new();
   }
 
   public void addLock()
@@ -259,12 +243,7 @@ private:
 
   public void releaseRoll()
   {
-    for (int i = 0; i < rolls.actor.length; i++)
-    {
-      if (!rolls.actor[i].isExist)
-        continue;
-      (cast(Roll) rolls.actor[i]).released = true;
-    }
+    rolls_release_all();
   }
 
   public void releaseLock()
@@ -379,8 +358,8 @@ private:
   {
     state = GAMEOVER;
     bonuses.clear();
-    shots.clear();
-    rolls.clear();
+    shots_clear();
+    rolls_clear();
     locks.clear();
     setScreenShake(0, 0);
     interval = mainLoop.INTERVAL_BASE;
@@ -417,10 +396,10 @@ private:
     field.move();
     ship.move();
     bonuses.move();
-    shots.move();
+    shots_update();
     enemies.move();
     if (mode == ROLL)
-      rolls.move();
+      rolls_update();
     else
       locks.move();
     BulletActor.resetTotalBulletsSpeed();
@@ -592,10 +571,10 @@ private:
     glEnd();
     fragments_draw();
     ship.draw();
-    shots.draw();
+    shots_draw();
     
     if (mode == ROLL)
-      rolls.draw();
+      rolls_draw();
     else
       locks.draw();
     enemies.draw();
@@ -686,18 +665,11 @@ private:
       x = rand.nextSignedFloat(screenShakeIntense * (screenShakeCnt + 10));
       y = rand.nextSignedFloat(screenShakeIntense * (screenShakeCnt + 10));
     }
-    glTranslatef(x, y, -field.eyeZ);
+    glTranslatef(x, y, -20);
   }
 
   public void draw()
   {
-    SDL_Event e = mainLoop.event;
-    if (e.type == SDL_VIDEORESIZE)
-    {
-      SDL_ResizeEvent re = e.resize;
-      if (re.w > 150 && re.h > 100)
-        screen.resized(re.w, re.h);
-    }
     screen.startRenderToTexture();
     glPushMatrix();
     setEyepos();

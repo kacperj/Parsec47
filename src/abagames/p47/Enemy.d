@@ -16,8 +16,7 @@ import abagames.util.ActorPool;
 import abagames.p47.Ship;
 import abagames.p47.Field;
 import abagames.p47.Bonus;
-import abagames.p47.Shot;
-import abagames.p47.Roll;
+import abagames.p47.Shot;  // kept for Shot.SPEED constant
 import abagames.p47.Lock;
 import abagames.p47.P47GameManager;
 import abagames.p47.BulletActor;
@@ -25,6 +24,22 @@ import abagames.p47.BulletActorPool;
 import abagames.p47.EnemyType;
 import abagames.p47.SoundManager;
 import abagames.p47.Renderer;
+import abagames.p47.Effects;
+
+
+private extern (C) {
+  bool shots_is_active(int i);
+  float shots_get_pos_x(int i);
+  float shots_get_pos_y(int i);
+  void shots_set_inactive(int i);
+
+  bool  rolls_is_active(int i);
+  float rolls_get_pos0_x(int i);
+  float rolls_get_pos0_y(int i);
+  bool  rolls_is_released(int i);
+  int   rolls_get_cnt(int i);
+  int   rolls_pool_size();
+}
 
 /**
  * Enemies.
@@ -47,6 +62,7 @@ public:
   int shield;
 private:
   static const int MOVE_POINT_MAX = 8;
+  static const int ROLL_NO_COLLISION_CNT = 45;
   static Rand _rand;
   static @property Rand rand()
   {
@@ -57,8 +73,6 @@ private:
 
   Field field;
   BulletActorPool bullets;
-  ActorPool!Shot shots;
-  ActorPool!Roll rolls;
   ActorPool!Lock locks;
   Ship ship;
   P47GameManager manager;
@@ -86,13 +100,11 @@ private:
   bool damaged;
   int bossTimer;
 
-  public this(Field field, BulletActorPool bullets, ActorPool!Shot shots,
-    ActorPool!Roll rolls, ActorPool!Lock locks, Ship ship, P47GameManager manager)
+  public this(Field field, BulletActorPool bullets,
+    ActorPool!Lock locks, Ship ship, P47GameManager manager)
   {
     this.field = field;
     this.bullets = bullets;
-    this.shots = shots;
-    this.rolls = rolls;
     this.locks = locks;
     this.ship = ship;
     this.manager = manager;
@@ -268,7 +280,7 @@ private:
     {
       if (ni >= BatteryType.WING_SHAPE_POINT_NUM)
         ni = 0;
-      manager.addFragments(n,
+      Effects.addFragments(n,
         pos.x + bt.wingShapePos[i].x, pos.y + bt.wingShapePos[i].y,
         pos.x + bt.wingShapePos[ni].x, pos.y + bt.wingShapePos[ni].y,
         z, speed, deg);
@@ -282,7 +294,7 @@ private:
     {
       if (ni >= EnemyType.BODY_SHAPE_POINT_NUM)
         ni = 0;
-      manager.addFragments(n,
+      Effects.addFragments(n,
         pos.x + type.bodyShapePos[i].x, pos.y + type.bodyShapePos[i].y,
         pos.x + type.bodyShapePos[ni].x, pos.y + type.bodyShapePos[ni].y,
         z, speed, deg);
@@ -432,18 +444,20 @@ private:
   {
     int ch;
     // Chech shots.
-    for (int i = 0; i < shots.actor.length; i++)
+    Vector sp = new Vector;
+    for (int i = 0; i < 32; i++)
     {
-      if (!shots.actor[i].isExist)
+      if (!shots_is_active(i))
         continue;
-      Vector sp = shots.actor[i].pos;
+      sp.x = shots_get_pos_x(i);
+      sp.y = shots_get_pos_y(i);
       ch = checkHit(sp, 0.7, 0);
       if (ch >= HIT)
       {
-        manager.addParticle(sp, rand.nextSignedFloat(0.3), 0, Shot.SPEED / 4);
-        manager.addParticle(sp, rand.nextSignedFloat(0.3), 0, Shot.SPEED / 4);
-        manager.addParticle(sp, std.math.PI + rand.nextSignedFloat(0.3), 0, Shot.SPEED / 7);
-        shots.actor[i].isExist = false;
+        Effects.addParticle(sp, rand.nextSignedFloat(0.3), 0, Shot.SPEED / 4);
+        Effects.addParticle(sp, rand.nextSignedFloat(0.3), 0, Shot.SPEED / 4);
+        Effects.addParticle(sp, std.math.PI + rand.nextSignedFloat(0.3), 0, Shot.SPEED / 7);
+        shots_set_inactive(i);
         if (ch == HIT)
           addDamage(SHOT_DAMAGE);
         else
@@ -453,24 +467,24 @@ private:
     if (manager.mode == P47GameManager.ROLL)
     {
       // Chech rolls.
-      for (int i = 0; i < rolls.actor.length; i++)
+      for (int i = 0; i < rolls_pool_size(); i++)
       {
-        if (!rolls.actor[i].isExist)
+        if (!rolls_is_active(i))
           continue;
-        Roll rl = rolls.actor[i];
-        ch = checkHit(rl.pos[0], 1.0, 1.0);
+        Vector rp = new Vector(rolls_get_pos0_x(i), rolls_get_pos0_y(i));
+        ch = checkHit(rp, 1.0, 1.0);
         if (ch >= HIT)
         {
           for (int j = 0; j < 4; j++)
-            manager.addParticle(rl.pos[0], rand.nextFloat(std.math.PI * 2), 0, Shot.SPEED / 10);
+            Effects.addParticle(rp, rand.nextFloat(std.math.PI * 2), 0, Shot.SPEED / 10);
           float rd = ROLL_DAMAGE;
-          if (rl.released)
+          if (rolls_is_released(i))
           {
             rd += rd;
           }
           else
           {
-            if (rl.cnt < Roll.NO_COLLISION_CNT)
+            if (rolls_get_cnt(i) < ROLL_NO_COLLISION_CNT)
               continue;
           }
           if (ch == HIT)
@@ -505,7 +519,7 @@ private:
           if (ch >= HIT && ch == lk.lockedPart)
           {
             for (int j = 0; j < 4; j++)
-              manager.addParticle(lk.pos[0], rand.nextFloat(std.math.PI * 2), 0, Shot.SPEED / 10);
+              Effects.addParticle(lk.pos[0], rand.nextFloat(std.math.PI * 2), 0, Shot.SPEED / 10);
             if (ch == HIT)
               addDamage(LOCK_DAMAGE);
             else

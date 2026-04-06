@@ -12,24 +12,39 @@ extern "C" {
 const SDL_INIT_JOYSTICK: u32 = 0x0000_0200;
 const JOYSTICK_AXIS: i16 = 16384;
 
-// SDL_KEYDOWN / SDL_KEYUP event type bytes (SDL1)
-const SDL_KEYDOWN: u8 = 2;
-const SDL_KEYUP: u8 = 3;
+// SDL2 SDLK keycode values
+const SK_RIGHT: u32 = 1073741903;
+const SK_LEFT: u32 = 1073741904;
+const SK_DOWN: u32 = 1073741905;
+const SK_UP: u32 = 1073741906;
+const SK_KP_6: u32 = 1073741918;
+const SK_KP_4: u32 = 1073741916;
+const SK_KP_2: u32 = 1073741914;
+const SK_KP_8: u32 = 1073741920;
+const SK_Z: u32 = 122;
+const SK_X: u32 = 120;
+const SK_LCTRL: u32 = 1073742048;
+const SK_LALT: u32 = 1073742050;
+const SK_LSHIFT: u32 = 1073742049;
+const SK_P: u32 = 112;
+const SK_ESCAPE: u32 = 27;
 
-// SDL1 SDLKey keysym values (indices into KEY_STATE)
-const SK_RIGHT: usize = 275;
-const SK_LEFT: usize = 276;
-const SK_DOWN: usize = 274;
-const SK_UP: usize = 273;
-const SK_KP_6: usize = 262;
-const SK_KP_4: usize = 260;
-const SK_KP_2: usize = 258;
-const SK_KP_8: usize = 264;
-const SK_Z: usize = 122;
-const SK_X: usize = 120;
-const SK_LCTRL: usize = 306;
-const SK_LALT: usize = 308;
-const SK_LSHIFT: usize = 304;
+// Indices into KEY_STATE for each tracked key
+const IDX_RIGHT: usize = 0;
+const IDX_LEFT: usize = 1;
+const IDX_DOWN: usize = 2;
+const IDX_UP: usize = 3;
+const IDX_KP_6: usize = 4;
+const IDX_KP_4: usize = 5;
+const IDX_KP_2: usize = 6;
+const IDX_KP_8: usize = 7;
+const IDX_Z: usize = 8;
+const IDX_X: usize = 9;
+const IDX_LCTRL: usize = 10;
+const IDX_LALT: usize = 11;
+const IDX_LSHIFT: usize = 12;
+const IDX_P: usize = 13;
+const IDX_ESCAPE: usize = 14;
 
 // Pad state bitmasks (must match D-side constants)
 const PAD_UP: c_int = 1;
@@ -39,11 +54,46 @@ const PAD_RIGHT: c_int = 8;
 const PAD_BUTTON1: c_int = 16;
 const PAD_BUTTON2: c_int = 32;
 
-// Key state table indexed by SDL1 SDLKey value (SDLK_LAST = 323, so 512 is safe)
-static mut KEY_STATE: [u8; 512] = [0u8; 512];
+// Key state table, indexed by our compact key indices above
+static mut KEY_STATE: [u8; 15] = [0u8; 15];
 
 static JOYSTICK: AtomicPtr<c_void> = AtomicPtr::new(null_mut());
 static BUTTON_REVERSED: AtomicBool = AtomicBool::new(false);
+
+fn sdl2_keycode_to_index(kc: u32) -> Option<usize> {
+    match kc {
+        k if k == SK_RIGHT => Some(IDX_RIGHT),
+        k if k == SK_LEFT => Some(IDX_LEFT),
+        k if k == SK_DOWN => Some(IDX_DOWN),
+        k if k == SK_UP => Some(IDX_UP),
+        k if k == SK_KP_6 => Some(IDX_KP_6),
+        k if k == SK_KP_4 => Some(IDX_KP_4),
+        k if k == SK_KP_2 => Some(IDX_KP_2),
+        k if k == SK_KP_8 => Some(IDX_KP_8),
+        k if k == SK_Z => Some(IDX_Z),
+        k if k == SK_X => Some(IDX_X),
+        k if k == SK_LCTRL => Some(IDX_LCTRL),
+        k if k == SK_LALT => Some(IDX_LALT),
+        k if k == SK_LSHIFT => Some(IDX_LSHIFT),
+        k if k == SK_P => Some(IDX_P),
+        k if k == SK_ESCAPE => Some(IDX_ESCAPE),
+        _ => None,
+    }
+}
+
+/// Called by platform.rs when a SDL2 key event arrives.
+pub(crate) fn handle_key_event(keycode: u32, pressed: bool) {
+    if let Some(idx) = sdl2_keycode_to_index(keycode) {
+        unsafe {
+            KEY_STATE[idx] = if pressed { 1 } else { 0 };
+        }
+    }
+}
+
+#[inline]
+fn key_at(idx: usize) -> bool {
+    unsafe { KEY_STATE[idx] != 0 }
+}
 
 /// Initialize SDL2 joystick subsystem and open the first joystick.
 /// Returns 0 on success, -1 on failure.
@@ -62,38 +112,6 @@ pub extern "C" fn pad_open_joystick() -> c_int {
     }
 }
 
-/// Update internal key state from an SDL1 SDL_Event.
-///
-/// SDL_KeyboardEvent memory layout (SDL 1.2):
-///   offset 0: type  (u8) — SDL_KEYDOWN=2 or SDL_KEYUP=3
-///   offset 1: which (u8)
-///   offset 2: state (u8)
-///   offset 3: padding
-///   offset 4: keysym.scancode (u8)
-///   offset 5-7: padding
-///   offset 8: keysym.sym (SDLKey = i32) <- the logical key value
-#[no_mangle]
-pub extern "C" fn pad_handle_event(event: *const c_void) {
-    if event.is_null() {
-        return;
-    }
-    unsafe {
-        let bytes = event as *const u8;
-        let event_type = *bytes;
-        if event_type == SDL_KEYDOWN || event_type == SDL_KEYUP {
-            let sym = *(bytes.add(8) as *const i32);
-            if sym >= 0 && (sym as usize) < KEY_STATE.len() {
-                KEY_STATE[sym as usize] = if event_type == SDL_KEYDOWN { 1 } else { 0 };
-            }
-        }
-    }
-}
-
-#[inline]
-fn key_pressed(sk: usize) -> bool {
-    unsafe { KEY_STATE[sk] != 0 }
-}
-
 /// Returns a bitmask of directional pad state (UP/DOWN/LEFT/RIGHT).
 #[no_mangle]
 pub extern "C" fn pad_get_pad_state() -> c_int {
@@ -110,16 +128,16 @@ pub extern "C" fn pad_get_pad_state() -> c_int {
     };
 
     let mut pad: c_int = 0;
-    if key_pressed(SK_RIGHT) || key_pressed(SK_KP_6) || x > JOYSTICK_AXIS {
+    if key_at(IDX_RIGHT) || key_at(IDX_KP_6) || x > JOYSTICK_AXIS {
         pad |= PAD_RIGHT;
     }
-    if key_pressed(SK_LEFT) || key_pressed(SK_KP_4) || x < -JOYSTICK_AXIS {
+    if key_at(IDX_LEFT) || key_at(IDX_KP_4) || x < -JOYSTICK_AXIS {
         pad |= PAD_LEFT;
     }
-    if key_pressed(SK_DOWN) || key_pressed(SK_KP_2) || y > JOYSTICK_AXIS {
+    if key_at(IDX_DOWN) || key_at(IDX_KP_2) || y > JOYSTICK_AXIS {
         pad |= PAD_DOWN;
     }
-    if key_pressed(SK_UP) || key_pressed(SK_KP_8) || y < -JOYSTICK_AXIS {
+    if key_at(IDX_UP) || key_at(IDX_KP_8) || y < -JOYSTICK_AXIS {
         pad |= PAD_UP;
     }
     pad
@@ -145,8 +163,8 @@ pub extern "C" fn pad_get_button_state() -> c_int {
                 || SDL_JoystickGetButton(joy, 6) != 0
         };
 
-    let press1 = key_pressed(SK_Z) || key_pressed(SK_LCTRL) || btn1_joy;
-    let press2 = key_pressed(SK_X) || key_pressed(SK_LALT) || key_pressed(SK_LSHIFT) || btn2_joy;
+    let press1 = key_at(IDX_Z) || key_at(IDX_LCTRL) || btn1_joy;
+    let press2 = key_at(IDX_X) || key_at(IDX_LALT) || key_at(IDX_LSHIFT) || btn2_joy;
 
     let reversed = BUTTON_REVERSED.load(Ordering::Relaxed);
     let mut btn: c_int = 0;
@@ -173,15 +191,21 @@ pub extern "C" fn pad_get_button_reversed() -> c_int {
     }
 }
 
-/// Check whether a given SDL1 SDLKey keysym is currently pressed.
+/// Check whether a given SDL2 SDLK keycode is currently pressed.
+/// D side passes 112 (p) and 27 (ESC) — both valid SDL2 ASCII keycodes.
 #[no_mangle]
 pub extern "C" fn pad_is_key_pressed(sk: c_int) -> c_int {
-    if sk < 0 || (sk as usize) >= 512 {
+    if sk < 0 {
         return 0;
     }
-    if key_pressed(sk as usize) {
-        1
-    } else {
-        0
+    match sdl2_keycode_to_index(sk as u32) {
+        Some(idx) => {
+            if key_at(idx) {
+                1
+            } else {
+                0
+            }
+        }
+        None => 0,
     }
 }

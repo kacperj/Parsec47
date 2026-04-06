@@ -61,7 +61,7 @@ private void parseArgs(string[] args)
         throw new Exception("Invalid options");
       }
       i++;
-      float l = cast(float) atoi(std.string.toStringz(args[i])) / 100;
+      float l = cast(float) atoi(std.string.toStringz(args[i])) / 100;        
       if (l < 0 || l > 1)
       {
         usage(args[0]);

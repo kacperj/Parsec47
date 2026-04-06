@@ -24,7 +24,6 @@ docker cp "$CONTAINER:/build/out/SDL2_mixer.dll"   ./build/SDL2_mixer.dll
 docker rm "$CONTAINER" >/dev/null
 
 cp -r assets/* build/assets
-cp SDL.dll build/SDL.dll
 
 
 echo "=== Done ==="

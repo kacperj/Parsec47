@@ -7,20 +7,20 @@ module abagames.p47.Bonus;
 
 private:
 import std.math;
-import opengl;
 import abagames.util.Vector;
 import abagames.util.Rand;
 import abagames.util.Actor;
-import abagames.p47.Field;
+import abagames.util.BoxCollision;
 import abagames.p47.Ship;
-import abagames.p47.P47GameManager;
-import abagames.p47.SoundManager;
-import abagames.p47.Renderer;
-import abagames.p47.BonusState;
 
 
 private extern (C) {
   void bonus_collected();
+  void bonus_draw(float posX, float posY, int cnt, bool isDown, bool isInhaled);
+  void bonus_state_reset();
+  float ship_get_pos_x();
+  float ship_get_pos_y();
+  Box field_get_collision_box();
 }
 
 /**
@@ -32,19 +32,15 @@ public:
   static float rate;
 private:
   static const float BASE_SPEED = 0.1;
-  static const Color BONUS_COLOR = Color(0.2, 0.7, 0.5, 1);
   static float speed;
   static const float INHALE_WIDTH = 3;
   static const float ACQUIRE_WIDTH = 1;
   static const int RETRO_CNT = 20;
-  static const float BOX_SIZE = 0.4;
   static Rand rand;
   float fieldLimitX, fieldLimitY;
-  Field field;
   Ship ship;
-  P47GameManager manager;
   Vector pos;
-  Vector vel;
+  Vector2 vel;
   int cnt;
   bool isDown;
   bool isInhaled;
@@ -61,15 +57,12 @@ private:
     speed = BASE_SPEED * rate;
   }
 
-  public this(Field field, Ship ship, P47GameManager manager)
+  public this(Ship ship)
   {
-    this.field = field;
     this.ship = ship;
-    this.manager = manager;
     pos = new Vector;
-    vel = new Vector;
-    fieldLimitX = field.box.halfWidth() / 6 * 5;
-    fieldLimitY = field.box.halfHeight() / 10 * 9;
+    fieldLimitX = field_get_collision_box().halfWidth() / 6 * 5;
+    fieldLimitY = field_get_collision_box().halfHeight() / 10 * 9;
   }
 
   public void set(Vector p, Vector ofs)
@@ -88,11 +81,6 @@ private:
     isDown = true;
     isInhaled = false;
     isExist = true;
-  }
-
-  private void missBonus()
-  {
-    BonusState.resetBonusScore();
   }
 
   public override void move()
@@ -127,7 +115,7 @@ private:
       vel.y += (speed - vel.y) / 50;
       if (pos.y > fieldLimitY)
       {
-        missBonus();
+        bonus_state_reset();
         isExist = false;
         return;
       }
@@ -135,7 +123,9 @@ private:
     cnt++;
     if (cnt < RETRO_CNT)
       return;
-    float d = pos.dist(ship.pos);
+    float _ax = fabs(pos.x - ship_get_pos_x());
+    float _ay = fabs(pos.y - ship_get_pos_y());
+    float d = (_ax > _ay) ? _ax + _ay / 2 : _ay + _ax / 2;
     if (d < ACQUIRE_WIDTH * (1 + cast(float) inhaleCnt * 0.2) && ship.cnt >= -Ship.INVINCIBLE_CNT)
     {
       bonus_collected();
@@ -148,8 +138,8 @@ private:
       float ip = (INHALE_WIDTH - d) / 48;
       if (ip < 0.025)
         ip = 0.025;
-      vel.x += (ship.pos.x - pos.x) * ip;
-      vel.y += (ship.pos.y - pos.y) * ip;
+      vel.x += (ship_get_pos_x() - pos.x) * ip;
+      vel.y += (ship_get_pos_y() - pos.y) * ip;
       if (ship.cnt < -Ship.INVINCIBLE_CNT)
       {
         isInhaled = false;
@@ -165,39 +155,7 @@ private:
 
   public override void draw()
   {
-    float retro;
-    if (cnt < RETRO_CNT)
-      retro = 1 - cast(float) cnt / RETRO_CNT;
-    else
-      retro = 0;
-    float d = cnt * 0.1;
-    float ox = sin(d) * 0.3;
-    float oy = cos(d) * 0.3;
-    if (retro > 0)
-    {
-      RetroParam param = RetroParam(retro, 0.2);
-      Renderer.drawBoxRetro(pos.x - ox, pos.y - oy, BOX_SIZE / 2, BOX_SIZE / 2, 0, BONUS_COLOR, param);
-      Renderer.drawBoxRetro(pos.x + ox, pos.y + oy, BOX_SIZE / 2, BOX_SIZE / 2, 0, BONUS_COLOR, param);
-      Renderer.drawBoxRetro(pos.x - oy, pos.y + ox, BOX_SIZE / 2, BOX_SIZE / 2, 0, BONUS_COLOR, param);
-      Renderer.drawBoxRetro(pos.x + oy, pos.y - ox, BOX_SIZE / 2, BOX_SIZE / 2, 0, BONUS_COLOR, param);
-    }
-    else
-    {
-      if (isInhaled)
-        Renderer.setColor(Color(0.8, 0.6, 0.4, 0.7));
-      else if (isDown)
-        Renderer.setColor(Color(0.4, 0.9, 0.6, 0.7));
-      else
-        Renderer.setColor(Color(0.8, 0.9, 0.5, 0.7));
-      Renderer.drawBoxLine(pos.x - ox - BOX_SIZE / 2, pos.y - oy - BOX_SIZE / 2,
-        BOX_SIZE, BOX_SIZE);
-      Renderer.drawBoxLine(pos.x + ox - BOX_SIZE / 2, pos.y + oy - BOX_SIZE / 2,
-        BOX_SIZE, BOX_SIZE);
-      Renderer.drawBoxLine(pos.x - oy - BOX_SIZE / 2, pos.y + ox - BOX_SIZE / 2,
-        BOX_SIZE, BOX_SIZE);
-      Renderer.drawBoxLine(pos.x + oy - BOX_SIZE / 2, pos.y - ox - BOX_SIZE / 2,
-        BOX_SIZE, BOX_SIZE);
-    }
+    bonus_draw(pos.x, pos.y, cnt, isDown, isInhaled);
   }
 }
 

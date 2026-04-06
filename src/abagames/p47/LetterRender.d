@@ -3,7 +3,6 @@ module abagames.p47.LetterRender;
 private extern(C):
 void letter_render_create_display_lists();
 void letter_render_draw_string(const(ubyte)* ptr, int len, float lx, float y, float s, int d);
-void letter_render_draw_num(int num, float lx, float y, float s, int d);
 
 public class LetterRender
 {

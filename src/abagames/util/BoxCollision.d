@@ -1,6 +1,8 @@
 module abagames.util.BoxCollision;
 
 import std.math;
+import abagames.util.Vector;
+
 
 /**
  * Axis-aligned box centered at the origin, defined by half-extents.
@@ -25,6 +27,23 @@ public struct Box {
 
   float halfWidth() { return width() * 0.5; }
   float halfHeight() { return height() * 0.5; }
+
+  public bool checkHit(Vector point) {
+    return BoxCollision.checkHit(this, point.x, point.y);
+  }
+
+  public bool checkHit(Vector2 point) {
+    return BoxCollision.checkHit(this, point.x, point.y);
+  }
+
+
+  public bool checkHit(Vector point, float space) {
+    return BoxCollision.checkHit(this, point.x, point.y, space);
+  }
+
+  public bool checkHit(Vector2 point, float space) {
+    return BoxCollision.checkHit(this, point.x, point.y, space);
+  }
 
   public bool checkHit(float x, float y) {
     return BoxCollision.checkHit(this, x, y);

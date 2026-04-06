@@ -48,6 +48,19 @@ impl<T: Actor> ActorPool<T> {
         }
     }
 
+    pub fn get_instance(&mut self) -> Option<&mut T> {
+        for _ in 0..self.actors.len() {
+            self.current_index -= 1;
+            if self.current_index < 0 {
+                self.current_index = self.actors.len() as i32 - 1;
+            }
+            if !self.actors[self.current_index as usize].is_active() {
+                return Some(&mut self.actors[self.current_index as usize]);
+            }
+        }
+        None
+    }
+
     pub fn init_instance_force(&mut self, factory: impl Fn(&mut T)) {
         self.current_index -= 1;
         if self.current_index < 0 {

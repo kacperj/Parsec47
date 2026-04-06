@@ -293,7 +293,7 @@ private:
     apNum = 0;
     if (rank <= 0)
       return;
-    field.aimSpeed = 0.1 + section * 0.02;
+    field.setAimSpeed(0.1 + section * 0.02);
     if (section == 4)
     {
       // Set the middle boss.
@@ -303,7 +303,7 @@ private:
       gameManager.addBoss(pos, std.math.PI, middleBossType);
       bossSection = true;
       sectionIntervalCnt = sectionCnt = 2 * 60;
-      field.aimZ = 11;
+      field.setAimZ(11);
       return;
     }
     else if (section == 9)
@@ -315,19 +315,19 @@ private:
       gameManager.addBoss(pos, std.math.PI, largeBossType);
       bossSection = true;
       sectionIntervalCnt = sectionCnt = 3 * 60;
-      field.aimZ = 12;
+      field.setAimZ(12);
       return;
     }
     else if (section == middleRushSectionNum)
     {
       // In this section, no small enemy.
       middleRushSection = true;
-      field.aimZ = 9;
+      field.setAimZ(9);
     }
     else
     {
       middleRushSection = false;
-      field.aimZ = 10 + rand.nextSignedFloat(0.3);
+      field.setAimZ(10 + rand.nextSignedFloat(0.3));
     }
     bossSection = false;
     if (section == 3)

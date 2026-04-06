@@ -5,6 +5,10 @@
  */
 module abagames.p47.Ship;
 
+private extern (C) {
+  void ship_set_pos(float x, float y);
+}
+
 private:
 import std.math;
 import opengl;
@@ -18,6 +22,7 @@ import abagames.p47.BonusState;
 import abagames.p47.P47GameManager;
 import abagames.p47.Renderer;
 import abagames.p47.SoundManager;
+import abagames.p47.Effects;
 
 /**
  * My ship.
@@ -111,9 +116,9 @@ private:
       return;
     SoundManager.playSe(SoundManager.SHIP_DESTROYED);
     manager.shipDestroyed();
-    manager.addFragments(30, pos.x, pos.y, pos.x, pos.y, 0, 0.08, std.math.PI);
+    Effects.addFragments(30, pos.x, pos.y, pos.x, pos.y, 0, 0.08, std.math.PI);
     for (int i = 0; i < 45; i++)
-      manager.addParticle(pos, rand.nextFloat(std.math.PI * 2), 0, 0.6);
+      Effects.addParticle(pos, rand.nextFloat(std.math.PI * 2), 0, 0.6);
     start();
     cnt = -RESTART_CNT;
   }
@@ -231,6 +236,7 @@ private:
     Bullet.target.x = pos.x;
     Bullet.target.y = pos.y;
     ttlCnt++;
+    ship_set_pos(pos.x, pos.y);
   }
 
   public void draw()

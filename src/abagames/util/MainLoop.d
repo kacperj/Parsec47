@@ -6,14 +6,19 @@
 module abagames.util.sdl.MainLoop;
 
 private:
-import std.string;
-import SDL;
 import abagames.util.Logger;
 import abagames.util.Rand;
 import abagames.p47.P47PrefManager;
 import abagames.p47.P47GameManager;
 import abagames.p47.P47Screen;
 import abagames.util.sdl.Pad;
+
+private extern(C):
+int  window_poll_events();
+int  window_get_resize_w();
+int  window_get_resize_h();
+uint window_get_ticks();
+void window_delay(uint ms);
 
 /**
  * SDL main loop.
@@ -25,7 +30,6 @@ public:
   int interval = INTERVAL_BASE;
   int accframe = 0;
   int maxSkipFrame = 5;
-  SDL_Event event;
 
 private:
   P47Screen screen;
@@ -58,7 +62,6 @@ private:
     gameManager.close();
     prefManager.save();
     screen.closeSDL();
-    SDL_Quit();
   }
 
   private bool done;
@@ -82,19 +85,20 @@ private:
 
     while (!done)
     {
-      SDL_PollEvent(&event);
-      input.handleEvent(&event);
-      if (event.type == SDL_QUIT)
+      int evMask = window_poll_events();
+      if (evMask & 1)
         breakLoop();
-      nowTick = SDL_GetTicks();
+      if (evMask & 2)
+        screen.resized(window_get_resize_w(), window_get_resize_h());
+      nowTick = window_get_ticks();
       frame = cast(int)(nowTick - prvTickCount) / interval;
       if (frame <= 0)
       {
         frame = 1;
-        SDL_Delay(cast(uint)(prvTickCount + interval - nowTick));
+        window_delay(cast(uint)(prvTickCount + interval - nowTick));
         if (accframe)
         {
-          prvTickCount = SDL_GetTicks();
+          prvTickCount = window_get_ticks();
         }
         else
         {

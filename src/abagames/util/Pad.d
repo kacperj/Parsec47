@@ -5,13 +5,8 @@
  */
 module abagames.util.sdl.Pad;
 
-private:
-import SDL;
-import abagames.util.sdl.SDLInitFailedException;
-
 private extern(C):
 int  pad_open_joystick();
-void pad_handle_event(void* event);
 int  pad_get_pad_state();
 int  pad_get_button_state();
 void pad_set_button_reversed(int v);
@@ -36,21 +31,13 @@ public:
   @property bool buttonReversed()       { return pad_get_button_reversed() != 0; }
   @property void buttonReversed(bool v) { pad_set_button_reversed(v ? 1 : 0); }
 
-  // SDL1 SDLKey values: SDLK_p=112, SDLK_ESCAPE=27
+  // SDL2 SDLK values: SDLK_p=112, SDLK_ESCAPE=27 (same as SDL1 for ASCII keys)
   bool isPausePressed()  { return pad_is_key_pressed(112) != 0; }
   bool isEscapePressed() { return pad_is_key_pressed(27) != 0; }
 
   public void openJoystick()
   {
-    if (pad_open_joystick() < 0)
-    {
-      throw new SDLInitFailedException("Unable to init SDL joystick");
-    }
-  }
-
-  public void handleEvent(SDL_Event* event)
-  {
-    pad_handle_event(cast(void*) event);
+    pad_open_joystick();
   }
 
   bool isPadUp()              { return (pad_get_pad_state()    & PAD_UP)      != 0; }
