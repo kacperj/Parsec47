@@ -1,8 +1,18 @@
 use crate::letter_render::*;
+use crate::prefs::*;
 use crate::renderer::*;
 use crate::rendering::gl::*;
 use crate::state::state_export::*;
 use core::ffi::c_float;
+
+const DIFFICULTY_STR: [&[u8]; 5] = [b"PRACTICE", b"NORMAL", b"HARD", b"EXTREME", b"QUIT"];
+const DIFFICULTY_SHORT_STR: [&[u8]; 5] = [b"P", b"N", b"H", b"E", b"Q"];
+const MODE_STR: [&[u8]; 2] = [b"ROLL", b"LOCK"];
+const TITLE_DIFFICULTY_NUM: i32 = 4;
+const TITLE_VERTICAL_BOXES: i32 = TITLE_DIFFICULTY_NUM + 1;
+const TITLE_BOX_COUNT: i32 = 16;
+const TITLE_BOX_SMALL: i32 = 24;
+const TITLE_SLOT_NUM: i32 = 10;
 
 #[no_mangle]
 pub extern "C" fn renderer_set_color_params(r: c_float, g: c_float, b: c_float, a: c_float) {
@@ -191,4 +201,116 @@ pub extern "C" fn renderer_draw_side_boards() {
     unsafe {
         glEnable(GL_BLEND);
     }
+}
+
+#[no_mangle]
+pub extern "C" fn renderer_draw_title(cur_x: i32, cur_y: i32, mode: i32, box_cnt: i32) {
+    let diff_label = DIFFICULTY_STR[cur_y as usize];
+    let mode_label = MODE_STR[mode as usize];
+    letter_render_draw_string(
+        diff_label.as_ptr(),
+        diff_label.len() as i32,
+        (470 - diff_label.len() as i32 * 14) as c_float,
+        150.0,
+        10.0,
+        TO_RIGHT,
+    );
+    letter_render_draw_string(
+        mode_label.as_ptr(),
+        mode_label.len() as i32,
+        (470 - mode_label.len() as i32 * 14) as c_float,
+        450.0,
+        10.0,
+        TO_RIGHT,
+    );
+
+    if cur_x > 0 {
+        let text = b"START AT PARSEC";
+        letter_render_draw_string(text.as_ptr(), text.len() as i32, 290.0, 180.0, 6.0, TO_RIGHT);
+        letter_render_draw_num(
+            prefs_get_start_parsec(mode, cur_y, cur_x),
+            470.0,
+            180.0,
+            6.0,
+            TO_RIGHT,
+        );
+    }
+
+    if cur_y < TITLE_DIFFICULTY_NUM {
+        letter_render_draw_num(
+            prefs_get_hi_score(mode, cur_y, cur_x),
+            470.0,
+            210.0,
+            10.0,
+            TO_RIGHT,
+        );
+    }
+
+    let box_letter_scale: c_float = 12.0;
+
+    for y in 0..TITLE_VERTICAL_BOXES {
+        let slots = prefs_get_slots(mode, y);
+        for x in 0..slots {
+            let sx = 180 + x * 28;
+            let mut sy = 260 + y * 32;
+
+            if y == TITLE_DIFFICULTY_NUM {
+                sy += 15;
+            }
+
+            if x == cur_x && y == cur_y {
+                let bs = (TITLE_BOX_COUNT - box_cnt) / 2;
+                renderer_draw_box_outlined(
+                    sx - bs,
+                    sy - bs,
+                    TITLE_BOX_SMALL + bs * 2,
+                    TITLE_BOX_SMALL + bs * 2,
+                );
+
+                if x == 0 {
+                    let short = DIFFICULTY_SHORT_STR[y as usize];
+                    letter_render_draw_string(
+                        short.as_ptr(),
+                        short.len() as i32,
+                        (sx + 13) as c_float,
+                        (sy + 13) as c_float,
+                        box_letter_scale,
+                        TO_RIGHT,
+                    );
+                } else {
+                    let short = DIFFICULTY_SHORT_STR[y as usize];
+                    letter_render_draw_string(
+                        short.as_ptr(),
+                        short.len() as i32,
+                        (sx + 4) as c_float,
+                        (sy + 13) as c_float,
+                        box_letter_scale,
+                        TO_RIGHT,
+                    );
+                    if x >= TITLE_SLOT_NUM - 1 {
+                        let xstr = b"X";
+                        letter_render_draw_string(
+                            xstr.as_ptr(),
+                            1,
+                            (sx + 21) as c_float,
+                            (sy + 14) as c_float,
+                            box_letter_scale,
+                            TO_RIGHT,
+                        );
+                    } else {
+                        letter_render_draw_num(
+                            x,
+                            (sx + 22) as c_float,
+                            (sy + 13) as c_float,
+                            box_letter_scale,
+                            TO_RIGHT,
+                        );
+                    }
+                }
+            } else {
+                renderer_draw_box_light(sx, sy, TITLE_BOX_SMALL, TITLE_BOX_SMALL);
+            }
+        }
+    }
+    renderer_draw_title_board();
 }

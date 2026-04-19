@@ -16,7 +16,6 @@ import abagames.util.sdl.MainLoop;
 import abagames.util.sdl.Pad;
 import abagames.p47.P47PrefManager;
 import abagames.p47.P47Screen;
-import abagames.p47.LetterRender;
 import abagames.p47.Ship;
 import abagames.p47.Field;
 import abagames.p47.Enemy;
@@ -24,14 +23,12 @@ import abagames.p47.EnemyType;
 import abagames.p47.BulletActor;
 import abagames.p47.BulletActorPool;
 import abagames.p47.BarrageManager;
-import abagames.p47.Shot;  // kept for Shot.SPEED constant
 import abagames.p47.Lock;
-import abagames.p47.Bonus;
-import abagames.p47.BonusState;
 import abagames.p47.StageManager;
 import abagames.p47.Title;
 import abagames.p47.SoundManager;
 import abagames.p47.Renderer;
+import abagames.p47.ShipMode;
 import abagames.util.BoxCollision;
 
 /**
@@ -45,6 +42,7 @@ private extern (C) {
   void sound_manager_stop_music();
   void renderer_draw_pause_status(int parsec, int pauseCnt);
   void renderer_draw_gameover_status(int parsec, int cnt);
+  void letter_render_create_display_lists();
 
   void particles_draw();
   void particles_draw_luminous();
@@ -58,33 +56,36 @@ private extern (C) {
   void life_decrease();
   int life_get();
   int score_get();
-  void score_increase(int sc);
 
   void shots_update();
   void shots_draw();
   void shots_clear();
-  void shots_init_new(float x, float y, float deg, float bx1, float by1, float bx2, float by2);
 
   void rolls_clear();
   void rolls_draw();
-  void rolls_init_new();
   void rolls_update();
-  void rolls_release_all();
+
+  void bonuses_init();
+  void bonuses_set_speed_rate(float r);
+  void bonuses_clear();
+  void bonuses_move();
+  void bonuses_draw();
+
+  void screen_shake_set(int cnt, float intense);
+  void screen_shake_update();
+  Vector2 screen_shake_get_translation();
+
+  int prefs_get_start_parsec(int mode, int difficulty, int slot);
 }
-
-
 
 public class P47GameManager
 {
 public:
   int status;
   bool nowait = false;
+  static bool noBonus = false;
   int difficulty, parsecSlot;
-  static enum
-  {
-    ROLL,
-    LOCK,
-  }
+
   int mode;
   static enum
   {
@@ -125,7 +126,6 @@ private:
   ActorPool!Enemy enemies;
   BulletActorPool bullets;
   ActorPool!Lock locks;
-  ActorPool!Bonus bonuses;
   BarrageManager barrageManager;
   StageManager stageManager;
   int cnt;
@@ -140,6 +140,10 @@ private:
   // Initialize actor pools, load BGMs/SEs and textures.
   public void init()
   {
+    this.difficulty = prefManager.selectedDifficulty;
+    this.parsecSlot = prefManager.selectedParsecSlot;
+    this.mode = prefManager.selectedMode;
+
     pad = cast(Pad) input;
     screen = abstScreen;
     rand = new Rand;
@@ -151,19 +155,18 @@ private:
     ship.init(pad, field, this);
     BulletActor.createDisplayLists();
     bullets = new BulletActorPool(512, () => new BulletActor(field, ship));
-    LetterRender.createDisplayLists();
+    letter_render_create_display_lists();
     Lock.init();
     locks = new ActorPool!Lock(4, () => new Lock());
     enemies = new ActorPool!Enemy(ENEMY_MAX, () => new Enemy(field, bullets, locks, ship, this));
-    Bonus.init();
-    bonuses = new ActorPool!Bonus(128, () => new Bonus(ship));
+    bonuses_init();
     barrageManager = new BarrageManager;
     barrageManager.loadBulletMLs();
     EnemyType.init(barrageManager);
     stageManager = new StageManager;
     stageManager.init(this, barrageManager, field);
     title = new Title;
-    title.init(pad, this, prefManager);
+    title.init();
     interval = mainLoop.INTERVAL_BASE;
     SoundManager.init();
   }
@@ -180,17 +183,8 @@ private:
     SoundManager.close();
   }
 
-  public void addScore(int sc)
-  {
-    score_increase(sc);
-  }
-
   public void shipDestroyed()
   {
-    if (mode == ROLL)
-      releaseRoll();
-    else
-      releaseLock();
     clearBullets();
     life_decrease();
     if (life_get() < 0)
@@ -223,27 +217,12 @@ private:
     en.setBoss(pos, d, type);
   }
 
-  public void addShot(Vector pos, float deg)
-  {
-    shots_init_new(pos.x, pos.y, deg, field.box.x1, field.box.y1, field.box.x2, field.box.y2);
-  }
-
-  public void addRoll()
-  {
-    rolls_init_new();
-  }
-
   public void addLock()
   {
     Lock lock = locks.getInstance();
     if (!lock)
       return;
     lock.set();
-  }
-
-  public void releaseRoll()
-  {
-    rolls_release_all();
   }
 
   public void releaseLock()
@@ -253,17 +232,6 @@ private:
       if (!locks.actor[i].isExist)
         continue;
       (cast(Lock) locks.actor[i]).released = true;
-    }
-  }
-
-  public void addBonus(Vector pos, Vector ofs, int num)
-  {
-    for (int i = 0; i < num; i++)
-    {
-      Bonus bonus = bonuses.getInstance();
-      if (!bonus)
-        return;
-      bonus.set(pos, ofs);
     }
   }
 
@@ -287,8 +255,16 @@ private:
     QUIT
   }
 
-  public void startStage(int difficulty, int parsecSlot, int startParsec, int mode)
+  public void startStagePreview()
   {
+    StageSelection stageSelection = title.getStatus();
+    startStage(stageSelection.difficulty, stageSelection.parsecSlot, stageSelection.mode);
+  }
+
+  public void startStage(int difficulty, int parsecSlot, int mode)
+  {
+    int startParsec = prefs_get_start_parsec(mode, difficulty, parsecSlot);
+
     enemies.clear();
     bullets.clear();
     this.difficulty = difficulty;
@@ -300,27 +276,27 @@ private:
     case PRACTICE:
       stageManager.setRank(1, 4, startParsec, stageType);
       ship.setSpeedRate(0.7);
-      Bonus.setSpeedRate(0.6);
+      bonuses_set_speed_rate(0.6);
       break;
     case NORMAL:
       stageManager.setRank(10, 8, startParsec, stageType);
       ship.setSpeedRate(0.9);
-      Bonus.setSpeedRate(0.8);
+      bonuses_set_speed_rate(0.8);
       break;
     case HARD:
       stageManager.setRank(22, 12, startParsec, stageType);
       ship.setSpeedRate(1);
-      Bonus.setSpeedRate(1);
+      bonuses_set_speed_rate(1);
       break;
     case EXTREME:
       stageManager.setRank(36, 16, startParsec, stageType);
       ship.setSpeedRate(1.2);
-      Bonus.setSpeedRate(1.3);
+      bonuses_set_speed_rate(1.3);
       break;
     case QUIT:
       stageManager.setRank(0, 0, 0, 0);
       ship.setSpeedRate(1);
-      Bonus.setSpeedRate(1);
+      bonuses_set_speed_rate(1);
       break;
     default:
       break;
@@ -330,7 +306,7 @@ private:
   private void initShipState()
   {
     score_set_initial();
-    ship.start();
+    ship.start(mode);
   }
 
   private void startInGame()
@@ -338,18 +314,19 @@ private:
     state = IN_GAME;
     SoundManager.isInGame = (state == IN_GAME);
     initShipState();
-    startStage(difficulty, parsecSlot, title.getStartParsec(difficulty, parsecSlot), mode);
+    startStage(difficulty, parsecSlot, mode);
   }
 
   private void startTitle()
   {
     state = TITLE;
-    title.start();
+    title.start(difficulty, parsecSlot, mode);
     field.setColor(mode);
     initShipState();
     bullets.clear();
+    bonuses_clear();
     ship.cnt = 0;
-    startStage(difficulty, parsecSlot, title.getStartParsec(difficulty, parsecSlot), mode);
+    startStagePreview();
     cnt = 0;
     sound_manager_stop_music();
   }
@@ -357,7 +334,7 @@ private:
   private void startGameover()
   {
     state = GAMEOVER;
-    bonuses.clear();
+    bonuses_clear();
     shots_clear();
     rolls_clear();
     locks.clear();
@@ -365,10 +342,10 @@ private:
     interval = mainLoop.INTERVAL_BASE;
     mainLoop.interval = mainLoop.INTERVAL_BASE;
     cnt = 0;
-    if (score_get() > prefManager.hiScore[mode][difficulty][parsecSlot])
-      prefManager.hiScore[mode][difficulty][parsecSlot] = score_get();
-    if (stageManager.parsec > prefManager.reachedParsec[mode][difficulty])
-      prefManager.reachedParsec[mode][difficulty] = stageManager.parsec;
+    if (score_get() > prefManager.getHiScore(mode, difficulty, parsecSlot))
+      prefManager.setHiScore(mode, difficulty, parsecSlot, score_get());
+    if (stageManager.parsec > prefManager.getReachedParsec(mode, difficulty))
+      prefManager.setReachedParsec(mode, difficulty, stageManager.parsec);
     SoundManager.fadeMusic();
   }
 
@@ -395,10 +372,10 @@ private:
     stageMove();
     field.move();
     ship.move();
-    bonuses.move();
+    bonuses_move();
     shots_update();
     enemies.move();
-    if (mode == ROLL)
+    if (mode == ShipMode.ROLL)
       rolls_update();
     else
       locks.move();
@@ -406,7 +383,7 @@ private:
     bullets.move();
     particles_update();
     fragments_update();
-    moveScreenShake();
+    screen_shake_update();
     if (pad.isPausePressed())
     {
       if (!pPrsd)
@@ -443,6 +420,10 @@ private:
   private void titleMove()
   {
     title.move();
+    if (title.shouldChangeStage()) {
+      startStagePreview();
+    }
+
     if (cnt <= 8)
     {
       btnPrsd = true;
@@ -453,11 +434,20 @@ private:
       {
         if (!btnPrsd)
         {
-          title.setStatus();
+          StageSelection stageSelection = title.getStatus();
+          this.difficulty = stageSelection.difficulty;
+          this.parsecSlot = stageSelection.parsecSlot;
+          this.mode = stageSelection.mode;
+
           if (difficulty >= P47PrefManager.DIFFICULTY_NUM)
             mainLoop.breakLoop();
-          else
+          else {
+            prefManager.selectedDifficulty = this.difficulty;
+            prefManager.selectedParsecSlot = this.parsecSlot;
+            prefManager.selectedMode = this.mode;
             startInGame();
+          }
+
           return;
         }
       }
@@ -466,6 +456,7 @@ private:
         if (!btnPrsd)
         {
           title.changeMode();
+          startStagePreview();
           field.setColor(mode);
           btnPrsd = true;
         }
@@ -562,9 +553,11 @@ private:
   private void inGameDraw()
   {
     field.draw();
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    bonuses.draw();
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    if (!noBonus) {
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      bonuses_draw();
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    }
     
     glBegin(GL_LINES);
     particles_draw();
@@ -573,7 +566,7 @@ private:
     ship.draw();
     shots_draw();
     
-    if (mode == ROLL)
+    if (mode == ShipMode.ROLL)
       rolls_draw();
     else
       locks.draw();
@@ -642,30 +635,15 @@ private:
     title.draw();
   }
 
-  private int screenShakeCnt;
-  private float screenShakeIntense;
-
   public void setScreenShake(int cnt, float intense)
   {
-    screenShakeCnt = cnt;
-    screenShakeIntense = intense;
-  }
-
-  private void moveScreenShake()
-  {
-    if (screenShakeCnt > 0)
-      screenShakeCnt--;
+    screen_shake_set(cnt, intense);
   }
 
   private void setEyepos()
   {
-    float x = 0, y = 0;
-    if (screenShakeCnt > 0)
-    {
-      x = rand.nextSignedFloat(screenShakeIntense * (screenShakeCnt + 10));
-      y = rand.nextSignedFloat(screenShakeIntense * (screenShakeCnt + 10));
-    }
-    glTranslatef(x, y, -20);
+    Vector2 t = screen_shake_get_translation();
+    glTranslatef(t.x, t.y, -20);
   }
 
   public void draw()

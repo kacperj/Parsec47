@@ -11,13 +11,18 @@ import std.math;
 import opengl;
 import abagames.util.Logger;
 import abagames.p47.Renderer;
-import abagames.p47.LuminousScreen;
 
 private extern(C):
 int  window_init(int width, int height, int fullscreen, const(char)* title);
 void window_close();
 void window_gl_swap();
 void window_show_cursor(int show);
+void luminous_screen_init(float luminous, int width, int height);
+void luminous_screen_close();
+void luminous_screen_resized(int width, int height);
+void luminous_screen_start_render_to_texture();
+void luminous_screen_end_render_to_texture();
+void luminous_screen_draw();
 
 /**
  * SDL screen handler and OpenGL setup for PARSEC47.
@@ -35,8 +40,9 @@ private:
 public:
   static bool lowres = false;
   static bool windowMode = false;
+  static bool fullscreenDesktop = false;
   static float luminous = 0;
-  LuminousScreen luminousScreen;
+  bool hasLuminous;
 
   public void initSDL()
   {
@@ -45,7 +51,7 @@ public:
       width /= 2;
       height /= 2;
     }
-    int fullscreen = windowMode ? 0 : 1;
+    int fullscreen = windowMode ? 0 : (fullscreenDesktop ? 2 : 1);
     if (window_init(width, height, fullscreen, std.string.toStringz(CAPTION)) < 0)
     {
       throw new Exception("Unable to create window");
@@ -69,19 +75,19 @@ public:
     glDisable(GL_COLOR_MATERIAL);
     if (luminous > 0)
     {
-      luminousScreen = new LuminousScreen;
-      luminousScreen.init(luminous, width, height);
+      luminous_screen_init(luminous, width, height);
+      hasLuminous = true;
     }
     else
     {
-      luminousScreen = null;
+      hasLuminous = false;
     }
   }
 
   private void close()
   {
-    if (luminousScreen)
-      luminousScreen.close();
+    if (hasLuminous)
+      luminous_screen_close();
   }
 
   private void screenResized()
@@ -101,8 +107,8 @@ public:
   {
     this.width = width;
     this.height = height;
-    if (luminousScreen)
-      luminousScreen.resized(width, height);
+    if (hasLuminous)
+      luminous_screen_resized(width, height);
     screenResized();
   }
 
@@ -126,20 +132,20 @@ public:
 
   public void startRenderToTexture()
   {
-    if (luminousScreen)
-      luminousScreen.startRenderToTexture();
+    if (hasLuminous)
+      luminous_screen_start_render_to_texture();
   }
 
   public void endRenderToTexture()
   {
-    if (luminousScreen)
-      luminousScreen.endRenderToTexture();
+    if (hasLuminous)
+      luminous_screen_end_render_to_texture();
   }
 
   public void drawLuminous()
   {
-    if (luminousScreen)
-      luminousScreen.draw();
+    if (hasLuminous)
+      luminous_screen_draw();
   }
 
   public void handleError()

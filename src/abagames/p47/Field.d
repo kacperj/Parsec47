@@ -30,6 +30,7 @@ public class Field
 {
 public:
   static const int TYPE_NUM = 4;
+  static bool noField = false;
 
   @property Box box() { return field_get_collision_box(); }
 
@@ -65,6 +66,8 @@ public:
 
   public void draw()
   {
+    if (noField)
+      return;
     field_draw();
   }
 

@@ -15,6 +15,11 @@ public static class Effects
     particles_init_new(pos.x, pos.y, deg, ofs, speed);
   }
 
+  public static void addParticle(Vector2 pos, float deg, float ofs, float speed)
+  {
+    particles_init_new(pos.x, pos.y, deg, ofs, speed);
+  }
+
   public static void addFragments(int n, float x1, float y1, float x2, float y2, float z,
     float speed, float deg)
   {

@@ -5,10 +5,10 @@ use crate::rendering::gl::*;
 
 const LETTER_NUM: i32 = 42;
 
-const TO_RIGHT: i32 = 0;
-const TO_DOWN: i32 = 1;
-const TO_LEFT: i32 = 2;
-const TO_UP: i32 = 3;
+pub const TO_RIGHT: i32 = 0;
+pub const TO_DOWN: i32 = 1;
+pub const TO_LEFT: i32 = 2;
+pub const TO_UP: i32 = 3;
 
 static mut DISPLAY_LIST_IDX: GLuint = 0;
 static mut COLOR_IDX: i32 = 0;
@@ -374,11 +374,11 @@ fn draw_letter_glyph(idx: usize, r: c_float, g: c_float, b: c_float) {
     }
 }
 
-fn draw_letter_at(n: i32, x: c_float, y: c_float, s: c_float, d: c_float) {
+fn draw_letter_at(n: i32, x: c_float, y: c_float, scale: c_float, d: c_float) {
     unsafe {
         glPushMatrix();
         glTranslatef(x, y, 0.0);
-        glScalef(s, s, s);
+        glScalef(scale, scale, scale);
         glRotatef(d, 0.0, 0.0, 1.0);
         glCallList(DISPLAY_LIST_IDX + n as GLuint + COLOR_IDX as GLuint);
         glPopMatrix();
@@ -440,20 +440,20 @@ pub extern "C" fn letter_render_draw_string(
     len: i32,
     lx: c_float,
     y: c_float,
-    s: c_float,
-    d: i32,
+    scale: c_float,
+    direction: i32,
 ) {
-    let ld = direction_to_angle(d);
+    let ld = direction_to_angle(direction);
     let mut x = lx;
     let mut y = y;
-    let step = s * 1.7;
+    let step = scale * 1.7;
 
     for i in 0..len {
         let c = unsafe { *ptr.add(i as usize) };
         if let Some(idx) = char_to_glyph_index(c) {
-            draw_letter_at(idx, x, y, s, ld);
+            draw_letter_at(idx, x, y, scale, ld);
         }
-        match d {
+        match direction {
             TO_RIGHT => x += step,
             TO_DOWN => y += step,
             TO_LEFT => x -= step,

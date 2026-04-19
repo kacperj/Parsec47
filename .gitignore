@@ -9,3 +9,4 @@ SDL2.dll
 SDL2_mixer.dll
 build
 rust/target
+rust/p47rust.def

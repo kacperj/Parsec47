@@ -57,7 +57,7 @@ This will:
 
 After building, run `p47.exe` on Windows. Requires the DLLs in the project root (`SDL.dll`, `SDL_mixer.dll`, `bulletml.dll`, `sound.dll`, `SDL2.dll`, `SDL2_mixer.dll`) and the BulletML pattern directories.
 
-Command-line options: `-window`, `-nosound`, `-lowres`, `-brightness N`, `-luminous N`, `-reverse`, `-slowship`, `-nowait`.
+Command-line options: `-window`, `-nosound`, `-lowres`, `-brightness N`, `-luminous N`, `-reverse`, `-slowship`, `-nowait`, `-nofield`, `-nobonus`.
 
 ## Code Conventions
 

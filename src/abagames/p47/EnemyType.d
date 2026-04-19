@@ -13,6 +13,8 @@ import abagames.util.Rand;
 import abagames.p47.BarrageManager;
 import abagames.p47.Bullet;
 import abagames.p47.Renderer;
+import abagames.p47.ShipMode;
+
 
 extern(C) Color create_enemy_color(int variant);
 
@@ -101,11 +103,7 @@ public:
   }
   int type;
   // To avoid the forward reference.
-  static enum
-  {
-    ROLL,
-    LOCK,
-  }
+
 private:
   static Rand rand;
   static BarrageManager barrageManager;
@@ -149,7 +147,7 @@ private:
     for (int i = 0; i < BarrageManager.BARRAGE_MAX; i++)
       usedMorphParser[i] = false;
     int mpn;
-    if (mode == ROLL)
+    if (mode == ShipMode.ROLL)
       mpn = barrageManager.parserNum[BarrageManager.MORPH];
     else
       mpn = barrageManager.parserNum[BarrageManager.MORPH_LOCK];
@@ -164,7 +162,7 @@ private:
         if (mi >= mpn)
           mi = 0;
       }
-      if (mode == ROLL)
+      if (mode == ShipMode.ROLL)
         br.morphParser[i] = barrageManager.parser[BarrageManager.MORPH][mi];
       else
         br.morphParser[i] = barrageManager.parser[BarrageManager.MORPH_LOCK][mi];
@@ -195,7 +193,7 @@ private:
     rank /= (br.rank + 2);
     if (intense == WEAK)
       br.rank /= 2;
-    if (mode == ROLL)
+    if (mode == ShipMode.ROLL)
       br.speedRank = sqrt(rank) * (rand.nextFloat(0.2) + 1);
     else
       br.speedRank = sqrt(rank * 0.66) * (rand.nextFloat(0.2) + 0.8);
@@ -446,7 +444,7 @@ private:
     barragePatternNum = 1;
     wingCollision = false;
     Barrage br = barrage[0];
-    if (mode == ROLL)
+    if (mode == ShipMode.ROLL)
       setBarrageType(br, BarrageManager.SMALL, mode);
     else
       setBarrageType(br, BarrageManager.SMALL_LOCK, mode);
@@ -470,7 +468,7 @@ private:
     Barrage br = barrage[0];
     setBarrageType(br, BarrageManager.MIDDLE, mode);
     float cr, sr;
-    if (mode == ROLL)
+    if (mode == ShipMode.ROLL)
     {
       switch (rand.nextInt(6))
       {
@@ -517,7 +515,7 @@ private:
     setBarrageShape(br, 0.75);
     br.xReverse = rand.nextInt(2) * 2 - 1;
     setEnemyShapeAndWings(MIDDLE);
-    if (mode == ROLL)
+    if (mode == ShipMode.ROLL)
     {
       shield = 40 + rand.nextInt(10);
       setBattery(sr, 1, BarrageManager.MIDDLESUB, NORMAL, 0, 0, 1, mode);
@@ -543,7 +541,7 @@ private:
     Barrage br = barrage[0];
     setBarrageType(br, BarrageManager.LARGE, mode);
     float cr, sr1, sr2;
-    if (mode == ROLL)
+    if (mode == ShipMode.ROLL)
     {
       switch (rand.nextInt(9))
       {
@@ -611,7 +609,7 @@ private:
     setBarrageShape(br, 0.8);
     br.xReverse = rand.nextInt(2) * 2 - 1;
     setEnemyShapeAndWings(LARGE);
-    if (mode == ROLL)
+    if (mode == ShipMode.ROLL)
     {
       shield = 60 + rand.nextInt(10);
       setBattery(sr1, 1, BarrageManager.MIDDLESUB, NORMAL, 0, 0, 1, mode);

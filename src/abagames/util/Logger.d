@@ -13,7 +13,6 @@ import std.stdio;
  */
 public class Logger
 {
-
   public static void info(string msg)
   {
     stderr.writeln("Info: " ~ msg);

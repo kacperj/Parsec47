@@ -6,7 +6,9 @@
 # Prerequisites: Docker
 set -e
 
-rm -rf build
+if [[ "$1" = "--clean" ]]; then
+  rm -rf build
+fi
 mkdir -p build/assets
 
 IMAGE="p47-builder"

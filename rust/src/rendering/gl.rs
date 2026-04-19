@@ -14,10 +14,13 @@ pub const GL_COMPILE: GLenum = 0x1300;
 pub const GL_BLEND: GLenum = 0x0BE2;
 pub const GL_TEXTURE_2D: GLenum = 0x0DE1;
 pub const GL_BGR: GLenum = 0x80E0;
+pub const GL_RGBA: GLenum = 0x1908;
 pub const GL_UNSIGNED_BYTE: GLenum = 0x1401;
 pub const GL_TEXTURE_MIN_FILTER: GLenum = 0x2801;
 pub const GL_TEXTURE_MAG_FILTER: GLenum = 0x2800;
 pub const GL_LINEAR: GLint = 0x2601;
+pub const GL_PROJECTION: GLenum = 0x1701;
+pub const GL_MODELVIEW: GLenum = 0x1700;
 
 #[link(name = "opengl32")]
 extern "system" {
@@ -53,4 +56,26 @@ extern "system" {
     pub fn glTexParameteri(target: GLenum, pname: GLenum, param: GLint);
     pub fn glDeleteTextures(n: GLsizei, textures: *const GLuint);
     pub fn glTexCoord2f(s: c_float, t: c_float);
+    pub fn glVertex2f(x: c_float, y: c_float);
+    pub fn glViewport(x: GLint, y: GLint, width: GLsizei, height: GLsizei);
+    pub fn glMatrixMode(mode: GLenum);
+    pub fn glLoadIdentity();
+    pub fn glOrtho(
+        left: f64,
+        right: f64,
+        bottom: f64,
+        top: f64,
+        near_val: f64,
+        far_val: f64,
+    );
+    pub fn glCopyTexImage2D(
+        target: GLenum,
+        level: GLint,
+        internalformat: GLenum,
+        x: GLint,
+        y: GLint,
+        width: GLsizei,
+        height: GLsizei,
+        border: GLint,
+    );
 }

@@ -9,8 +9,10 @@ extern (C)
 {
   void prefs_load();
   void prefs_save();
-  int* prefs_hi_score_ptr();
-  int* prefs_reached_parsec_ptr();
+  int prefs_get_hi_score(int mode, int difficulty, int slot);
+  void prefs_set_hi_score(int mode, int difficulty, int slot, int val);
+  int prefs_get_reached_parsec(int mode, int difficulty);
+  void prefs_set_reached_parsec(int mode, int difficulty, int val);
   int prefs_get_selected_difficulty();
   void prefs_set_selected_difficulty(int val);
   int prefs_get_selected_parsec_slot();
@@ -29,16 +31,25 @@ public class P47PrefManager
 public:
   static const int MODE_NUM = 2;
   static const int DIFFICULTY_NUM = 4;
-  static const int REACHED_PARSEC_SLOT_NUM = 10;
 
-  @property ref int[REACHED_PARSEC_SLOT_NUM][DIFFICULTY_NUM][MODE_NUM] hiScore()
+  int getHiScore(int mode, int difficulty, int slot)
   {
-    return *cast(int[REACHED_PARSEC_SLOT_NUM][DIFFICULTY_NUM][MODE_NUM]*) prefs_hi_score_ptr();
+    return prefs_get_hi_score(mode, difficulty, slot);
   }
 
-  @property ref int[DIFFICULTY_NUM][MODE_NUM] reachedParsec()
+  void setHiScore(int mode, int difficulty, int slot, int val)
   {
-    return *cast(int[DIFFICULTY_NUM][MODE_NUM]*) prefs_reached_parsec_ptr();
+    prefs_set_hi_score(mode, difficulty, slot, val);
+  }
+
+  int getReachedParsec(int mode, int difficulty)
+  {
+    return prefs_get_reached_parsec(mode, difficulty);
+  }
+
+  void setReachedParsec(int mode, int difficulty, int val)
+  {
+    prefs_set_reached_parsec(mode, difficulty, val);
   }
 
   @property int selectedDifficulty() { return prefs_get_selected_difficulty(); }

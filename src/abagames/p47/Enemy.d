@@ -15,8 +15,6 @@ import abagames.util.Actor;
 import abagames.util.ActorPool;
 import abagames.p47.Ship;
 import abagames.p47.Field;
-import abagames.p47.Bonus;
-import abagames.p47.Shot;  // kept for Shot.SPEED constant
 import abagames.p47.Lock;
 import abagames.p47.P47GameManager;
 import abagames.p47.BulletActor;
@@ -25,6 +23,8 @@ import abagames.p47.EnemyType;
 import abagames.p47.SoundManager;
 import abagames.p47.Renderer;
 import abagames.p47.Effects;
+import abagames.p47.ShipMode;
+
 
 
 private extern (C) {
@@ -39,6 +39,11 @@ private extern (C) {
   bool  rolls_is_released(int i);
   int   rolls_get_cnt(int i);
   int   rolls_pool_size();
+
+  float bonus_get_rate();
+
+  void score_increase(int sc);
+  void bonuses_add(float x, float y, float ox, float oy);
 }
 
 /**
@@ -63,6 +68,8 @@ public:
 private:
   static const int MOVE_POINT_MAX = 8;
   static const int ROLL_NO_COLLISION_CNT = 45;
+  static const float SHOT_SPEED = 1;
+
   static Rand _rand;
   static @property Rand rand()
   {
@@ -262,10 +269,16 @@ private:
     }
   }
 
-  private void addBonuses(Vector p, int sl)
+  private void addBonuses(Vector ofs, int sl)
   {
-    int bn = cast(int)(cast(float) sl * 3 / ((cast(float) cnt / 30) + 1) * Bonus.rate + 0.9);
-    manager.addBonus(pos, p, bn);
+    int bn = cast(int)(cast(float) sl * 3 / ((cast(float) cnt / 30) + 1) * bonus_get_rate() + 0.9);
+
+    float ox = ofs ? ofs.x : 0;
+    float oy = ofs ? ofs.y : 0;
+    for (int i = 0; i < bn; i++)
+    {
+      bonuses_add(pos.x, pos.y, ox, oy);
+    }
   }
 
   private void addBonuses()
@@ -319,7 +332,7 @@ private:
     {
       // Destroyed.
       addBonuses();
-      manager.addScore(ENEMY_TYPE_SCORE[type.type]);
+      score_increase(ENEMY_TYPE_SCORE[type.type]);
       if (isBoss)
       {
         addFragments(15, 0, 0.1, rand.nextSignedFloat(1));
@@ -370,7 +383,7 @@ private:
       // Wing is destroyed.
       Vector p = type.batteryType[idx].collisionPos;
       addBonuses(p, type.batteryType[idx].shield);
-      manager.addScore(ENEMY_WING_SCORE);
+      score_increase(ENEMY_WING_SCORE);
       addWingFragments(type.batteryType[idx], 10, 0, 0.1, rand.nextSignedFloat(1));
       SoundManager.playSe(SoundManager.LARGE_ENEMY_DESTROYED);
       manager.setScreenShake(10, 0.03);
@@ -389,8 +402,13 @@ private:
     HIT = -1,
   }
 
-  // Check shots and rolls hit the enemy.
   private int checkHit(Vector p, float xofs, float yofs)
+  {
+    return checkHit(Vector2(p.x, p.y), xofs, yofs);
+  }
+
+  // Check shots and rolls hit the enemy.
+  private int checkHit(Vector2 p, float xofs, float yofs)
   {
     if (fabs(p.x - pos.x) < type.collisionSize.x + xofs &&
       fabs(p.y - pos.y) < type.collisionSize.y + yofs)
@@ -411,7 +429,7 @@ private:
   }
 
   // Check ship locks the enemy.
-  private int checkLocked(Vector p, float xofs, Lock lock)
+  private int checkLocked(Vector2 p, float xofs, Lock lock)
   {
     if (fabs(p.x - pos.x) < type.collisionSize.x + xofs && pos.y < lock.lockMinY && pos.y > p.y)
     {
@@ -454,9 +472,9 @@ private:
       ch = checkHit(sp, 0.7, 0);
       if (ch >= HIT)
       {
-        Effects.addParticle(sp, rand.nextSignedFloat(0.3), 0, Shot.SPEED / 4);
-        Effects.addParticle(sp, rand.nextSignedFloat(0.3), 0, Shot.SPEED / 4);
-        Effects.addParticle(sp, std.math.PI + rand.nextSignedFloat(0.3), 0, Shot.SPEED / 7);
+        Effects.addParticle(sp, rand.nextSignedFloat(0.3), 0, SHOT_SPEED / 4);
+        Effects.addParticle(sp, rand.nextSignedFloat(0.3), 0, SHOT_SPEED / 4);
+        Effects.addParticle(sp, std.math.PI + rand.nextSignedFloat(0.3), 0, SHOT_SPEED / 7);
         shots_set_inactive(i);
         if (ch == HIT)
           addDamage(SHOT_DAMAGE);
@@ -464,7 +482,7 @@ private:
           addDamageBattery(ch, SHOT_DAMAGE);
       }
     }
-    if (manager.mode == P47GameManager.ROLL)
+    if (manager.mode == ShipMode.ROLL)
     {
       // Chech rolls.
       for (int i = 0; i < rolls_pool_size(); i++)
@@ -476,7 +494,7 @@ private:
         if (ch >= HIT)
         {
           for (int j = 0; j < 4; j++)
-            Effects.addParticle(rp, rand.nextFloat(std.math.PI * 2), 0, Shot.SPEED / 10);
+            Effects.addParticle(rp, rand.nextFloat(std.math.PI * 2), 0, SHOT_SPEED / 10);
           float rd = ROLL_DAMAGE;
           if (rolls_is_released(i))
           {
@@ -504,7 +522,7 @@ private:
         Lock lk = locks.actor[i];
         if (lk.state == Lock.SEARCH || lk.state == Lock.SEARCHED)
         {
-          ch = checkLocked(lk.pos[0], 2.5, lk);
+          ch = checkLocked(lk.getLaserHead(), 2.5, lk);
           if (ch >= HIT)
           {
             lk.state = Lock.SEARCHED;
@@ -515,11 +533,11 @@ private:
         }
         else if (lk.state == Lock.FIRED && lk.lockedEnemy == this)
         {
-          ch = checkHit(lk.pos[0], 1.5, 1.5);
+          ch = checkHit(lk.getLaserHead(), 1.5, 1.5);
           if (ch >= HIT && ch == lk.lockedPart)
           {
             for (int j = 0; j < 4; j++)
-              Effects.addParticle(lk.pos[0], rand.nextFloat(std.math.PI * 2), 0, Shot.SPEED / 10);
+              Effects.addParticle(lk.getLaserHead(), rand.nextFloat(std.math.PI * 2), 0, SHOT_SPEED / 10);
             if (ch == HIT)
               addDamage(LOCK_DAMAGE);
             else

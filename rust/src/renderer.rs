@@ -159,8 +159,8 @@ pub extern "C" fn draw_line_retro_with_z(
 
 #[no_mangle]
 pub extern "C" fn draw_box_retro(
-    x: c_float,
-    y: c_float,
+    center_x: c_float,
+    center_y: c_float,
     width: c_float,
     height: c_float,
     deg: c_float,
@@ -173,40 +173,40 @@ pub extern "C" fn draw_box_retro(
     let w2 = -width * deg.cos() - height * deg.sin();
     let h2 = -width * deg.sin() + height * deg.cos();
     draw_line_retro_with_z(
-        x + w2,
-        y - h2,
-        x + w1,
-        y - h1,
+        center_x + w2,
+        center_y - h2,
+        center_x + w1,
+        center_y - h1,
         0.0,
         retro,
         retro_size,
         color,
     );
     draw_line_retro_with_z(
-        x + w1,
-        y - h1,
-        x - w2,
-        y + h2,
+        center_x + w1,
+        center_y - h1,
+        center_x - w2,
+        center_y + h2,
         0.0,
         retro,
         retro_size,
         color,
     );
     draw_line_retro_with_z(
-        x - w2,
-        y + h2,
-        x - w1,
-        y + h1,
+        center_x - w2,
+        center_y + h2,
+        center_x - w1,
+        center_y + h1,
         0.0,
         retro,
         retro_size,
         color,
     );
     draw_line_retro_with_z(
-        x - w1,
-        y + h1,
-        x + w2,
-        y - h2,
+        center_x - w1,
+        center_y + h1,
+        center_x + w2,
+        center_y - h2,
         0.0,
         retro,
         retro_size,

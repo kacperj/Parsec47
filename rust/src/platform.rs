@@ -28,6 +28,7 @@ const SDL_INIT_EVENTS: u32 = 0x0000_4000;
 const SDL_WINDOW_FULLSCREEN: u32 = 0x0000_0001;
 const SDL_WINDOW_OPENGL: u32 = 0x0000_0002;
 const SDL_WINDOW_RESIZABLE: u32 = 0x0000_0020;
+const SDL_WINDOW_FULLSCREEN_DESKTOP: u32 = 0x0000_1001;
 
 // SDL_WINDOWPOS_CENTERED_MASK | 0
 const SDL_WINDOWPOS_CENTERED: c_int = 0x2FFF_0000u32 as c_int;
@@ -50,7 +51,7 @@ static RESIZE_W: AtomicI32 = AtomicI32::new(0);
 static RESIZE_H: AtomicI32 = AtomicI32::new(0);
 
 /// Create an SDL2 window with an OpenGL context.
-/// `fullscreen`: non-zero = fullscreen, zero = resizable window.
+/// `fullscreen`: 0 = resizable window, 1 = exclusive fullscreen, 2 = fullscreen desktop (native resolution).
 /// `title`: null-terminated C string for the window title.
 /// Returns 0 on success, -1 on failure.
 #[no_mangle]
@@ -66,10 +67,10 @@ pub extern "C" fn window_init(
         }
 
         let flags = SDL_WINDOW_OPENGL
-            | if fullscreen != 0 {
-                SDL_WINDOW_FULLSCREEN
-            } else {
-                SDL_WINDOW_RESIZABLE
+            | match fullscreen {
+                2 => SDL_WINDOW_FULLSCREEN_DESKTOP,
+                1 => SDL_WINDOW_FULLSCREEN,
+                _ => SDL_WINDOW_RESIZABLE,
             };
 
         let win = SDL_CreateWindow(

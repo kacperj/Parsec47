@@ -17,6 +17,7 @@ import abagames.p47.P47GameManager;
 import abagames.p47.P47PrefManager;
 import abagames.p47.Renderer;
 import abagames.p47.Ship;
+import abagames.p47.Field;
 
 /**
  * Boot the game.
@@ -30,7 +31,7 @@ MainLoop mainLoop;
 
 private void usage(string args0)
 {
-  Logger.error("Usage: " ~ args0 ~ " [-brightness [0-100]] [-luminous [0-100]] [-nosound] [-window] [-reverse] [-lowres] [-slowship] [-nowait]");
+  Logger.error("Usage: " ~ args0 ~ " [-brightness [0-100]] [-luminous [0-100]] [-nosound] [-window] [-fullscreen] [-reverse] [-lowres] [-slowship] [-nowait] [-nofield] [-nobonus]");
 }
 
 private void parseArgs(string[] args)
@@ -75,6 +76,9 @@ private void parseArgs(string[] args)
     case "-window":
       P47Screen.windowMode = true;
       break;
+    case "-fullscreen":
+      P47Screen.fullscreenDesktop = true;
+      break;
     case "-reverse":
       pad.buttonReversed = true;
       break;
@@ -86,6 +90,12 @@ private void parseArgs(string[] args)
       break;
     case "-nowait":
       gameManager.nowait = true;
+      break;
+    case "-nofield":
+      Field.noField = true;
+      break;
+    case "-nobonus":
+      P47GameManager.noBonus = true;
       break;
     case "-accframe":
       mainLoop.accframe = 1;

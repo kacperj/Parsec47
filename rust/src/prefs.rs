@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
+use std::cmp;
 
 const PREFS_FILE: &str = "p47.json";
 
@@ -71,13 +72,23 @@ pub extern "C" fn prefs_save() {
 }
 
 #[no_mangle]
-pub extern "C" fn prefs_hi_score_ptr() -> *mut i32 {
-    &raw mut data().hi_score as *mut i32
+pub extern "C" fn prefs_get_hi_score(mode: i32, difficulty: i32, slot: i32) -> i32 {
+    data().hi_score[mode as usize][difficulty as usize][slot as usize]
 }
 
 #[no_mangle]
-pub extern "C" fn prefs_reached_parsec_ptr() -> *mut i32 {
-    &raw mut data().reached_parsec as *mut i32
+pub extern "C" fn prefs_set_hi_score(mode: i32, difficulty: i32, slot: i32, val: i32) {
+    data().hi_score[mode as usize][difficulty as usize][slot as usize] = val;
+}
+
+#[no_mangle]
+pub extern "C" fn prefs_get_reached_parsec(mode: i32, difficulty: i32) -> i32 {
+    data().reached_parsec[mode as usize][difficulty as usize]
+}
+
+#[no_mangle]
+pub extern "C" fn prefs_set_reached_parsec(mode: i32, difficulty: i32, val: i32) {
+    data().reached_parsec[mode as usize][difficulty as usize] = val;
 }
 
 #[no_mangle]
@@ -108,4 +119,31 @@ pub extern "C" fn prefs_get_selected_mode() -> i32 {
 #[no_mangle]
 pub extern "C" fn prefs_set_selected_mode(val: i32) {
     data().selected_mode = val;
+}
+
+#[no_mangle]
+pub extern "C" fn prefs_get_slots(mode: i32, difficulty: i32) -> i32 {
+    // Set slot for quit button
+    if (difficulty == DIFFICULTY_NUM as i32) {
+        return 1;
+    }
+
+    let parsec = prefs_get_reached_parsec(mode, difficulty);
+
+    let slot_number = (parsec - 1) / 10 + 1;
+
+    return cmp::min(slot_number, 10);
+}
+
+#[no_mangle]
+pub extern "C" fn prefs_get_start_parsec(mode: i32, difficulty: i32, slot: i32) -> i32 {
+    if slot < (SLOT_NUM as i32) - 1 {
+        return slot * 10 + 1;
+    }
+
+    let parsec = prefs_get_reached_parsec(mode, difficulty);
+
+    let last_start_parsec = ((parsec - 1) / 10 ) * 10 + 1;
+
+    return last_start_parsec;
 }
