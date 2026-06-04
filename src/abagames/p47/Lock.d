@@ -218,7 +218,7 @@ private:
   {
     return !lockedEnemy.isExist ||
           lockedEnemy.shield <= 0 ||
-          (lockedPart >= 0 && lockedEnemy.battery[lockedPart].shield <= 0)
+          (lockedPart >= 0 && lockedEnemy.battery[lockedPart].shield <= 0);
   }
 }
 

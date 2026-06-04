@@ -34,11 +34,13 @@ public:
     SMALL_LOCK,
     MIDDLESUB_LOCK,
   }
-  const int BARRAGE_TYPE = 13;
+  
   static const int BARRAGE_MAX = 64;
+  
+private:
+  const int BARRAGE_TYPE = 13;
   BulletMLParserTinyXML*[BARRAGE_MAX][BARRAGE_TYPE] parser;
   int[BARRAGE_TYPE] parserNum;
-private:
   const string[BARRAGE_TYPE] dirName =
     [
       "morph", "small", "smallmove", "smallsidemove",
@@ -66,6 +68,16 @@ private:
       }
       parserNum[i] = j;
     }
+  }
+
+  public BulletMLParser* getMoveParser(int category, int moveTypeRandom)
+  {
+    return this.parser[category][moveTypeRandom % this.getParserNumbersForCategory(category)];
+  }
+
+  public int getParserNumbersForCategory(int category)
+  {
+    return this.parserNum[category];
   }
 
   public void unloadBulletMLs()

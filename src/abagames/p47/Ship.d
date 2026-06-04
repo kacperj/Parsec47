@@ -9,11 +9,14 @@ private extern (C) {
   void ship_set_pos(float x, float y);
   void ship_set_cnt(int cnt);
   void bonus_state_reset();
-  void ship_create_display_lists();
   void ship_draw(int cnt, float bank, float fireWideDeg, int ttlCnt);
   void rolls_init_new();
   void rolls_release_all();
   void shots_init_new(float x, float y, float deg, float bx1, float by1, float bx2, float by2);
+}
+
+public extern (C) {
+  void ship_create_display_lists();
 }
 
 private:
@@ -182,13 +185,13 @@ private:
       }
     }
     vel.x = vel.y = 0;
-    if (pad.isPadUp())
+    if ((pad_get_pad_state() & Pad.PAD_UP) != 0)
       vel.y = speed;
-    else if (pad.isPadDown())
+    else if ((pad_get_pad_state() & Pad.PAD_DOWN) != 0)
       vel.y = -speed;
-    if (pad.isPadRight())
+    if ((pad_get_pad_state() & Pad.PAD_RIGHT) != 0)
       vel.x = speed;
-    else if (pad.isPadLeft())
+    else if ((pad_get_pad_state() & Pad.PAD_LEFT) != 0)
       vel.x = -speed;
     if (vel.x != 0 && vel.y != 0)
     {
@@ -250,10 +253,5 @@ private:
   public void draw()
   {
     ship_draw(cnt, bank, fireWideDeg, ttlCnt);
-  }
-
-  public static void createDisplayLists()
-  {
-    ship_create_display_lists();
   }
 }

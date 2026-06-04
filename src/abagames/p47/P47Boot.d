@@ -12,9 +12,7 @@ import abagames.util.Logger;
 import abagames.util.sdl.Pad;
 import abagames.util.sdl.MainLoop;
 import abagames.p47.SoundManager;
-import abagames.p47.P47Screen;
 import abagames.p47.P47GameManager;
-import abagames.p47.P47PrefManager;
 import abagames.p47.Renderer;
 import abagames.p47.Ship;
 import abagames.p47.Field;
@@ -23,10 +21,8 @@ import abagames.p47.Field;
  * Boot the game.
  */
 private:
-P47Screen screen;
 Pad pad;
 P47GameManager gameManager;
-P47PrefManager prefManager;
 MainLoop mainLoop;
 
 private void usage(string args0)
@@ -53,7 +49,7 @@ private void parseArgs(string[] args)
         usage(args[0]);
         throw new Exception("Invalid options");
       }
-      Renderer.brightness = b;
+      renderer_set_brightness(b);
       break;
     case "-luminous":
       if (i >= args.length - 1)
@@ -68,22 +64,22 @@ private void parseArgs(string[] args)
         usage(args[0]);
         throw new Exception("Invalid options");
       }
-      P47Screen.luminous = l;
+      MainLoop.luminous = l;
       break;
     case "-nosound":
-      SoundManager.noSound = true;
+      sound_manager_set_no_sound(1);
       break;
     case "-window":
-      P47Screen.windowMode = true;
+      MainLoop.windowMode = true;
       break;
     case "-fullscreen":
-      P47Screen.fullscreenDesktop = true;
+      MainLoop.fullscreenDesktop = true;
       break;
     case "-reverse":
-      pad.buttonReversed = true;
+      pad_set_button_reversed(1);
       break;
     case "-lowres":
-      P47Screen.lowres = true;
+      MainLoop.lowres = true;
       break;
     case "-slowship":
       Ship.isSlow = true;
@@ -109,18 +105,15 @@ private void parseArgs(string[] args)
 
 public int boot(string[] args)
 {
-  screen = new P47Screen;
-  pad = new Pad;
   try
   {
-    pad.openJoystick();
+    pad_open_joystick();
   }
   catch (Exception e)
   {
   }
   gameManager = new P47GameManager;
-  prefManager = new P47PrefManager;
-  mainLoop = new MainLoop(screen, pad, gameManager, prefManager);
+  mainLoop = new MainLoop(gameManager);
   try
   {
     parseArgs(args);

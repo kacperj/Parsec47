@@ -155,14 +155,14 @@ COPY src/       src/
 COPY resource/  resource/
 
 RUN set -e && \
-    ALL_SRC=$(find import src -name '*.d' | sort | tr '\n' ' ') && \
+    ALL_SRC=$(find src -name '*.d' | sort | tr '\n' ' ') && \
     ldc2 --mtriple=x86_64-windows-msvc \
       -c -O --release -d-version=Win32_release -wi \
       -of=out/p47.obj $ALL_SRC && \
     ldc2 --mtriple=x86_64-windows-msvc \
       -of=out/p47.exe out/p47.obj \
       -L=resource/p47.RES \
-      -L=opengl32.lib -L=out/bulletml.lib -L=out/p47rust.lib \
+      -L=out/bulletml.lib -L=out/p47rust.lib \
       -L=/SUBSYSTEM:WINDOWS \
       -L=/DEFAULTLIB:user32 && \
     rm -f out/p47.obj

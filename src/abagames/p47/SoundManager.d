@@ -5,7 +5,7 @@
  */
 module abagames.p47.SoundManager;
 
-private extern (C)
+public extern (C)
 {
   int sound_manager_init();
   void sound_manager_close();
@@ -37,14 +37,9 @@ public static:
     LASER,
   }
   const int BGM_NUM = 4;
-  const int SE_NUM = 11;
 
-  static @property void noSound(bool v) { sound_manager_set_no_sound(v ? 1 : 0); }
   static @property void isInGame(bool v) { sound_manager_set_in_game(v ? 1 : 0); }
 
-  public static void init() { cast(void) sound_manager_init(); }
-  public static void close() { sound_manager_close(); }
   public static void fadeMusic() { sound_manager_fade_music(); }
-  public static void playBgm(int n) { sound_manager_play_bgm(n); }
   public static void playSe(int n) { sound_manager_play_se(n); }
 }

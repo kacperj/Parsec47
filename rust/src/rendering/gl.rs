@@ -21,6 +21,16 @@ pub const GL_TEXTURE_MAG_FILTER: GLenum = 0x2800;
 pub const GL_LINEAR: GLint = 0x2601;
 pub const GL_PROJECTION: GLenum = 0x1701;
 pub const GL_MODELVIEW: GLenum = 0x1700;
+pub const GL_LINE_SMOOTH: GLenum = 0x0B20;
+pub const GL_SRC_ALPHA: GLenum = 0x0302;
+pub const GL_ONE_MINUS_SRC_ALPHA: GLenum = 0x0303;
+pub const GL_ONE: GLenum = 0x0001;
+pub const GL_LIGHTING: GLenum = 0x0B50;
+pub const GL_CULL_FACE: GLenum = 0x0B44;
+pub const GL_DEPTH_TEST: GLenum = 0x0B71;
+pub const GL_COLOR_MATERIAL: GLenum = 0x0B57;
+pub const GL_COLOR_BUFFER_BIT: GLenum = 0x0000_4000;
+pub const GL_NO_ERROR: GLenum = 0;
 
 #[link(name = "opengl32")]
 extern "system" {
@@ -78,4 +88,17 @@ extern "system" {
         height: GLsizei,
         border: GLint,
     );
+    pub fn glClearColor(red: c_float, green: c_float, blue: c_float, alpha: c_float);
+    pub fn glClear(mask: GLenum);
+    pub fn glLineWidth(width: c_float);
+    pub fn glBlendFunc(sfactor: GLenum, dfactor: GLenum);
+    pub fn glFrustum(
+        left: f64,
+        right: f64,
+        bottom: f64,
+        top: f64,
+        near_val: f64,
+        far_val: f64,
+    );
+    pub fn glGetError() -> GLenum;
 }

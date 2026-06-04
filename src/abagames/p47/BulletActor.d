@@ -7,7 +7,6 @@ module abagames.p47.BulletActor;
 
 private:
 import std.math;
-import opengl;
 import bulletml;
 import abagames.util.Actor;
 import abagames.util.Vector;
@@ -15,7 +14,16 @@ import abagames.p47.Bullet;
 import abagames.p47.Field;
 import abagames.p47.BulletActorPool;
 import abagames.p47.Ship;
-import abagames.p47.Renderer;
+
+private extern (C) {
+  void bullet_actor_draw_retro(float d, float rt, float bulletSize, int shape, int color);
+  void bullet_actor_draw(int shape, int color, float deg, float xReverse, int cnt,
+                         float posX, float posY, float rtCnt, float bulletSize);
+}
+
+public extern (C) {
+  void bullet_actor_create_display_lists();
+}
 
 /**
  * Actor of the bullet.
@@ -31,7 +39,6 @@ private:
   Field field;
   Ship ship;
   static int nextId;
-  static int displayListIdx;
   bool isSimple;
   bool isTop;
   bool isVisible;
@@ -230,291 +237,19 @@ private:
       totalBulletsSpeed += bullet.speed * sr;
       if (rtCnt > RETRO_CNT)
         checkShipHit();
-      if (field.checkHit(bullet.pos, FIELD_SPACE))
+      if (field_check_hit_with_space(bullet.pos.x, bullet.pos.y, FIELD_SPACE))
         removeForced();
     }
     cnt++;
-  }
-
-  public static const int BULLET_SHAPE_NUM = 7;
-  public static const int BULLET_COLOR_NUM = 4;
-  private static const float[3][][BULLET_SHAPE_NUM] shapePos =
-    [
-      [[-0.5, -0.5], [0.5, -0.5], [0, 1],],
-      [[0, -1], [0.5, 0], [0, 1], [-0.5, 0]],
-      [[-0.25, -0.66], [0.25, -0.66], [0.25, 0.66], [-0.25, 0.66]],
-      [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]],
-      [
-        [-0.25, -0.5], [0.25, -0.5], [0.5, -0.25], [0.5, 0.25],
-        [0.25, 0.5], [-0.25, 0.5], [-0.5, 0.25], [-0.5, -0.25]
-      ],
-      [[-0.66, -0.46], [0, 0.86], [0.66, -0.46]],
-      [[-0.5, -0.5], [0, -0.5], [0.5, 0], [0.5, 0.5], [0, 0.5], [-0.5, 0]],
-    ];
-
-  private void drawRetro(float d)
-  {
-    float rt = 1 - rtCnt / RETRO_CNT;
-
-    RetroParam param = RetroParam(rt, 0.4 * bullet.bulletSize);
-
-    Color bulletColor = Color(bulletColor[bullet.color][0],
-      bulletColor[bullet.color][1],
-      bulletColor[bullet.color][2], 1);
-
-    float x, y, tx, px, py, fx, fy;
-    for (int i = 0; i < shapePos[bullet.shape].length; i++)
-    {
-      px = x;
-      py = y;
-      tx = shapePos[bullet.shape][i][0] * bullet.bulletSize;
-      y = shapePos[bullet.shape][i][1] * bullet.bulletSize;
-      x = tx * cos(d) - y * sin(d);
-      y = tx * sin(d) + y * cos(d);
-      if (i > 0)
-      {
-        Renderer.drawLineRetro(px, py, x, y, 0, bulletColor, param);
-      }
-      else
-      {
-        fx = x;
-        fy = y;
-      }
-    }
-    Renderer.drawLineRetro(x, y, fx, fy, 0, bulletColor, param);
   }
 
   public override void draw()
   {
     if (!isVisible)
       return;
-    float d;
-    switch (bullet.shape)
-    {
-    case 0:
-    case 2:
-    case 5:
-      d = -bullet.deg * (bullet.xReverse);
-      break;
-    case 1:
-      d = cnt * 0.14;
-      break;
-    case 3:
-      d = cnt * 0.23;
-      break;
-    case 4:
-      d = cnt * 0.33;
-      break;
-    case 6:
-      d = cnt * 0.08;
-      break;
-    default:
-      break;
-    }
-    glPushMatrix();
-    glTranslatef(bullet.pos.x, bullet.pos.y, 0);
-    if (rtCnt >= RETRO_CNT)
-    {
-      int di = displayListIdx + bullet.color * (BULLET_SHAPE_NUM + 1);
-      glCallList(di);
-      glRotatef(rtod(d), 0, 0, 1);
-      glScalef(bullet.bulletSize, bullet.bulletSize, 1);
-      glCallList(di + 1 + bullet.shape);
-    }
-    else
-    {
-      drawRetro(d);
-    }
-    glPopMatrix();
+    bullet_actor_draw(bullet.shape, bullet.color, bullet.deg, bullet.xReverse,
+      cnt, bullet.pos.x, bullet.pos.y, rtCnt, bullet.bulletSize);
   }
 
-  private static const float SHAPE_POINT_SIZE = 0.1;
-
-  private static const Color SHAPE_BASE_COLOR = Color(1, 0.9, 0.7, 0.55);
-
-  private static const float[3][BULLET_COLOR_NUM] bulletColor =
-    [
-      [1, 0, 0], [0.2, 1, 0.4], [0.3, 0.3, 1], [1, 1, 0],
-    ];
-
-  public static void createDisplayLists()
-  {
-    int idx = 0;
-    float r, g, b;
-    GLfloat size = 1.0f, sz, sz2;
-    displayListIdx = glGenLists(BULLET_COLOR_NUM * (BULLET_SHAPE_NUM + 1));
-    for (int i = 0; i < BULLET_COLOR_NUM; i++)
-    {
-      r = bulletColor[i][0];
-      g = bulletColor[i][1];
-      b = bulletColor[i][2];
-      r += (1 - r) * 0.5;
-      g += (1 - g) * 0.5;
-      b += (1 - b) * 0.5;
-      for (int j = 0; j < BULLET_SHAPE_NUM + 1; j++)
-      {
-        glNewList(displayListIdx + idx, GL_COMPILE);
-        Renderer.setColor(Color(r, g, b, 1));
-        switch (j)
-        {
-        case 0:
-          glBegin(GL_TRIANGLE_FAN);
-          glVertex3f(-SHAPE_POINT_SIZE, -SHAPE_POINT_SIZE, 0);
-          glVertex3f(SHAPE_POINT_SIZE, -SHAPE_POINT_SIZE, 0);
-          glVertex3f(SHAPE_POINT_SIZE, SHAPE_POINT_SIZE, 0);
-          glVertex3f(-SHAPE_POINT_SIZE, SHAPE_POINT_SIZE, 0);
-          glEnd();
-          break;
-        case 1:
-          sz = size / 2;
-          glDisable(GL_BLEND);
-          glBegin(GL_LINE_LOOP);
-          glVertex3f(-sz, -sz, 0);
-          glVertex3f(sz, -sz, 0);
-          glVertex3f(0, size, 0);
-          glEnd();
-          glEnable(GL_BLEND);
-          Renderer.setColor(Color(r, g, b, 0.55));
-          glBegin(GL_TRIANGLE_FAN);
-          glVertex3f(-sz, -sz, 0);
-          glVertex3f(sz, -sz, 0);
-          Renderer.setColor(SHAPE_BASE_COLOR);
-          glVertex3f(0, size, 0);
-          glEnd();
-          break;
-        case 2:
-          sz = size / 2;
-          glDisable(GL_BLEND);
-          glBegin(GL_LINE_LOOP);
-          glVertex3f(0, -size, 0);
-          glVertex3f(sz, 0, 0);
-          glVertex3f(0, size, 0);
-          glVertex3f(-sz, 0, 0);
-          glEnd();
-          glEnable(GL_BLEND);
-          Renderer.setColor(Color(r, g, b, 0.7));
-          glBegin(GL_TRIANGLE_FAN);
-          glVertex3f(0, -size, 0);
-          glVertex3f(sz, 0, 0);
-          Renderer.setColor(SHAPE_BASE_COLOR);
-          glVertex3f(0, size, 0);
-          glVertex3f(-sz, 0, 0);
-          glEnd();
-          break;
-        case 3:
-          sz = size / 4;
-          sz2 = size / 3 * 2;
-          glDisable(GL_BLEND);
-          glBegin(GL_LINE_LOOP);
-          glVertex3f(-sz, -sz2, 0);
-          glVertex3f(sz, -sz2, 0);
-          glVertex3f(sz, sz2, 0);
-          glVertex3f(-sz, sz2, 0);
-          glEnd();
-          glEnable(GL_BLEND);
-          Renderer.setColor(Color(r, g, b, 0.45));
-          glBegin(GL_TRIANGLE_FAN);
-          glVertex3f(-sz, -sz2, 0);
-          glVertex3f(sz, -sz2, 0);
-          Renderer.setColor(SHAPE_BASE_COLOR);
-          glVertex3f(sz, sz2, 0);
-          glVertex3f(-sz, sz2, 0);
-          glEnd();
-          break;
-        case 4:
-          sz = size / 2;
-          glDisable(GL_BLEND);
-          glBegin(GL_LINE_LOOP);
-          glVertex3f(-sz, -sz, 0);
-          glVertex3f(sz, -sz, 0);
-          glVertex3f(sz, sz, 0);
-          glVertex3f(-sz, sz, 0);
-          glEnd();
-          glEnable(GL_BLEND);
-          Renderer.setColor(Color(r, g, b, 0.7));
-          glBegin(GL_TRIANGLE_FAN);
-          glVertex3f(-sz, -sz, 0);
-          glVertex3f(sz, -sz, 0);
-          Renderer.setColor(SHAPE_BASE_COLOR);
-          glVertex3f(sz, sz, 0);
-          glVertex3f(-sz, sz, 0);
-          glEnd();
-          break;
-        case 5:
-          sz = size / 2;
-          glDisable(GL_BLEND);
-          glBegin(GL_LINE_LOOP);
-          glVertex3f(-sz / 2, -sz, 0);
-          glVertex3f(sz / 2, -sz, 0);
-          glVertex3f(sz, -sz / 2, 0);
-          glVertex3f(sz, sz / 2, 0);
-          glVertex3f(sz / 2, sz, 0);
-          glVertex3f(-sz / 2, sz, 0);
-          glVertex3f(-sz, sz / 2, 0);
-          glVertex3f(-sz, -sz / 2, 0);
-          glEnd();
-          glEnable(GL_BLEND);
-          Renderer.setColor(Color(r, g, b, 0.85));
-          glBegin(GL_TRIANGLE_FAN);
-          glVertex3f(-sz / 2, -sz, 0);
-          glVertex3f(sz / 2, -sz, 0);
-          glVertex3f(sz, -sz / 2, 0);
-          glVertex3f(sz, sz / 2, 0);
-          Renderer.setColor(SHAPE_BASE_COLOR);
-          glVertex3f(sz / 2, sz, 0);
-          glVertex3f(-sz / 2, sz, 0);
-          glVertex3f(-sz, sz / 2, 0);
-          glVertex3f(-sz, -sz / 2, 0);
-          glEnd();
-          break;
-        case 6:
-          sz = size * 2 / 3;
-          sz2 = size / 5;
-          glDisable(GL_BLEND);
-          glBegin(GL_LINE_STRIP);
-          glVertex3f(-sz, -sz + sz2, 0);
-          glVertex3f(0, sz + sz2, 0);
-          glVertex3f(sz, -sz + sz2, 0);
-          glEnd();
-          glEnable(GL_BLEND);
-          Renderer.setColor(Color(r, g, b, 0.55));
-          glBegin(GL_TRIANGLE_FAN);
-          glVertex3f(-sz, -sz + sz2, 0);
-          glVertex3f(sz, -sz + sz2, 0);
-          Renderer.setColor(SHAPE_BASE_COLOR);
-          glVertex3f(0, sz + sz2, 0);
-          glEnd();
-          break;
-        case 7:
-          sz = size / 2;
-          glDisable(GL_BLEND);
-          glBegin(GL_LINE_LOOP);
-          glVertex3f(-sz, -sz, 0);
-          glVertex3f(0, -sz, 0);
-          glVertex3f(sz, 0, 0);
-          glVertex3f(sz, sz, 0);
-          glVertex3f(0, sz, 0);
-          glVertex3f(-sz, 0, 0);
-          glEnd();
-          glEnable(GL_BLEND);
-          Renderer.setColor(Color(r, g, b, 0.85));
-          glBegin(GL_TRIANGLE_FAN);
-          glVertex3f(-sz, -sz, 0);
-          glVertex3f(0, -sz, 0);
-          glVertex3f(sz, 0, 0);
-          Renderer.setColor(SHAPE_BASE_COLOR);
-          glVertex3f(sz, sz, 0);
-          glVertex3f(0, sz, 0);
-          glVertex3f(-sz, 0, 0);
-          glEnd();
-          break;
-        default:
-          break;
-        }
-        glEndList();
-        idx++;
-      }
-    }
-  }
 }
 

@@ -6,6 +6,7 @@ use crate::actors::roll::Roll;
 use crate::actors::shot::Shot;
 use crate::collision::CollisionBox;
 use crate::core::vector::Vector2;
+use crate::rendering::gl::*;
 
 static mut PARTICLE_POOL: Option<ActorPool<Particle>> = None;
 static mut FRAGMENT_POOL: Option<ActorPool<Fragment>> = None;
@@ -17,12 +18,16 @@ fn get_particle_pool() -> &'static mut ActorPool<Particle> {
 
 #[no_mangle]
 pub extern "C" fn particles_draw() {
+    unsafe { glBegin(GL_LINES) };
     get_particle_pool().draw();
+    unsafe { glEnd() };
 }
 
 #[no_mangle]
 pub extern "C" fn particles_draw_luminous() {
+    unsafe { glBegin(GL_LINES) };
     get_particle_pool().draw_luminous();
+    unsafe { glEnd() };
 }
 
 #[no_mangle]
@@ -98,7 +103,9 @@ pub extern "C" fn fragments_draw() {
 
 #[no_mangle]
 pub extern "C" fn fragments_draw_luminous() {
+    unsafe { glBegin(GL_LINES) };
     get_fragment_pool().draw_luminous();
+    unsafe { glEnd() };
 }
 
 #[no_mangle]

@@ -13,10 +13,13 @@ public extern (C)
 
 public class Rand
 {
-
   public this()
   {
     rand_set_seed(cast(uint) MonoTime.currTime.ticks);
+  }
+
+  public int nextInt() {
+    return rand_next_int(int.max);
   }
 
   public int nextInt(int n)

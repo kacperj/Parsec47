@@ -2,7 +2,6 @@ alias BulletMLParserTinyXML = int;
 alias BulletMLParser = int;
 alias BulletMLState = int;
 alias BulletMLRunner = int;
-alias BulletMLRunnerD = int;
 
 private alias BML_fp_d    = extern(C) double function(int*);
 private alias BML_fp_i    = extern(C) int    function(int*);

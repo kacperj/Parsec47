@@ -79,9 +79,7 @@ public:
   static const int BARRAGE_PATTERN_MAX = BatteryType.BARRAGE_PATTERN_MAX;
   static const int BODY_SHAPE_POINT_NUM = 4;
   static const int BATTERY_MAX = 4;
-  static const int ENEMY_TYPE_MAX = 32;
-  // Whether each type of the enemy is exist or not.
-  static bool[ENEMY_TYPE_MAX] isExist;
+
   Barrage[BARRAGE_PATTERN_MAX] barrage;
   Vector2[BODY_SHAPE_POINT_NUM] bodyShapePos;
   Vector collisionSize;
@@ -107,22 +105,14 @@ public:
 private:
   static Rand rand;
   static BarrageManager barrageManager;
-  static int idCnt;
 
   public static void init(BarrageManager manager)
   {
     rand = new Rand;
     barrageManager = manager;
-    idCnt = 0;
   }
 
-  public static void clearIsExistList()
-  {
-    for (int i = 0; i < idCnt; i++)
-      isExist[i] = false;
-  }
-
-  public this()
+  public this(int newId)
   {
     collisionSize = new Vector;
     for (int i = 0; i < BARRAGE_PATTERN_MAX; i++)
@@ -133,9 +123,8 @@ private:
     {
       batteryType[i] = new BatteryType;
     }
-    assert(idCnt < ENEMY_TYPE_MAX);
-    id = idCnt;
-    idCnt++;
+
+    id = newId;
   }
 
   // To avoid using the same morph pattern.
@@ -143,32 +132,40 @@ private:
 
   private void setBarrageType(Barrage br, int btn, int mode)
   {
-    br.parser = barrageManager.parser[btn][rand.nextInt(barrageManager.parserNum[btn])];
+    int barrageTypeRandom = rand.nextInt();
+
+    br.parser = barrageManager.getMoveParser(btn, barrageTypeRandom);
+
     for (int i = 0; i < BarrageManager.BARRAGE_MAX; i++)
       usedMorphParser[i] = false;
-    int mpn;
-    if (mode == ShipMode.ROLL)
-      mpn = barrageManager.parserNum[BarrageManager.MORPH];
-    else
-      mpn = barrageManager.parserNum[BarrageManager.MORPH_LOCK];
+    
+    int morphParserCategory = (mode == ShipMode.ROLL) ? BarrageManager.MORPH : BarrageManager.MORPH_LOCK;
+
+    int availableMorphParsers = barrageManager.getParserNumbersForCategory(morphParserCategory);
+
     for (int i = 0; i < br.morphParser.length; i++)
     {
-      int mi = rand.nextInt(mpn);
-      for (int j = 0; j < mpn; j++)
-      {
-        if (!usedMorphParser[mi])
-          break;
-        mi++;
-        if (mi >= mpn)
-          mi = 0;
-      }
-      if (mode == ShipMode.ROLL)
-        br.morphParser[i] = barrageManager.parser[BarrageManager.MORPH][mi];
-      else
-        br.morphParser[i] = barrageManager.parser[BarrageManager.MORPH_LOCK][mi];
+      int mi = getUnusedMorphIndex(availableMorphParsers);
       usedMorphParser[mi] = true;
+
+      br.morphParser[i] = barrageManager.getMoveParser(morphParserCategory, mi);
     }
     br.morphNum = br.morphParser.length;
+  }
+
+  private int getUnusedMorphIndex(int availableMorphParsers)
+  {
+    int mi = rand.nextInt(availableMorphParsers);
+
+    for (int j = 0; j < availableMorphParsers; j++)
+    {
+      if (!usedMorphParser[mi])
+          break;
+      mi++;
+      if (mi >= availableMorphParsers)
+        mi = 0;
+    }
+    return mi;
   }
 
   // Barrage intense.

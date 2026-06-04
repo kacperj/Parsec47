@@ -7,7 +7,6 @@ module abagames.p47.P47GameManager;
 
 private:
 import std.math;
-import opengl;
 import bulletml;
 import abagames.util.Rand;
 import abagames.util.Vector;
@@ -15,7 +14,6 @@ import abagames.util.ActorPool;
 import abagames.util.sdl.MainLoop;
 import abagames.util.sdl.Pad;
 import abagames.p47.P47PrefManager;
-import abagames.p47.P47Screen;
 import abagames.p47.Ship;
 import abagames.p47.Field;
 import abagames.p47.Enemy;
@@ -45,11 +43,9 @@ private extern (C) {
   void letter_render_create_display_lists();
 
   void particles_draw();
-  void particles_draw_luminous();
   void particles_update();
 
   void fragments_draw();
-  void fragments_draw_luminous();
   void fragments_update();
 
   void score_set_initial();
@@ -73,7 +69,17 @@ private extern (C) {
 
   void screen_shake_set(int cnt, float intense);
   void screen_shake_update();
-  Vector2 screen_shake_get_translation();
+  void screen_shake_apply();
+
+  void screen_clear();
+  void screen_draw_luminous();
+  void screen_view_ortho_fixed();
+  void screen_view_perspective();
+
+  void game_manager_draw_luminous(int state);
+
+  void gl_push_matrix();
+  void gl_pop_matrix();
 
   int prefs_get_start_parsec(int mode, int difficulty, int slot);
 }
@@ -96,30 +102,15 @@ public:
   }
   int state;
   MainLoop mainLoop;
-  P47Screen abstScreen;
-  P47PrefManager prefManager;
 
   public void setMainLoop(MainLoop mainLoop)
   {
     this.mainLoop = mainLoop;
   }
 
-  public void setUIs(P47Screen screen, Pad input)
-  {
-    abstScreen = screen;
-    this.input = input;
-  }
-
-  public void setPrefManager(P47PrefManager prefManager)
-  {
-    this.prefManager = prefManager;
-  }
-
 private:
-  Pad input;
   Pad pad;
   const int ENEMY_MAX = 32;
-  P47Screen screen;
   Rand rand;
   Field field;
   Ship ship;
@@ -140,20 +131,19 @@ private:
   // Initialize actor pools, load BGMs/SEs and textures.
   public void init()
   {
-    this.difficulty = prefManager.selectedDifficulty;
-    this.parsecSlot = prefManager.selectedParsecSlot;
-    this.mode = prefManager.selectedMode;
+    this.difficulty = prefs_get_selected_difficulty();
+    this.parsecSlot = prefs_get_selected_parsec_slot();
+    this.mode = prefs_get_selected_mode();
 
-    pad = cast(Pad) input;
-    screen = abstScreen;
+    pad = new Pad;
     rand = new Rand;
-    Field.createDisplayLists();
+    field_create_ring_display_list();
     field = new Field;
-    field.init(Box.createWithHalfExtents(11, 16));
-    Ship.createDisplayLists();
+    field_init(Box.createWithHalfExtents(11, 16));
+    ship_create_display_lists();
     ship = new Ship;
     ship.init(pad, field, this);
-    BulletActor.createDisplayLists();
+    bullet_actor_create_display_lists();
     bullets = new BulletActorPool(512, () => new BulletActor(field, ship));
     letter_render_create_display_lists();
     Lock.init();
@@ -164,11 +154,11 @@ private:
     barrageManager.loadBulletMLs();
     EnemyType.init(barrageManager);
     stageManager = new StageManager;
-    stageManager.init(this, barrageManager, field);
+    stageManager.init(this, field);
     title = new Title;
-    title.init();
+    renderer_title_texture_init();
     interval = mainLoop.INTERVAL_BASE;
-    SoundManager.init();
+    cast(void) sound_manager_init();
   }
 
   public void start()
@@ -179,8 +169,8 @@ private:
   public void close()
   {
     barrageManager.unloadBulletMLs();
-    title.close();
-    SoundManager.close();
+    renderer_title_texture_delete();
+    sound_manager_close();
   }
 
   public void shipDestroyed()
@@ -191,12 +181,15 @@ private:
       startGameover();
   }
 
-  public void addEnemy(Vector pos, float d, EnemyType type, BulletMLParser* moveParser)
+  public void addEnemy(Vector2 pos, float d, EnemyType type, int moveType, int moveTypeRandom)
   {
     Enemy en = enemies.getInstance();
     if (!en)
       return;
-    en.set(pos, d, type, moveParser);
+
+    BulletMLParser* moveParser = barrageManager.getMoveParser(moveType, moveTypeRandom);
+    BulletMLRunner* moveRunner = BulletMLRunner_new_parser(moveParser);
+    en.set(pos, d, type, moveRunner);
   }
 
   public void clearBullets()
@@ -320,7 +313,7 @@ private:
   private void startTitle()
   {
     state = TITLE;
-    title.start(difficulty, parsecSlot, mode);
+    title_start(difficulty, parsecSlot, mode);
     field.setColor(mode);
     initShipState();
     bullets.clear();
@@ -342,10 +335,10 @@ private:
     interval = mainLoop.INTERVAL_BASE;
     mainLoop.interval = mainLoop.INTERVAL_BASE;
     cnt = 0;
-    if (score_get() > prefManager.getHiScore(mode, difficulty, parsecSlot))
-      prefManager.setHiScore(mode, difficulty, parsecSlot, score_get());
-    if (stageManager.parsec > prefManager.getReachedParsec(mode, difficulty))
-      prefManager.setReachedParsec(mode, difficulty, stageManager.parsec);
+    if (score_get() > prefs_get_hi_score(mode, difficulty, parsecSlot))
+      prefs_set_hi_score(mode, difficulty, parsecSlot, score_get());
+    if (stageManager.parsec > prefs_get_reached_parsec(mode, difficulty))
+      prefs_set_reached_parsec(mode, difficulty, stageManager.parsec);
     SoundManager.fadeMusic();
   }
 
@@ -360,16 +353,11 @@ private:
     state = IN_GAME;
   }
 
-  private void stageMove()
-  {
-    stageManager.move();
-  }
-
   private bool pPrsd = true;
 
   private void inGameMove()
   {
-    stageMove();
+    stageManager.move();
     field.move();
     ship.move();
     bonuses_move();
@@ -419,8 +407,8 @@ private:
 
   private void titleMove()
   {
-    title.move();
-    if (title.shouldChangeStage()) {
+    title_move();
+    if (title_should_change_stage() != 0) {
       startStagePreview();
     }
 
@@ -442,9 +430,9 @@ private:
           if (difficulty >= P47PrefManager.DIFFICULTY_NUM)
             mainLoop.breakLoop();
           else {
-            prefManager.selectedDifficulty = this.difficulty;
-            prefManager.selectedParsecSlot = this.parsecSlot;
-            prefManager.selectedMode = this.mode;
+            prefs_set_selected_difficulty(this.difficulty);
+            prefs_set_selected_parsec_slot(this.parsecSlot);
+            prefs_set_selected_mode(this.mode);
             startInGame();
           }
 
@@ -455,7 +443,7 @@ private:
       {
         if (!btnPrsd)
         {
-          title.changeMode();
+          title_change_mode();
           startStagePreview();
           field.setColor(mode);
           btnPrsd = true;
@@ -466,7 +454,7 @@ private:
         btnPrsd = false;
       }
     }
-    stageMove();
+    stageManager.move();
     field.move();
     enemies.move();
     bullets.move();
@@ -525,7 +513,7 @@ private:
 
   public void move()
   {
-    if (pad.isEscapePressed())
+    if (pad_is_key_pressed(27) != 0)
     {
       mainLoop.breakLoop();
       return;
@@ -553,15 +541,11 @@ private:
   private void inGameDraw()
   {
     field.draw();
-    if (!noBonus) {
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    if (!noBonus)
       bonuses_draw();
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-    }
-    
-    glBegin(GL_LINES);
+
+
     particles_draw();
-    glEnd();
     fragments_draw();
     ship.draw();
     shots_draw();
@@ -584,20 +568,10 @@ private:
   private void gameoverDraw()
   {
     field.draw();
-    glBegin(GL_LINES);
     particles_draw();
-    glEnd();
     fragments_draw();
     enemies.draw();
     bullets.draw();
-  }
-
-  private void inGameDrawLuminous()
-  {
-    glBegin(GL_LINES);
-    particles_draw_luminous();
-    fragments_draw_luminous();
-    glEnd();
   }
 
   private void drawBossShieldMeter()
@@ -632,7 +606,7 @@ private:
   {
     renderer_draw_side_boards();
     renderer_draw_score();
-    title.draw();
+    title_draw();
   }
 
   public void setScreenShake(int cnt, float intense)
@@ -640,32 +614,13 @@ private:
     screen_shake_set(cnt, intense);
   }
 
-  private void setEyepos()
-  {
-    Vector2 t = screen_shake_get_translation();
-    glTranslatef(t.x, t.y, -20);
-  }
-
   public void draw()
   {
-    screen.startRenderToTexture();
-    glPushMatrix();
-    setEyepos();
-    switch (state)
-    {
-    case IN_GAME:
-    case PAUSE:
-    case GAMEOVER:
-      inGameDrawLuminous();
-      break;
-    default:
-    }
-    glPopMatrix();
-    screen.endRenderToTexture();
+    game_manager_draw_luminous(state);
 
-    screen.clear();
-    glPushMatrix();
-    setEyepos();
+    screen_clear();
+    gl_push_matrix();
+    screen_shake_apply();
     switch (state)
     {
     case IN_GAME:
@@ -680,11 +635,11 @@ private:
       break;
     default:
     }
-    glPopMatrix();
+    gl_pop_matrix();
 
-    screen.drawLuminous();
+    screen_draw_luminous();
 
-    screen.viewOrthoFixed();
+    screen_view_ortho_fixed();
     switch (state)
     {
     case IN_GAME:
@@ -701,6 +656,6 @@ private:
       break;
     default:
     }
-    screen.viewPerspective();
+    screen_view_perspective();
   }
 }

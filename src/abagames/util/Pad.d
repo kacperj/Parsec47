@@ -5,7 +5,7 @@
  */
 module abagames.util.sdl.Pad;
 
-private extern(C):
+public extern(C):
 int  pad_open_joystick();
 int  pad_get_pad_state();
 int  pad_get_button_state();
@@ -18,7 +18,7 @@ int  pad_is_key_pressed(int sk);
  */
 public class Pad
 {
-private:
+public:
   static const int PAD_UP      = 1;
   static const int PAD_DOWN    = 2;
   static const int PAD_LEFT    = 4;
@@ -29,21 +29,10 @@ private:
 public:
 
   @property bool buttonReversed()       { return pad_get_button_reversed() != 0; }
-  @property void buttonReversed(bool v) { pad_set_button_reversed(v ? 1 : 0); }
 
   // SDL2 SDLK values: SDLK_p=112, SDLK_ESCAPE=27 (same as SDL1 for ASCII keys)
   bool isPausePressed()  { return pad_is_key_pressed(112) != 0; }
-  bool isEscapePressed() { return pad_is_key_pressed(27) != 0; }
 
-  public void openJoystick()
-  {
-    pad_open_joystick();
-  }
-
-  bool isPadUp()              { return (pad_get_pad_state()    & PAD_UP)      != 0; }
-  bool isPadDown()            { return (pad_get_pad_state()    & PAD_DOWN)    != 0; }
-  bool isPadLeft()            { return (pad_get_pad_state()    & PAD_LEFT)    != 0; }
-  bool isPadRight()           { return (pad_get_pad_state()    & PAD_RIGHT)   != 0; }
   bool isAnyDirectionPressed(){ return pad_get_pad_state()                    != 0;  }
   bool isButton1()            { return (pad_get_button_state() & PAD_BUTTON1) != 0; }
   bool isButton2()            { return (pad_get_button_state() & PAD_BUTTON2) != 0; }

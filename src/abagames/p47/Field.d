@@ -9,7 +9,7 @@ private:
 import abagames.util.Vector;
 import abagames.util.BoxCollision;
 
-extern(C) {
+public extern(C) {
   uint field_create_ring_display_list();
   void field_init(Box b);
   void field_set_aim_z(float z);
@@ -34,19 +34,9 @@ public:
 
   @property Box box() { return field_get_collision_box(); }
 
-  public void init(Box collisionBox)
-  {
-    field_init(collisionBox);
-  }
-
   public void setAimZ(float z)
   {
     field_set_aim_z(z);
-  }
-
-  public void setAimSpeed(float speed)
-  {
-    field_set_aim_speed(speed);
   }
 
   public void setColor(int mode)
@@ -59,30 +49,10 @@ public:
     field_move();
   }
 
-  public void setType(int type)
-  {
-    field_set_type(type);
-  }
-
   public void draw()
   {
     if (noField)
       return;
     field_draw();
-  }
-
-  public bool checkHit(Vector p)
-  {
-    return field_check_hit(p.x, p.y);
-  }
-
-  public bool checkHit(Vector p, float space)
-  {
-    return field_check_hit_with_space(p.x, p.y, space);
-  }
-
-  public static void createDisplayLists()
-  {
-    field_create_ring_display_list();
   }
 }

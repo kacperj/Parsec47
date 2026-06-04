@@ -10,7 +10,6 @@ import abagames.util.Logger;
 import abagames.util.Rand;
 import abagames.p47.P47PrefManager;
 import abagames.p47.P47GameManager;
-import abagames.p47.P47Screen;
 import abagames.util.sdl.Pad;
 
 private extern(C):
@@ -19,6 +18,11 @@ int  window_get_resize_w();
 int  window_get_resize_h();
 uint window_get_ticks();
 void window_delay(uint ms);
+int  screen_init_sdl(int lowres, int windowMode, int fullscreenDesktop, float luminous);
+void screen_resized(int width, int height);
+void screen_clear();
+int  screen_flip();
+void screen_close_sdl();
 
 /**
  * SDL main loop.
@@ -30,29 +34,25 @@ public:
   int interval = INTERVAL_BASE;
   int accframe = 0;
   int maxSkipFrame = 5;
+  // Screen configuration, set from command-line options before loop() runs.
+  static bool lowres = false;
+  static bool windowMode = false;
+  static bool fullscreenDesktop = false;
+  static float luminous = 0;
 
 private:
-  P47Screen screen;
-  Pad input;
   P47GameManager gameManager;
-  P47PrefManager prefManager;
 
-  public this(P47Screen screen, Pad input,
-    P47GameManager gameManager, P47PrefManager prefManager)
+  public this(P47GameManager gameManager)
   {
-    this.screen = screen;
-    this.input = input;
     gameManager.setMainLoop(this);
-    gameManager.setUIs(screen, input);
-    gameManager.setPrefManager(prefManager);
     this.gameManager = gameManager;
-    this.prefManager = prefManager;
   }
 
   // Initialize and load preference.
   private void initFirst()
   {
-    prefManager.load();
+    prefs_load();
     gameManager.init();
   }
 
@@ -60,8 +60,8 @@ private:
   private void quitLast()
   {
     gameManager.close();
-    prefManager.save();
-    screen.closeSDL();
+    prefs_save();
+    screen_close_sdl();
   }
 
   private bool done;
@@ -79,7 +79,9 @@ private:
     long nowTick;
     int frame;
 
-    screen.initSDL();
+    if (screen_init_sdl(lowres ? 1 : 0, windowMode ? 1 : 0,
+        fullscreenDesktop ? 1 : 0, luminous) < 0)
+      throw new Exception("Unable to create window");
     initFirst();
     gameManager.start();
 
@@ -89,7 +91,7 @@ private:
       if (evMask & 1)
         breakLoop();
       if (evMask & 2)
-        screen.resized(window_get_resize_w(), window_get_resize_h());
+        screen_resized(window_get_resize_w(), window_get_resize_h());
       nowTick = window_get_ticks();
       frame = cast(int)(nowTick - prvTickCount) / interval;
       if (frame <= 0)
@@ -118,9 +120,10 @@ private:
       {
         gameManager.move();
       }
-      screen.clear();
+      screen_clear();
       gameManager.draw();
-      screen.flip();
+      if (screen_flip() < 0)
+        throw new Exception("OpenGL error");
     }
     quitLast();
   }

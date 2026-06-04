@@ -7,7 +7,6 @@ module abagames.p47.Enemy;
 
 private:
 import std.math;
-import opengl;
 import bulletml;
 import abagames.util.Vector;
 import abagames.util.Rand;
@@ -20,6 +19,7 @@ import abagames.p47.P47GameManager;
 import abagames.p47.BulletActor;
 import abagames.p47.BulletActorPool;
 import abagames.p47.EnemyType;
+import abagames.p47.EnemyTypeTracker;
 import abagames.p47.SoundManager;
 import abagames.p47.Renderer;
 import abagames.p47.Effects;
@@ -44,6 +44,10 @@ private extern (C) {
 
   void score_increase(int sc);
   void bonuses_add(float x, float y, float ox, float oy);
+
+  void gl_begin_triangle_fan();
+  void gl_end();
+  void gl_vertex_3f(float x, float y, float z);
 }
 
 /**
@@ -126,12 +130,12 @@ private:
     fieldLimitY = field.box.halfHeight() / 4 * 3;
   }
 
-  public void set(Vector p, float d, EnemyType type, BulletMLParser* moveParser)
+  public void set(Vector2 p, float d, EnemyType type, BulletMLRunner* moveRunner)
   {
     pos.x = p.x;
     pos.y = p.y;
     this.type = type;
-    BulletMLRunner* moveRunner = BulletMLRunner_new_parser(moveParser);
+    
     BulletActorPool.registFunctions(moveRunner);
     moveBullet = bullets.addBullet(moveRunner,
       pos.x, pos.y, d, 0, 0.5,
@@ -680,7 +684,7 @@ private:
 
   public override void move()
   {
-    EnemyType.isExist[type.id] = true;
+    EnemyTypeTracker.mark(type.id);
     if (!isBoss)
     {
       pos.x = moveBullet.bullet.pos.x;
@@ -712,7 +716,7 @@ private:
     }
     if (!isBoss)
     {
-      if (field.checkHit(pos))
+      if (field_check_hit(pos.x, pos.y))
       {
         remove();
         return;
@@ -834,15 +838,15 @@ private:
 
     if (type.type != EnemyType.SMALL)
     {
-      glBegin(GL_TRIANGLE_FAN);
+      gl_begin_triangle_fan();
       Renderer.setColor(Color(enemyRetroColor.r, enemyRetroColor.g, enemyRetroColor.b, 0));
       for (int i = 0; i < EnemyType.BODY_SHAPE_POINT_NUM; i++)
       {
         if (i == 2)
           Renderer.setColor(enemyRetroColor);
-        glVertex3f(pos.x + type.bodyShapePos[i].x, pos.y + type.bodyShapePos[i].y, z);
+        gl_vertex_3f(pos.x + type.bodyShapePos[i].x, pos.y + type.bodyShapePos[i].y, z);
       }
-      glEnd();
+      gl_end();
     }
 
     for (int i = 0; i < type.batteryNum; i++)
@@ -884,15 +888,15 @@ private:
         }
         if (type.type != EnemyType.SMALL)
         {
-          glBegin(GL_TRIANGLE_FAN);
+          gl_begin_triangle_fan();
           Renderer.setColor(batteryRetroColor);
           for (int wi = 0; wi < BatteryType.WING_SHAPE_POINT_NUM; wi++)
           {
             if (wi == 2)
               Renderer.setColor(Color(batteryRetroColor.r, batteryRetroColor.g, batteryRetroColor.b, 0));
-            glVertex3f(pos.x + bt.wingShapePos[wi].x, pos.y + bt.wingShapePos[wi].y, z);
+            gl_vertex_3f(pos.x + bt.wingShapePos[wi].x, pos.y + bt.wingShapePos[wi].y, z);
           }
-          glEnd();
+          gl_end();
         }
       }
     }

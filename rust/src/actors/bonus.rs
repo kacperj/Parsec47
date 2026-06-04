@@ -5,6 +5,7 @@ use crate::core::rand::rand_next_signed_float;
 use crate::field::field_get_collision_box;
 use crate::renderer::{draw_box_line, draw_box_retro, set_color};
 use crate::rendering::color::Color;
+use crate::rendering::gl::{glBlendFunc, GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA};
 use crate::ship::{ship_get_pos_x, ship_get_pos_y, ship_get_cnt};
 use crate::state::state_export::{bonus_collected, bonus_state_reset};
 
@@ -211,7 +212,9 @@ pub extern "C" fn bonuses_move() {
 
 #[no_mangle]
 pub extern "C" fn bonuses_draw() {
+    unsafe { glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) };
     get_bonus_pool().draw();
+    unsafe { glBlendFunc(GL_SRC_ALPHA, GL_ONE) };
 }
 
 #[no_mangle]
