@@ -1,36 +1,68 @@
-FROM mstorsjo/llvm-mingw:latest
+# Multi-stage build for p47. Select the target with `docker build --target`:
+#   --target windows  -> p47.exe + bulletml.dll + SDL2.dll + SDL2_mixer.dll (cross-compiled)
+#   --target linux    -> p47 (ELF) + libbulletml.so (native; SDL is a system dep)
+# `build.sh <target>` drives this. A bare `docker build .` builds the last
+# stage (windows), the historical default.
 
-ARG LDC_VER=1.42.0
+# =============================================================================
+# Linux: native x86_64 build using distro SDL2/OpenGL packages
+# =============================================================================
+FROM debian:bookworm AS linux
 
-# Install LDC (Linux host) + Windows cross-compilation libs
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential clang pkg-config curl ca-certificates \
+        libsdl2-dev libsdl2-mixer-dev libgl1-mesa-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# Rust (native host target x86_64-unknown-linux-gnu — no extra target needed)
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+
+WORKDIR /build
+
+# ── bulletml (C++ → libbulletml.so) ──
+COPY bulletlib/src/         bulletlib/src/
+COPY bulletlib/include/     bulletlib/include/
+
+RUN set -e && mkdir -p out && \
+    for f in \
+      bulletlib/src/bulletmlparser.cpp \
+      bulletlib/src/bulletmlparser-tinyxml.cpp \
+      bulletlib/src/bulletmlrunner.cpp \
+      bulletlib/src/bulletmlrunnerimpl.cpp \
+      bulletlib/src/bulletmltree.cpp \
+      bulletlib/src/calc.cpp \
+      bulletlib/src/formula-variables.cpp \
+      bulletlib/src/tinyxml/tinyxml.cpp \
+      bulletlib/src/tinyxml/tinyxmlerror.cpp \
+      bulletlib/src/tinyxml/tinyxmlparser.cpp \
+      bulletlib/include/bulletml_d.cpp; do \
+        name=$(basename "${f%.cpp}"); \
+        clang++ -c -O2 -DNDEBUG -fPIC \
+          -Wno-register -Wno-writable-strings -Wno-string-plus-int \
+          -Ibulletlib/include -Ibulletlib/src -o "out/$name.o" "$f"; \
+    done && \
+    clang++ -shared -o out/libbulletml.so out/*.o && \
+    rm -f out/*.o
+
+# ── p47 (Rust → ELF executable) ──
+COPY rust/ rust/
+COPY assets/images/ assets/images/
+
+RUN . "$HOME/.cargo/env" && \
+    cd rust && \
+    BULLETML_LIB_DIR=/build/out \
+    cargo build --release && \
+    cp target/release/p47 /build/out/p47
+
+# =============================================================================
+# Windows: cross-compile with llvm-mingw + distro source builds of SDL deps
+# =============================================================================
+FROM mstorsjo/llvm-mingw:latest AS windows
+
 RUN apt-get update && apt-get install -y --no-install-recommends wget xz-utils p7zip-full cmake make && \
-    rm -rf /var/lib/apt/lists/* && \
-    wget -q "https://github.com/ldc-developers/ldc/releases/download/v${LDC_VER}/ldc2-${LDC_VER}-linux-x86_64.tar.xz" && \
-    tar xf ldc2-*-linux-x86_64.tar.xz -C /opt && \
-    ln -s /opt/ldc2-${LDC_VER}-linux-x86_64 /opt/ldc2 && \
-    rm ldc2-*-linux-x86_64.tar.xz && \
-    wget -q "https://github.com/ldc-developers/ldc/releases/download/v${LDC_VER}/ldc2-${LDC_VER}-windows-x64.7z" && \
-    7z x ldc2-*-windows-x64.7z -o/tmp > /dev/null && \
-    mkdir -p /opt/ldc2/lib-win64 && \
-    cp /tmp/ldc2-${LDC_VER}-windows-x64/lib/*.lib /opt/ldc2/lib-win64/ && \
-    cp -r /tmp/ldc2-${LDC_VER}-windows-x64/lib/mingw /opt/ldc2/lib-win64/mingw && \
-    rm -rf /tmp/ldc2-* ldc2-*-windows-x64.7z
+    rm -rf /var/lib/apt/lists/*
 
-ENV PATH="/opt/ldc2/bin:$PATH"
-
-# LDC cross-compilation config: point lib-dirs at Windows runtime libs
-# (switches and import paths are inherited from the default config)
-RUN cat <<'CONF' > /opt/ldc2/etc/ldc2.conf/60-target-windows.conf
-"x86_64-.*-windows-msvc":
-{
-    lib-dirs = [
-        "/opt/ldc2/lib-win64",
-        "/opt/ldc2/lib-win64/mingw",
-    ];
-};
-CONF
-
-## Install Rust with the Windows cross-compilation target
+# Install Rust with the Windows cross-compilation target
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable && \
     . "$HOME/.cargo/env" && \
     rustup target add x86_64-pc-windows-gnu
@@ -106,22 +138,6 @@ RUN wget -q "https://github.com/xiph/ogg/releases/download/v${LIBOGG_VER}/libogg
 
 WORKDIR /build
 
-# ── Rust workspace (mt + renderer → static libs, sound → DLL) ──
-COPY rust/ rust/
-COPY assets/images/ assets/images/
-
-RUN . "$HOME/.cargo/env" && \
-    mkdir -p out && \
-    cd rust && \
-    CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-clang \
-    SDL2_LIB_DIR=/opt/sdl2/lib \
-    LIBRARY_PATH=/opt/sdl2/lib \
-    cargo build --release --target x86_64-pc-windows-gnu && \
-    cp target/x86_64-pc-windows-gnu/release/p47rust.dll /build/out/ && \
-    llvm-lib /DEF:p47rust.def /OUT:/build/out/p47rust.lib /MACHINE:X64 && \
-    cp /opt/sdl2/bin/SDL2.dll /build/out/ && \
-    cp /opt/sdl2/bin/SDL2_mixer.dll /build/out/
-
 # ── bulletml (C++ → Windows DLL) ──
 COPY bulletlib/src/         bulletlib/src/
 COPY bulletlib/include/     bulletlib/include/
@@ -147,22 +163,19 @@ RUN set -e && mkdir -p out && \
     done && \
     x86_64-w64-mingw32-clang++ -shared -static \
       -o out/bulletml.dll out/*.o bulletlib/bulletml_api.def && \
-    llvm-lib /DEF:bulletlib/bulletml_api.def /OUT:out/bulletml.lib /MACHINE:X64 && \
     rm -f out/*.o
 
-# ── p47 (D → Windows EXE) ──
-COPY src/       src/
-COPY resource/  resource/
+# ── p47 (Rust → Windows EXE) ──
+COPY rust/ rust/
+COPY assets/images/ assets/images/
+COPY resource/ resource/
 
-RUN set -e && \
-    ALL_SRC=$(find src -name '*.d' | sort | tr '\n' ' ') && \
-    ldc2 --mtriple=x86_64-windows-msvc \
-      -c -O --release -d-version=Win32_release -wi \
-      -of=out/p47.obj $ALL_SRC && \
-    ldc2 --mtriple=x86_64-windows-msvc \
-      -of=out/p47.exe out/p47.obj \
-      -L=resource/p47.RES \
-      -L=out/bulletml.lib -L=out/p47rust.lib \
-      -L=/SUBSYSTEM:WINDOWS \
-      -L=/DEFAULTLIB:user32 && \
-    rm -f out/p47.obj
+RUN . "$HOME/.cargo/env" && \
+    cd rust && \
+    CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-clang \
+    SDL2_LIB_DIR=/opt/sdl2/lib \
+    LIBRARY_PATH=/opt/sdl2/lib \
+    cargo build --release --target x86_64-pc-windows-gnu && \
+    cp target/x86_64-pc-windows-gnu/release/p47.exe /build/out/ && \
+    cp /opt/sdl2/bin/SDL2.dll /build/out/ && \
+    cp /opt/sdl2/bin/SDL2_mixer.dll /build/out/

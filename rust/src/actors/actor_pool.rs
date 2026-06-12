@@ -61,6 +61,22 @@ impl<T: Actor> ActorPool<T> {
         None
     }
 
+    // Like get_instance, but returns the slot index instead of a borrow.
+    // Used where the caller needs a stable handle (e.g. the bullet pool exposes
+    // indices as handles) or must avoid holding a &mut across reentrant BulletML callbacks.
+    pub fn get_instance_index(&mut self) -> Option<i32> {
+        for _ in 0..self.actors.len() {
+            self.current_index -= 1;
+            if self.current_index < 0 {
+                self.current_index = self.actors.len() as i32 - 1;
+            }
+            if !self.actors[self.current_index as usize].is_active() {
+                return Some(self.current_index);
+            }
+        }
+        None
+    }
+
     pub fn init_instance_force(&mut self, factory: impl Fn(&mut T)) {
         self.current_index -= 1;
         if self.current_index < 0 {

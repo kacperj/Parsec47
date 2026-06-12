@@ -14,8 +14,7 @@ struct LuminousScreen {
 
 static mut STATE: Option<LuminousScreen> = None;
 
-#[no_mangle]
-pub extern "C" fn luminous_screen_init(luminous: c_float, width: c_int, height: c_int) {
+pub fn luminous_screen_init(luminous: c_float, width: c_int, height: c_int) {
     let texture = unsafe {
         let mut tex: GLuint = 0;
         let pixel_count =
@@ -48,8 +47,7 @@ pub extern "C" fn luminous_screen_init(luminous: c_float, width: c_int, height: 
     }
 }
 
-#[no_mangle]
-pub extern "C" fn luminous_screen_close() {
+pub fn luminous_screen_close() {
     unsafe {
         if let Some(ref s) = STATE {
             glDeleteTextures(1, &s.texture);
@@ -58,8 +56,7 @@ pub extern "C" fn luminous_screen_close() {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn luminous_screen_resized(width: c_int, height: c_int) {
+pub fn luminous_screen_resized(width: c_int, height: c_int) {
     unsafe {
         if let Some(ref mut s) = STATE {
             s.screen_width = width;
@@ -68,15 +65,13 @@ pub extern "C" fn luminous_screen_resized(width: c_int, height: c_int) {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn luminous_screen_start_render_to_texture() {
+pub fn luminous_screen_start_render_to_texture() {
     unsafe {
         glViewport(0, 0, LUMINOUS_TEXTURE_WIDTH, LUMINOUS_TEXTURE_HEIGHT);
     }
 }
 
-#[no_mangle]
-pub extern "C" fn luminous_screen_end_render_to_texture() {
+pub fn luminous_screen_end_render_to_texture() {
     unsafe {
         if let Some(ref s) = STATE {
             glBindTexture(GL_TEXTURE_2D, s.texture);
@@ -98,8 +93,7 @@ pub extern "C" fn luminous_screen_end_render_to_texture() {
 static LM_OFS: [[i32; 2]; 5] = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
 const LM_OFS_BS: c_float = 5.0;
 
-#[no_mangle]
-pub extern "C" fn luminous_screen_draw() {
+pub fn luminous_screen_draw() {
     unsafe {
         if let Some(ref s) = STATE {
             let sw = s.screen_width as c_float;

@@ -46,7 +46,7 @@ const IDX_LSHIFT: usize = 12;
 const IDX_P: usize = 13;
 const IDX_ESCAPE: usize = 14;
 
-// Pad state bitmasks (must match D-side constants)
+// Pad state bitmasks
 const PAD_UP: c_int = 1;
 const PAD_DOWN: c_int = 2;
 const PAD_LEFT: c_int = 4;
@@ -97,8 +97,7 @@ fn key_at(idx: usize) -> bool {
 
 /// Initialize SDL2 joystick subsystem and open the first joystick.
 /// Returns 0 on success, -1 on failure.
-#[no_mangle]
-pub extern "C" fn pad_open_joystick() -> c_int {
+pub fn pad_open_joystick() -> c_int {
     unsafe {
         if SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0 {
             return -1;
@@ -113,8 +112,7 @@ pub extern "C" fn pad_open_joystick() -> c_int {
 }
 
 /// Returns a bitmask of directional pad state (UP/DOWN/LEFT/RIGHT).
-#[no_mangle]
-pub extern "C" fn pad_get_pad_state() -> c_int {
+pub fn pad_get_pad_state() -> c_int {
     let joy = JOYSTICK.load(Ordering::Relaxed);
     let x: i16 = if !joy.is_null() {
         unsafe { SDL_JoystickGetAxis(joy, 0) }
@@ -144,8 +142,7 @@ pub extern "C" fn pad_get_pad_state() -> c_int {
 }
 
 /// Returns a bitmask of button state (BUTTON1/BUTTON2), respecting buttonReversed.
-#[no_mangle]
-pub extern "C" fn pad_get_button_state() -> c_int {
+pub fn pad_get_button_state() -> c_int {
     let joy = JOYSTICK.load(Ordering::Relaxed);
 
     let btn1_joy = !joy.is_null()
@@ -177,24 +174,13 @@ pub extern "C" fn pad_get_button_state() -> c_int {
     btn
 }
 
-#[no_mangle]
-pub extern "C" fn pad_set_button_reversed(v: c_int) {
+pub fn pad_set_button_reversed(v: c_int) {
     BUTTON_REVERSED.store(v != 0, Ordering::Relaxed);
 }
 
-#[no_mangle]
-pub extern "C" fn pad_get_button_reversed() -> c_int {
-    if BUTTON_REVERSED.load(Ordering::Relaxed) {
-        1
-    } else {
-        0
-    }
-}
-
 /// Check whether a given SDL2 SDLK keycode is currently pressed.
-/// D side passes 112 (p) and 27 (ESC) — both valid SDL2 ASCII keycodes.
-#[no_mangle]
-pub extern "C" fn pad_is_key_pressed(sk: c_int) -> c_int {
+/// Callers pass 112 (p) and 27 (ESC) — both valid SDL2 ASCII keycodes.
+pub fn pad_is_key_pressed(sk: c_int) -> c_int {
     if sk < 0 {
         return 0;
     }

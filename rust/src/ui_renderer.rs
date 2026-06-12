@@ -14,21 +14,6 @@ const TITLE_BOX_COUNT: i32 = 16;
 const TITLE_BOX_SMALL: i32 = 24;
 const TITLE_SLOT_NUM: i32 = 10;
 
-#[no_mangle]
-pub extern "C" fn renderer_set_color_params(r: c_float, g: c_float, b: c_float, a: c_float) {
-    set_color_params(r, g, b, a);
-}
-
-#[no_mangle]
-pub extern "C" fn renderer_draw_box_solid(x: c_float, y: c_float, width: c_float, height: c_float) {
-    draw_box_solid(x, y, width, height);
-}
-
-#[no_mangle]
-pub extern "C" fn renderer_draw_box_line(x: c_float, y: c_float, width: c_float, height: c_float) {
-    draw_box_line(x, y, width, height);
-}
-
 fn draw_board(x: i32, y: i32, width: i32, height: i32) {
     unsafe {
         glColor4f(0.0, 0.0, 0.0, 1.0);
@@ -41,8 +26,7 @@ fn draw_board(x: i32, y: i32, width: i32, height: i32) {
     );
 }
 
-#[no_mangle]
-pub extern "C" fn renderer_draw_box(x: i32, y: i32, w: i32, h: i32) {
+pub fn renderer_draw_box(x: i32, y: i32, w: i32, h: i32) {
     if w <= 0 {
         return;
     }
@@ -53,8 +37,7 @@ pub extern "C" fn renderer_draw_box(x: i32, y: i32, w: i32, h: i32) {
     draw_box_line(x, y, w, h);
 }
 
-#[no_mangle]
-pub extern "C" fn renderer_draw_box_outlined(x: i32, y: i32, w: i32, h: i32) {
+pub fn renderer_draw_box_outlined(x: i32, y: i32, w: i32, h: i32) {
     let (x, y, w, h) = (x as c_float, y as c_float, w as c_float, h as c_float);
     set_color_params(1.0, 1.0, 1.0, 1.0);
     draw_box_line(x, y, w, h);
@@ -62,8 +45,7 @@ pub extern "C" fn renderer_draw_box_outlined(x: i32, y: i32, w: i32, h: i32) {
     draw_box_solid(x, y, w, h);
 }
 
-#[no_mangle]
-pub extern "C" fn renderer_draw_box_light(x: i32, y: i32, w: i32, h: i32) {
+pub fn renderer_draw_box_light(x: i32, y: i32, w: i32, h: i32) {
     let (x, y, w, h) = (x as c_float, y as c_float, w as c_float, h as c_float);
     set_color_params(1.0, 1.0, 1.0, 0.7);
     draw_box_line(x, y, w, h);
@@ -82,18 +64,16 @@ fn renderer_draw_left(left: i32) {
     letter_render_change_color(0);
 }
 
-#[no_mangle]
-pub extern "C" fn renderer_draw_side_info(parsec: i32) {
+pub fn renderer_draw_side_info(parsec: i32) {
     renderer_draw_side_boards();
     renderer_draw_score();
-    renderer_draw_left(life_get());
+    renderer_draw_left(score_state().get_life());
     renderer_draw_parsec(parsec);
 }
 
-#[no_mangle]
-pub extern "C" fn renderer_draw_score() {
-    letter_render_draw_num(score_get(), 120.0, 28.0, 25.0, 3);
-    letter_render_draw_num(get_bonus_state(), 24.0, 20.0, 12.0, 3);
+pub fn renderer_draw_score() {
+    letter_render_draw_num(score_state().get_score(), 120.0, 28.0, 25.0, 3);
+    letter_render_draw_num(score_state().get_bonus_score(), 24.0, 20.0, 12.0, 3);
 }
 
 fn renderer_draw_parsec(parsec: i32) {
@@ -117,8 +97,7 @@ fn load_bmp_from_bytes(data: &[u8]) -> (i32, i32, *const u8) {
     (width, height.abs(), data[pixel_offset..].as_ptr())
 }
 
-#[no_mangle]
-pub extern "C" fn renderer_title_texture_init() {
+pub fn renderer_title_texture_init() {
     let (w, h, pixels) = load_bmp_from_bytes(TITLE_BMP);
     unsafe {
         glGenTextures(1, &mut TITLE_TEXTURE);
@@ -139,16 +118,14 @@ pub extern "C" fn renderer_title_texture_init() {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn renderer_title_texture_delete() {
+pub fn renderer_title_texture_delete() {
     unsafe {
         glDeleteTextures(1, &TITLE_TEXTURE);
         TITLE_TEXTURE = 0;
     }
 }
 
-#[no_mangle]
-pub extern "C" fn renderer_draw_title_board() {
+pub fn renderer_draw_title_board() {
     unsafe {
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, TITLE_TEXTURE);
@@ -169,8 +146,7 @@ pub extern "C" fn renderer_draw_title_board() {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn renderer_draw_gameover_status(
+pub fn renderer_draw_gameover_status(
     parsec: i32,
     cnt: i32,
 ) {
@@ -180,8 +156,7 @@ pub extern "C" fn renderer_draw_gameover_status(
     }
 }
 
-#[no_mangle]
-pub extern "C" fn renderer_draw_pause_status(
+pub fn renderer_draw_pause_status(
     parsec: i32,
     pause_cnt: i32,
 ) {
@@ -191,8 +166,7 @@ pub extern "C" fn renderer_draw_pause_status(
     }
 }
 
-#[no_mangle]
-pub extern "C" fn renderer_draw_side_boards() {
+pub fn renderer_draw_side_boards() {
     unsafe {
         glDisable(GL_BLEND);
     }
@@ -203,8 +177,7 @@ pub extern "C" fn renderer_draw_side_boards() {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn renderer_draw_title(cur_x: i32, cur_y: i32, mode: i32, box_cnt: i32) {
+pub fn renderer_draw_title(cur_x: i32, cur_y: i32, mode: i32, box_cnt: i32) {
     let diff_label = DIFFICULTY_STR[cur_y as usize];
     let mode_label = MODE_STR[mode as usize];
     letter_render_draw_string(

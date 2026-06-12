@@ -114,8 +114,7 @@ fn write_one_ring(ring_pos: &[(f32, f32); RING_POS_NUM]) {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn field_create_ring_display_list() -> GLuint {
+pub fn field_create_ring_display_list() -> GLuint {
     let mut ring_pos = [(0.0f32, 0.0f32); RING_POS_NUM];
     let mut d = -RING_DEG * (RING_POS_NUM as f32 / 2.0 - 0.5);
     for pos in ring_pos.iter_mut() {
@@ -132,10 +131,9 @@ pub extern "C" fn field_create_ring_display_list() -> GLuint {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn field_init(b: CollisionBox) {
+pub fn field_init(half_width: f32, half_height: f32) {
     unsafe {
-        FIELD.collision_box = b;
+        FIELD.collision_box = CollisionBox::create_with_half_extents(half_width, half_height);
         FIELD.roll = 0.0;
         FIELD.yaw = 0.0;
         FIELD.z = 10.0;
@@ -147,22 +145,19 @@ pub extern "C" fn field_init(b: CollisionBox) {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn field_set_aim_z(z: f32) {
+pub fn field_set_aim_z(z: f32) {
     unsafe {
         FIELD.aim_z = z;
     }
 }
 
-#[no_mangle]
-pub extern "C" fn field_set_aim_speed(speed: f32) {
+pub fn field_set_aim_speed(speed: f32) {
     unsafe {
         FIELD.aim_speed = speed;
     }
 }
 
-#[no_mangle]
-pub extern "C" fn field_set_color(mode: c_int) {
+pub fn field_set_color(mode: c_int) {
     unsafe {
         FIELD.color = match mode {
             MODE_ROLL => Color {
@@ -182,8 +177,7 @@ pub extern "C" fn field_set_color(mode: c_int) {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn field_move() {
+pub fn field_move() {
     unsafe {
         FIELD.roll += FIELD.speed;
         if FIELD.roll >= RING_ANGLE_INT {
@@ -197,8 +191,7 @@ pub extern "C" fn field_move() {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn field_set_type(type_: c_int) {
+pub fn field_set_type(type_: c_int) {
     unsafe {
         match type_ {
             0 => {
@@ -222,8 +215,7 @@ pub extern "C" fn field_set_type(type_: c_int) {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn field_draw() {
+pub fn field_draw() {
     unsafe {
         set_color(FIELD.color);
         let mut d = -(RING_NUM as f32) * RING_ANGLE_INT / 2.0 + FIELD.roll;
@@ -254,17 +246,14 @@ pub extern "C" fn field_draw() {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn field_check_hit(px: f32, py: f32) -> bool {
+pub fn field_check_hit(px: f32, py: f32) -> bool {
     unsafe { check_hit(FIELD.collision_box, px, py) }
 }
 
-#[no_mangle]
-pub extern "C" fn field_check_hit_with_space(px: f32, py: f32, space: f32) -> bool {
+pub fn field_check_hit_with_space(px: f32, py: f32, space: f32) -> bool {
     unsafe { check_hit_with_space(FIELD.collision_box, px, py, space) }
 }
 
-#[no_mangle]
-pub extern "C" fn field_get_collision_box() -> CollisionBox {
+pub fn field_get_collision_box() -> CollisionBox {
     unsafe { FIELD.collision_box }
 }

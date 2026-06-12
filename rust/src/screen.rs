@@ -96,8 +96,7 @@ fn handle_error() -> bool {
 /// `lowres` halves the 640x480 resolution. `window_mode`/`fullscreen_desktop`
 /// select the display mode. `luminous > 0` enables the glow pass.
 /// Returns 0 on success, -1 if window creation failed.
-#[no_mangle]
-pub extern "C" fn screen_init_sdl(
+pub fn screen_init_sdl(
     lowres: c_int,
     window_mode: c_int,
     fullscreen_desktop: c_int,
@@ -136,8 +135,7 @@ pub extern "C" fn screen_init_sdl(
     0
 }
 
-#[no_mangle]
-pub extern "C" fn screen_resized(width: c_int, height: c_int) {
+pub fn screen_resized(width: c_int, height: c_int) {
     let has_luminous = unsafe {
         if let Some(ref mut s) = STATE {
             s.width = width;
@@ -153,13 +151,11 @@ pub extern "C" fn screen_resized(width: c_int, height: c_int) {
     screen_resized_gl(width, height);
 }
 
-#[no_mangle]
-pub extern "C" fn screen_close_sdl() {
+pub fn screen_close_sdl() {
     do_close_sdl();
 }
 
-#[no_mangle]
-pub extern "C" fn screen_flip() -> c_int {
+pub fn screen_flip() -> c_int {
     if handle_error() {
         return -1;
     }
@@ -167,36 +163,31 @@ pub extern "C" fn screen_flip() -> c_int {
     0
 }
 
-#[no_mangle]
-pub extern "C" fn screen_clear() {
+pub fn screen_clear() {
     unsafe {
         glClear(GL_COLOR_BUFFER_BIT);
     }
 }
 
-#[no_mangle]
-pub extern "C" fn screen_start_render_to_texture() {
+pub fn screen_start_render_to_texture() {
     if unsafe { STATE.as_ref().map_or(false, |s| s.has_luminous) } {
         luminous_screen::luminous_screen_start_render_to_texture();
     }
 }
 
-#[no_mangle]
-pub extern "C" fn screen_end_render_to_texture() {
+pub fn screen_end_render_to_texture() {
     if unsafe { STATE.as_ref().map_or(false, |s| s.has_luminous) } {
         luminous_screen::luminous_screen_end_render_to_texture();
     }
 }
 
-#[no_mangle]
-pub extern "C" fn screen_draw_luminous() {
+pub fn screen_draw_luminous() {
     if unsafe { STATE.as_ref().map_or(false, |s| s.has_luminous) } {
         luminous_screen::luminous_screen_draw();
     }
 }
 
-#[no_mangle]
-pub extern "C" fn screen_view_ortho_fixed() {
+pub fn screen_view_ortho_fixed() {
     unsafe {
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
@@ -208,8 +199,7 @@ pub extern "C" fn screen_view_ortho_fixed() {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn screen_view_perspective() {
+pub fn screen_view_perspective() {
     unsafe {
         glMatrixMode(GL_PROJECTION);
         glPopMatrix();

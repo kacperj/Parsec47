@@ -3,7 +3,6 @@
 #ifndef TREE_H_
 #define TREE_H_
 
-#include "bulletmlcommon.h"
 
 #include <list>
 
@@ -28,28 +27,28 @@ public:
     typedef typename Children::const_iterator ConstChildIterator;
 
 public:
-    DECLSPEC TreeNode() {
+    TreeNode() {
 		releaseDuty_ = false;
     }
-    DECLSPEC virtual ~TreeNode();
+    virtual ~TreeNode();
 
-    DECLSPEC void addChild(C_* c) {
+    void addChild(C_* c) {
 		c->setParent(dynamic_cast<C_*>(this));
 		children_.push_back(c);
     }
-    DECLSPEC void setReleaseDuty(bool bl) {
+    void setReleaseDuty(bool bl) {
 		releaseDuty_ = bl;
     }
-    DECLSPEC void setParent(C_* c) {
+    void setParent(C_* c) {
 		parent_ = c;
     }
 
-    DECLSPEC ChildIterator childBegin() { return children_.begin(); }
-    DECLSPEC ChildIterator childEnd() { return children_.end(); }
-	DECLSPEC size_t childSize() { return children_.size(); }
-    DECLSPEC ConstChildIterator childBegin() const { return children_.begin(); }
-    DECLSPEC ConstChildIterator childEnd() const { return children_.end(); }
-    DECLSPEC C_* getParent() { return parent_; }
+    ChildIterator childBegin() { return children_.begin(); }
+    ChildIterator childEnd() { return children_.end(); }
+	size_t childSize() { return children_.size(); }
+    ConstChildIterator childBegin() const { return children_.begin(); }
+    ConstChildIterator childEnd() const { return children_.end(); }
+    C_* getParent() { return parent_; }
 
 private:
     Children children_;

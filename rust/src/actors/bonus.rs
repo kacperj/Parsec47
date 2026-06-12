@@ -7,7 +7,7 @@ use crate::renderer::{draw_box_line, draw_box_retro, set_color};
 use crate::rendering::color::Color;
 use crate::rendering::gl::{glBlendFunc, GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA};
 use crate::ship::{ship_get_pos_x, ship_get_pos_y, ship_get_cnt};
-use crate::state::state_export::{bonus_collected, bonus_state_reset};
+use crate::state::state_export::score_state;
 
 const BASE_SPEED: f32 = 0.1;
 const INHALE_WIDTH: f32 = 3.0;
@@ -133,7 +133,7 @@ impl Actor for BonusActor {
         } else {
             self.vel.1 += (speed - self.vel.1) / 50.0;
             if self.pos.1 > self.field_limit_y {
-                bonus_state_reset();
+                score_state().reset_bonus_score();
                 self.active = false;
                 return;
             }
@@ -149,7 +149,7 @@ impl Actor for BonusActor {
         if d < ACQUIRE_WIDTH * (1.0 + self.inhale_cnt as f32 * 0.2)
             && ship_cnt >= -INVINCIBLE_CNT
         {
-            bonus_collected();
+            score_state().bonus_collected();
             self.active = false;
             return;
         }
@@ -182,43 +182,36 @@ impl Actor for BonusActor {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn bonuses_init() {
+pub fn bonuses_init() {
     get_bonus_pool().clear();
 }
 
-#[no_mangle]
-pub extern "C" fn bonuses_set_speed_rate(r: f32) {
+pub fn bonuses_set_speed_rate(r: f32) {
     unsafe {
         BONUS_RATE = r;
         BONUS_SPEED = BASE_SPEED * r;
     }
 }
 
-#[no_mangle]
-pub extern "C" fn bonus_get_rate() -> f32 {
+pub fn bonus_get_rate() -> f32 {
     unsafe { BONUS_RATE }
 }
 
-#[no_mangle]
-pub extern "C" fn bonuses_clear() {
+pub fn bonuses_clear() {
     get_bonus_pool().clear();
 }
 
-#[no_mangle]
-pub extern "C" fn bonuses_move() {
+pub fn bonuses_move() {
     get_bonus_pool().update();
 }
 
-#[no_mangle]
-pub extern "C" fn bonuses_draw() {
+pub fn bonuses_draw() {
     unsafe { glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) };
     get_bonus_pool().draw();
     unsafe { glBlendFunc(GL_SRC_ALPHA, GL_ONE) };
 }
 
-#[no_mangle]
-pub extern "C" fn bonuses_add(x: f32, y: f32, ox: f32, oy: f32) {
+pub fn bonuses_add(x: f32, y: f32, ox: f32, oy: f32) {
     if let Some(b) = get_bonus_pool().get_instance() {
         b.init(x, y, ox, oy);
     }

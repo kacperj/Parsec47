@@ -3,8 +3,7 @@ use crate::rendering::color::*;
 use crate::rendering::gl::*;
 use core::ffi::{c_float, c_int};
 
-#[no_mangle]
-pub extern "C" fn create_enemy_color(variant: c_int) -> Color {
+pub fn create_enemy_color(variant: c_int) -> Color {
     let (r, g, b) = match variant {
         0 => (1.0, rand_next_float(0.7) + 0.3, rand_next_float(0.7) + 0.3),
         1 => (rand_next_float(0.7) + 0.3, 1.0, rand_next_float(0.7) + 0.3),
@@ -55,8 +54,7 @@ pub fn set_color(color: Color) {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn mix_retro_color(retro: c_float, color: Color) {
+pub fn mix_retro_color(retro: c_float, color: Color) {
     let cf = (1.0 - retro) * 0.5;
     let mut mr = color.r + (1.0 - color.r) * cf;
     let mut mg = color.g + (1.0 - color.g) * cf;
@@ -81,8 +79,8 @@ fn draw_square_retro(x: c_float, y: c_float, ds: c_float, z: c_float) {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn draw_line_retro_with_z(
+// enemy.rs and the actors are the only callers.
+pub fn draw_line_retro_with_z(
     x1: c_float,
     y1: c_float,
     x2: c_float,
@@ -157,8 +155,7 @@ pub extern "C" fn draw_line_retro_with_z(
     }
 }
 
-#[no_mangle]
-pub extern "C" fn draw_box_retro(
+pub fn draw_box_retro(
     center_x: c_float,
     center_y: c_float,
     width: c_float,
@@ -214,14 +211,8 @@ pub extern "C" fn draw_box_retro(
     );
 }
 
-#[no_mangle]
-pub extern "C" fn renderer_set_brightness(b: c_float) {
+pub fn renderer_set_brightness(b: c_float) {
     unsafe {
         BRIGHTNESS = b;
     }
-}
-
-#[no_mangle]
-pub extern "C" fn renderer_get_brightness() -> c_float {
-    unsafe { BRIGHTNESS }
 }

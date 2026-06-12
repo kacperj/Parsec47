@@ -26,8 +26,7 @@ fn get_slots(difficulty: c_int) -> c_int {
     prefs_get_slots(mode, difficulty)
 }
 
-#[no_mangle]
-pub extern "C" fn title_start(difficulty: c_int, parsec_slot: c_int, mode: c_int) {
+pub fn title_start(difficulty: c_int, parsec_slot: c_int, mode: c_int) {
     unsafe {
         CUR_X = parsec_slot;
         CUR_Y = difficulty;
@@ -36,8 +35,7 @@ pub extern "C" fn title_start(difficulty: c_int, parsec_slot: c_int, mode: c_int
     }
 }
 
-#[no_mangle]
-pub extern "C" fn title_move() {
+pub fn title_move() {
     unsafe {
         STAGE_CHANGED = false;
 
@@ -84,8 +82,7 @@ pub extern "C" fn title_move() {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn title_should_change_stage() -> c_int {
+pub fn title_should_change_stage() -> c_int {
     unsafe {
         if STAGE_CHANGED {
             1
@@ -95,23 +92,19 @@ pub extern "C" fn title_should_change_stage() -> c_int {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn title_get_cur_x() -> c_int {
+pub fn title_get_cur_x() -> c_int {
     unsafe { CUR_X }
 }
 
-#[no_mangle]
-pub extern "C" fn title_get_cur_y() -> c_int {
+pub fn title_get_cur_y() -> c_int {
     unsafe { CUR_Y }
 }
 
-#[no_mangle]
-pub extern "C" fn title_get_mode() -> c_int {
+pub fn title_get_mode() -> c_int {
     unsafe { MODE }
 }
 
-#[no_mangle]
-pub extern "C" fn title_change_mode() {
+pub fn title_change_mode() {
     unsafe {
         MODE += 1;
         if MODE >= MODE_NUM {
@@ -124,8 +117,7 @@ pub extern "C" fn title_change_mode() {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn title_draw() {
+pub fn title_draw() {
     unsafe {
         renderer_draw_title(CUR_X, CUR_Y, MODE, BOX_CNT);
     }

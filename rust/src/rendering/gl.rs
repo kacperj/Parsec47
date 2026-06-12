@@ -32,7 +32,8 @@ pub const GL_COLOR_MATERIAL: GLenum = 0x0B57;
 pub const GL_COLOR_BUFFER_BIT: GLenum = 0x0000_4000;
 pub const GL_NO_ERROR: GLenum = 0;
 
-#[link(name = "opengl32")]
+#[cfg_attr(windows, link(name = "opengl32"))]
+#[cfg_attr(not(windows), link(name = "GL"))]
 extern "system" {
     pub fn glColor4f(red: c_float, green: c_float, blue: c_float, alpha: c_float);
     pub fn glBegin(mode: GLenum);
@@ -47,7 +48,6 @@ extern "system" {
     pub fn glGenLists(range: GLsizei) -> GLuint;
     pub fn glNewList(list: GLuint, mode: GLenum);
     pub fn glEndList();
-    pub fn glDeleteLists(list: GLuint, range: GLsizei);
     pub fn glEnable(cap: GLenum);
     pub fn glDisable(cap: GLenum);
     pub fn glGenTextures(n: GLsizei, textures: *mut GLuint);

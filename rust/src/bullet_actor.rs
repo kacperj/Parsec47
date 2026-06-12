@@ -49,8 +49,7 @@ static SHAPE_POS: [&[(c_float, c_float)]; BULLET_SHAPE_NUM] = [
     ],
 ];
 
-#[no_mangle]
-pub extern "C" fn bullet_actor_draw_retro(
+pub fn bullet_actor_draw_retro(
     d: c_float,
     rt: c_float,
     bullet_size: c_float,
@@ -89,8 +88,7 @@ pub extern "C" fn bullet_actor_draw_retro(
     draw_line_retro_with_z(prev_x, prev_y, fx, fy, 0.0, rt, retro_size, c);
 }
 
-#[no_mangle]
-pub extern "C" fn bullet_actor_create_display_lists() {
+pub fn bullet_actor_create_display_lists() {
     let size: c_float = 1.0;
     let base_idx = unsafe { glGenLists((BULLET_COLOR_NUM * (BULLET_SHAPE_NUM + 1)) as GLsizei) };
     unsafe {
@@ -270,8 +268,7 @@ pub extern "C" fn bullet_actor_create_display_lists() {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn bullet_actor_draw(
+pub fn bullet_actor_draw(
     shape: c_int,
     color: c_int,
     deg: c_float,

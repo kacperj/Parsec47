@@ -3,21 +3,20 @@
 #ifndef FORMULA_H_
 #define FORMULA_H_
 
-#include "bulletmlcommon.h"
 
 template <typename Val_>
 class AbstractNumber {
 public:
-	DECLSPEC virtual Val_ value() const =0;
-	DECLSPEC virtual ~AbstractNumber() {}
+	virtual Val_ value() const =0;
+	virtual ~AbstractNumber() {}
 };
 
 template <typename Val_>
 class Number : public AbstractNumber<Val_> {
 public:
-	DECLSPEC explicit Number(Val_ val) : val_(val) {}
+	explicit Number(Val_ val) : val_(val) {}
 
-	DECLSPEC virtual Val_ value() const { return val_; }
+	virtual Val_ value() const { return val_; }
 
 private:
 	Val_ val_;
@@ -31,7 +30,7 @@ private:
 	typedef AbstractNumber<Val_> ANumber;
 
 public:
-	DECLSPEC virtual ~Formula() {
+	virtual ~Formula() {
 		delete lhs_;
 		delete rhs_;
 	}
@@ -41,15 +40,15 @@ public:
 	 * @todo yacc の使いかたを調べて、これを private に
 	 */
 	//@{
-	DECLSPEC explicit Formula(ANumber* val)
+	explicit Formula(ANumber* val)
 		: lhs_(val), rhs_(0), op_(op_null), headsub_(false) {}
-	DECLSPEC Formula(ANumber* lhs, Operator op, ANumber* rhs)
+	Formula(ANumber* lhs, Operator op, ANumber* rhs)
 		: lhs_(lhs), rhs_(rhs), op_(op), headsub_(false) {}
 
-	DECLSPEC Formula* setHeadSub() { headsub_ = true; return this; }
+	Formula* setHeadSub() { headsub_ = true; return this; }
 	//@}
 
-	DECLSPEC virtual Val_ value() const {
+	virtual Val_ value() const {
 		if (headsub_) return -valueBeforeHeadSub();
 		else return valueBeforeHeadSub();
 	}

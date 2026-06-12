@@ -3,21 +3,20 @@
 
 #include "formula.h"
 #include "bulletmlrunner.h"
-#include "bulletmlcommon.h"
 
 #include <cstdlib>
 #include <vector>
 
 namespace Variables {
-	DECLSPEC extern double rank;
-	DECLSPEC extern std::vector<double>* parameters;
-	DECLSPEC extern BulletMLRunner* runner;
+	extern double rank;
+	extern std::vector<double>* parameters;
+	extern BulletMLRunner* runner;
 }
 
 template <typename Val_>
 class Random : public AbstractNumber<Val_> {
 public:
-	DECLSPEC virtual Val_ value() const {
+	virtual Val_ value() const {
 		return Variables::runner->getRand();
 	}
 };
@@ -25,7 +24,7 @@ public:
 template <typename Val_>
 class Rank : public AbstractNumber<Val_> {
 public:
-	DECLSPEC virtual Val_ value() const {
+	virtual Val_ value() const {
 		return Variables::rank;
 	}
 };
@@ -33,8 +32,8 @@ public:
 template <typename Val_>
 class Param : public AbstractNumber<Val_> {
 public:
-	DECLSPEC explicit Param(int id) : id_(id) {}
-	DECLSPEC virtual Val_ value() const {
+	explicit Param(int id) : id_(id) {}
+	virtual Val_ value() const {
 		if (Variables::parameters && id_ < Variables::parameters->size()) {
 			return (*Variables::parameters)[id_];
 		}

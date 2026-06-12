@@ -2,27 +2,21 @@
 
 ## Project Overview
 
-PARSEC47 (p47) — a retromodern hispeed shoot-'em-up originally by Kenta Cho. This fork modernizes the build toolchain and incrementally rewrites parts in Rust.
+PARSEC47 (p47) — a retromodern hispeed shoot-'em-up originally by Kenta Cho. This fork modernized the build toolchain and **fully rewrote the game in Rust**.
 
-The game is written primarily in **D** (42 source files under `src/`), with a **C++ BulletML** library (`bulletlib/`) and a growing **Rust** layer (`rust/` workspace with `mt`, `renderer`, and `sound` crates).
+The game is now written entirely in **Rust** (`rust/` crate `p47rust`), with a **C++ BulletML** library (`bulletlib/`) linked as a shared library. The original D source has been removed; the Rust crate owns the OS entry point and produces the executable directly.
 
 ## Repository Layout
 
 ```
-src/              D source code (game logic, SDL integration)
-  abagames/p47/   Game-specific modules (Ship, Enemy, BulletActor, StageManager…)
-  abagames/util/  Engine utilities (Actor pool, Vector, Rand, SDL wrappers, BulletML bindings)
-import/           D import files (SDL headers, OpenGL bindings)
-lib/              Pre-built Windows .lib files (SDL, SDL_mixer)
-rust/             Rust workspace (Cargo)
-  mt/             Mersenne Twister RNG replacement
-  renderer/       Letter/text rendering replacement
-  sound/          SDL2-based audio (BGM/SFX) — compiled to sound.dll
-bulletlib/        C++ BulletML library (compiled to bulletml.dll)
-resource/         Windows resources (.RES)
-sounds/           Sound assets
-images/           Image assets
-large/ middle*/ small*/ morph*/  BulletML pattern XML files (barrage definitions)
+rust/             Rust crate `p47rust` (Cargo) — all game logic, rendering, audio, input
+  src/main.rs     OS entry point (was P47Boot.d) → calls boot::run
+  src/boot.rs     Command-line parsing + boot sequence
+  src/lib.rs      Module root (game_manager, ship, enemy, bullets, screen, sound, …)
+  build.rs        Per-target link config (Windows libunwind; Linux bulletml rpath)
+bulletlib/        C++ BulletML library (→ bulletml.dll on Windows, libbulletml.so on Linux)
+resource/         Windows app icon: p47.ico + p47.rc, compiled by rust/build.rs into p47.exe
+assets/           Game assets (images, sounds); BulletML pattern XML directories
 ```
 
 ## Building
@@ -32,46 +26,51 @@ The project builds entirely inside Docker — no local compilers needed. Only **
 Run the build script using **Git Bash**:
 
 ```bash
-./build.sh
+./build.sh            # Windows build (default)
+./build.sh windows    # explicit Windows build
+./build.sh linux      # Linux build
+./build.sh --clean    # wipe build/ first (combine with a target if desired)
 ```
 
-This will:
-1. Build a Docker image with LDC (D compiler), Rust toolchain, and LLVM/MinGW (C++ cross-compiler)
-2. Download SDL2 + SDL2_mixer development packages for cross-compilation
-3. Compile the Rust crates (`mt`, `renderer`) as Windows static libraries
-4. Compile the Rust `sound` crate as `sound.dll` (uses SDL2 crate with mixer feature)
-5. Compile `bulletlib` C++ sources into `bulletml.dll`
-6. Compile all D sources into `p47.exe`
-7. Extract `p47.exe`, `bulletml.dll`, `sound.dll`, `SDL2.dll`, and `SDL2_mixer.dll` into the project root
+The Dockerfile is multi-stage; `build.sh` selects the stage via `docker build --target <windows|linux>` and extracts the matching artifacts into `build/`:
+
+- **windows**: `p47.exe`, `bulletml.dll`, `SDL2.dll`, `SDL2_mixer.dll`
+- **linux**: `p47`, `libbulletml.so` (SDL2 is a system dependency, not shipped)
 
 **Do not use PowerShell or CMD** to run `build.sh` — use Git Bash.
 
 ### Build Toolchain Details
 
-- **D compiler**: LDC 1.42.0, cross-compiling to `x86_64-windows-msvc`
-- **C++ compiler**: `x86_64-w64-mingw32-clang++` (from `mstorsjo/llvm-mingw` Docker image)
-- **Rust**: stable toolchain, target `x86_64-pc-windows-gnu`
-- **Output**: Windows x64 binaries
+- **Windows** (cross-compiled on the `mstorsjo/llvm-mingw` image):
+  - **Rust**: stable, target `x86_64-pc-windows-gnu`, built as a `[[bin]]` (GUI subsystem)
+  - **C++**: `x86_64-w64-mingw32-clang++` → `bulletml.dll`
+  - SDL2 from the MinGW devel package; SDL2_mixer + libogg/libvorbis built from source
+- **Linux** (native on `debian:bookworm`):
+  - **Rust**: stable, host target `x86_64-unknown-linux-gnu`, built as a `[[bin]]`
+  - **C++**: `clang++` → `libbulletml.so`
+  - SDL2/SDL2_mixer/OpenGL from distro packages (`libsdl2-dev`, `libsdl2-mixer-dev`, `libgl1-mesa-dev`)
 
 ## Running
 
-After building, run `p47.exe` on Windows. Requires the DLLs in the project root (`SDL.dll`, `SDL_mixer.dll`, `bulletml.dll`, `sound.dll`, `SDL2.dll`, `SDL2_mixer.dll`) and the BulletML pattern directories.
+After building, run the executable from `build/`. The Windows build needs the DLLs beside it (`bulletml.dll`, `SDL2.dll`, `SDL2_mixer.dll`); the Linux build needs `libbulletml.so` beside it (rpath `$ORIGIN`) and system SDL2 installed. Both need the asset/BulletML pattern directories.
 
-Command-line options: `-window`, `-nosound`, `-lowres`, `-brightness N`, `-luminous N`, `-reverse`, `-slowship`, `-nowait`, `-nofield`, `-nobonus`.
+Command-line options: `-window`, `-fullscreen`, `-nosound`, `-lowres`, `-brightness N`, `-luminous N`, `-reverse`, `-slowship`, `-nowait`, `-nofield`, `-nobonus`.
 
 ## Code Conventions
 
-- D source uses module paths matching directory structure (e.g., `abagames.p47.Ship`)
-- Class names are PascalCase, methods are camelCase
-- The codebase is being incrementally ported: some D modules call into Rust via C ABI (`extern(C)`) — static libs for `mt`/`renderer`, DLL for `sound`
-- Commit messages are short (typically just "Work")
+- Rust 2021 edition; modules mirror the original D structure (e.g. `ship`, `enemy`, `bullets`, `stage_manager`).
+- Many functions are `#[no_mangle] pub extern "C"` — a legacy of the incremental D→Rust port (they used to be the FFI boundary). They are now internal calls; new code need not follow that convention.
+- The Rust crate links the C++ BulletML library directly (`raw-dylib` on Windows, normal `dylib` on Linux — see `src/barrage/mod.rs`).
+- Commit messages are short (typically just "Work").
 
 ## Key Architecture
 
-- `P47GameManager` — main game loop, state machine (title → in-game → game-over)
-- `P47Boot` — entry point, initializes SDL, screen, sound, and starts the main loop
-- `StageManager` — procedural stage generation
-- `BulletActorPool` / `BulletActor` — bullet hell pattern execution using BulletML
-- `Ship` — player ship logic (movement, shooting, roll/lock modes)
-- `Enemy` / `EnemyType` — enemy definitions and behavior
-- `MainLoop` (util) — SDL event loop and frame timing
+- `main.rs` / `boot.rs` — entry point: parse args, open joystick, seed RNG, run the main loop
+- `main_loop.rs` — SDL event loop and frame timing
+- `game_manager.rs` — main game state machine (title → in-game → game-over → pause)
+- `stage_manager.rs` — procedural stage generation
+- `bullets/`, `bullet_actor.rs`, `barrage/` — bullet-hell pattern execution using BulletML
+- `ship.rs` — player ship logic (movement, shooting, roll/lock modes)
+- `enemy.rs` / `enemy_type.rs` — enemy definitions and behavior
+- `screen.rs`, `renderer.rs`, `rendering/`, `letter_render.rs`, `luminous_screen.rs` — OpenGL rendering
+- `sound.rs`, `pad.rs`, `platform.rs` — SDL2 audio, input, and windowing

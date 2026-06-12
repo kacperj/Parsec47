@@ -408,8 +408,7 @@ fn char_to_glyph_index(c: u8) -> Option<i32> {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn letter_render_create_display_lists() {
+pub fn letter_render_create_display_lists() {
     unsafe {
         DISPLAY_LIST_IDX = glGenLists(LETTER_NUM as GLsizei * 2);
         for i in 0..LETTER_NUM {
@@ -434,8 +433,7 @@ pub fn letter_render_change_color(c: i32) {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn letter_render_draw_string(
+pub fn letter_render_draw_string(
     ptr: *const u8,
     len: i32,
     lx: c_float,
@@ -463,8 +461,7 @@ pub extern "C" fn letter_render_draw_string(
     }
 }
 
-#[no_mangle]
-pub extern "C" fn letter_render_draw_num(num: i32, lx: c_float, y: c_float, s: c_float, d: i32) {
+pub fn letter_render_draw_num(num: i32, lx: c_float, y: c_float, s: c_float, d: i32) {
     let ld = direction_to_angle(d);
     let mut x = lx;
     let mut y = y;

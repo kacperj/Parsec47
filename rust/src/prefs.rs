@@ -40,8 +40,7 @@ fn data() -> &'static mut ProgressData {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn prefs_load() {
+pub fn prefs_load() {
     let loaded = fs::read_to_string(PREFS_FILE)
         .ok()
         .and_then(|s| serde_json::from_str::<ProgressData>(&s).ok());
@@ -63,66 +62,54 @@ pub extern "C" fn prefs_load() {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn prefs_save() {
+pub fn prefs_save() {
     let d = data();
     if let Ok(json) = serde_json::to_string_pretty(d) {
         let _ = fs::write(PREFS_FILE, json);
     }
 }
 
-#[no_mangle]
-pub extern "C" fn prefs_get_hi_score(mode: i32, difficulty: i32, slot: i32) -> i32 {
+pub fn prefs_get_hi_score(mode: i32, difficulty: i32, slot: i32) -> i32 {
     data().hi_score[mode as usize][difficulty as usize][slot as usize]
 }
 
-#[no_mangle]
-pub extern "C" fn prefs_set_hi_score(mode: i32, difficulty: i32, slot: i32, val: i32) {
+pub fn prefs_set_hi_score(mode: i32, difficulty: i32, slot: i32, val: i32) {
     data().hi_score[mode as usize][difficulty as usize][slot as usize] = val;
 }
 
-#[no_mangle]
-pub extern "C" fn prefs_get_reached_parsec(mode: i32, difficulty: i32) -> i32 {
+pub fn prefs_get_reached_parsec(mode: i32, difficulty: i32) -> i32 {
     data().reached_parsec[mode as usize][difficulty as usize]
 }
 
-#[no_mangle]
-pub extern "C" fn prefs_set_reached_parsec(mode: i32, difficulty: i32, val: i32) {
+pub fn prefs_set_reached_parsec(mode: i32, difficulty: i32, val: i32) {
     data().reached_parsec[mode as usize][difficulty as usize] = val;
 }
 
-#[no_mangle]
-pub extern "C" fn prefs_get_selected_difficulty() -> i32 {
+pub fn prefs_get_selected_difficulty() -> i32 {
     data().selected_difficulty
 }
 
-#[no_mangle]
-pub extern "C" fn prefs_set_selected_difficulty(val: i32) {
+pub fn prefs_set_selected_difficulty(val: i32) {
     data().selected_difficulty = val;
 }
 
-#[no_mangle]
-pub extern "C" fn prefs_get_selected_parsec_slot() -> i32 {
+pub fn prefs_get_selected_parsec_slot() -> i32 {
     data().selected_parsec_slot
 }
 
-#[no_mangle]
-pub extern "C" fn prefs_set_selected_parsec_slot(val: i32) {
+pub fn prefs_set_selected_parsec_slot(val: i32) {
     data().selected_parsec_slot = val;
 }
 
-#[no_mangle]
-pub extern "C" fn prefs_get_selected_mode() -> i32 {
+pub fn prefs_get_selected_mode() -> i32 {
     data().selected_mode
 }
 
-#[no_mangle]
-pub extern "C" fn prefs_set_selected_mode(val: i32) {
+pub fn prefs_set_selected_mode(val: i32) {
     data().selected_mode = val;
 }
 
-#[no_mangle]
-pub extern "C" fn prefs_get_slots(mode: i32, difficulty: i32) -> i32 {
+pub fn prefs_get_slots(mode: i32, difficulty: i32) -> i32 {
     // Set slot for quit button
     if (difficulty == DIFFICULTY_NUM as i32) {
         return 1;
@@ -135,8 +122,7 @@ pub extern "C" fn prefs_get_slots(mode: i32, difficulty: i32) -> i32 {
     return cmp::min(slot_number, 10);
 }
 
-#[no_mangle]
-pub extern "C" fn prefs_get_start_parsec(mode: i32, difficulty: i32, slot: i32) -> i32 {
+pub fn prefs_get_start_parsec(mode: i32, difficulty: i32, slot: i32) -> i32 {
     if slot < (SLOT_NUM as i32) - 1 {
         return slot * 10 + 1;
     }

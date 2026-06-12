@@ -54,8 +54,7 @@ static RESIZE_H: AtomicI32 = AtomicI32::new(0);
 /// `fullscreen`: 0 = resizable window, 1 = exclusive fullscreen, 2 = fullscreen desktop (native resolution).
 /// `title`: null-terminated C string for the window title.
 /// Returns 0 on success, -1 on failure.
-#[no_mangle]
-pub extern "C" fn window_init(
+pub fn window_init(
     width: c_int,
     height: c_int,
     fullscreen: c_int,
@@ -100,8 +99,7 @@ pub extern "C" fn window_init(
 }
 
 /// Destroy the GL context and window.
-#[no_mangle]
-pub extern "C" fn window_close() {
+pub fn window_close() {
     unsafe {
         let ctx = GL_CTX.swap(null_mut(), Ordering::Relaxed);
         if !ctx.is_null() {
@@ -115,8 +113,7 @@ pub extern "C" fn window_close() {
 }
 
 /// Swap the OpenGL front and back buffers.
-#[no_mangle]
-pub extern "C" fn window_gl_swap() {
+pub fn window_gl_swap() {
     let win = WINDOW.load(Ordering::Relaxed);
     if !win.is_null() {
         unsafe { SDL_GL_SwapWindow(win) };
@@ -124,8 +121,7 @@ pub extern "C" fn window_gl_swap() {
 }
 
 /// Show or hide the mouse cursor. `show` non-zero = show, zero = hide.
-#[no_mangle]
-pub extern "C" fn window_show_cursor(show: c_int) {
+pub fn window_show_cursor(show: c_int) {
     unsafe { SDL_ShowCursor(show) };
 }
 
@@ -136,8 +132,7 @@ pub extern "C" fn window_show_cursor(show: c_int) {
 ///   bit 1 (2) — window resize; new dimensions via `window_get_resize_w/h`
 ///
 /// Key events are fed directly to `pad::handle_key_event`.
-#[no_mangle]
-pub extern "C" fn window_poll_events() -> c_int {
+pub fn window_poll_events() -> c_int {
     let mut result: c_int = 0;
     let mut buf = [0u8; EVENT_BUF_SIZE];
 
@@ -197,25 +192,21 @@ pub extern "C" fn window_poll_events() -> c_int {
 }
 
 /// Width from the most recent resize event (or initial width if no resize yet).
-#[no_mangle]
-pub extern "C" fn window_get_resize_w() -> c_int {
+pub fn window_get_resize_w() -> c_int {
     RESIZE_W.load(Ordering::Relaxed)
 }
 
 /// Height from the most recent resize event (or initial height if no resize yet).
-#[no_mangle]
-pub extern "C" fn window_get_resize_h() -> c_int {
+pub fn window_get_resize_h() -> c_int {
     RESIZE_H.load(Ordering::Relaxed)
 }
 
 /// Milliseconds elapsed since SDL was initialized.
-#[no_mangle]
-pub extern "C" fn window_get_ticks() -> u32 {
+pub fn window_get_ticks() -> u32 {
     unsafe { SDL_GetTicks() }
 }
 
 /// Sleep for `ms` milliseconds.
-#[no_mangle]
-pub extern "C" fn window_delay(ms: u32) {
+pub fn window_delay(ms: u32) {
     unsafe { SDL_Delay(ms) }
 }

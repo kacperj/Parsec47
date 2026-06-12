@@ -39,8 +39,7 @@ unsafe fn get_slots() -> Option<&'static mut Vec<SoundSlot>> {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn sound_init() -> c_int {
+pub fn sound_init() -> c_int {
     let sdl = match sdl2::init() {
         Ok(s) => s,
         Err(_) => return -1,
@@ -72,8 +71,7 @@ pub extern "C" fn sound_init() -> c_int {
     0
 }
 
-#[no_mangle]
-pub extern "C" fn sound_close() {
+pub fn sound_close() {
     Channel(MUSIC_CHANNEL).halt();
     let ptr = SLOTS.swap(std::ptr::null_mut(), Ordering::Relaxed);
     if !ptr.is_null() {
@@ -84,13 +82,11 @@ pub extern "C" fn sound_close() {
     mixer::close_audio();
 }
 
-#[no_mangle]
-pub extern "C" fn sound_set_fade_out_speed(speed: c_int) {
+pub fn sound_set_fade_out_speed(speed: c_int) {
     FADE_OUT_SPEED.store(speed, Ordering::Relaxed);
 }
 
-#[no_mangle]
-pub extern "C" fn sound_alloc_slot() -> c_int {
+pub fn sound_alloc_slot() -> c_int {
     unsafe {
         match get_slots() {
             Some(slots) => {
@@ -110,8 +106,7 @@ pub extern "C" fn sound_alloc_slot() -> c_int {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn sound_load_music(slot: c_int, path: *const c_char) -> c_int {
+pub fn sound_load_music(slot: c_int, path: *const c_char) -> c_int {
     if path.is_null() {
         return -1;
     }
@@ -137,8 +132,7 @@ pub extern "C" fn sound_load_music(slot: c_int, path: *const c_char) -> c_int {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn sound_load_chunk(slot: c_int, path: *const c_char, channel: c_int) -> c_int {
+pub fn sound_load_chunk(slot: c_int, path: *const c_char, channel: c_int) -> c_int {
     if path.is_null() {
         return -1;
     }
@@ -165,8 +159,7 @@ pub extern "C" fn sound_load_chunk(slot: c_int, path: *const c_char, channel: c_
     }
 }
 
-#[no_mangle]
-pub extern "C" fn sound_free_slot(slot: c_int) {
+pub fn sound_free_slot(slot: c_int) {
     unsafe {
         if let Some(slots) = get_slots() {
             if let Some(s) = slots.get_mut(slot as usize) {
@@ -183,8 +176,7 @@ pub extern "C" fn sound_free_slot(slot: c_int) {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn sound_play_music(slot: c_int) {
+pub fn sound_play_music(slot: c_int) {
     unsafe {
         if let Some(slots) = get_slots() {
             if let Some(s) = slots.get(slot as usize) {
@@ -196,20 +188,17 @@ pub extern "C" fn sound_play_music(slot: c_int) {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn sound_fade_music() {
+pub fn sound_fade_music() {
     unsafe {
         Mix_FadeOutChannel(MUSIC_CHANNEL, FADE_OUT_SPEED.load(Ordering::Relaxed));
     }
 }
 
-#[no_mangle]
-pub extern "C" fn sound_stop_music() {
+pub fn sound_stop_music() {
     Channel(MUSIC_CHANNEL).halt();
 }
 
-#[no_mangle]
-pub extern "C" fn sound_play_chunk(slot: c_int) {
+pub fn sound_play_chunk(slot: c_int) {
     unsafe {
         if let Some(slots) = get_slots() {
             if let Some(s) = slots.get(slot as usize) {
@@ -273,18 +262,15 @@ static SM_SE_SLOTS: [AtomicI32; SE_COUNT] = [
     AtomicI32::new(-1),
 ];
 
-#[no_mangle]
-pub extern "C" fn sound_manager_set_no_sound(v: c_int) {
+pub fn sound_manager_set_no_sound(v: c_int) {
     SM_NO_SOUND.store(v != 0, Ordering::Relaxed);
 }
 
-#[no_mangle]
-pub extern "C" fn sound_manager_set_in_game(v: c_int) {
+pub fn sound_manager_set_in_game(v: c_int) {
     SM_IS_IN_GAME.store(v != 0, Ordering::Relaxed);
 }
 
-#[no_mangle]
-pub extern "C" fn sound_manager_init() -> c_int {
+pub fn sound_manager_init() -> c_int {
     if SM_NO_SOUND.load(Ordering::Relaxed) {
         return 0;
     }
@@ -322,8 +308,7 @@ pub extern "C" fn sound_manager_init() -> c_int {
     0
 }
 
-#[no_mangle]
-pub extern "C" fn sound_manager_close() {
+pub fn sound_manager_close() {
     if SM_NO_SOUND.load(Ordering::Relaxed) {
         return;
     }
@@ -342,8 +327,7 @@ pub extern "C" fn sound_manager_close() {
     sound_close();
 }
 
-#[no_mangle]
-pub extern "C" fn sound_manager_play_bgm(n: c_int) {
+pub fn sound_manager_play_bgm(n: c_int) {
     if SM_NO_SOUND.load(Ordering::Relaxed) || !SM_IS_IN_GAME.load(Ordering::Relaxed) {
         return;
     }
@@ -355,8 +339,7 @@ pub extern "C" fn sound_manager_play_bgm(n: c_int) {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn sound_manager_play_se(n: c_int) {
+pub fn sound_manager_play_se(n: c_int) {
     if SM_NO_SOUND.load(Ordering::Relaxed) || !SM_IS_IN_GAME.load(Ordering::Relaxed) {
         return;
     }
@@ -368,16 +351,14 @@ pub extern "C" fn sound_manager_play_se(n: c_int) {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn sound_manager_fade_music() {
+pub fn sound_manager_fade_music() {
     if SM_NO_SOUND.load(Ordering::Relaxed) {
         return;
     }
     sound_fade_music();
 }
 
-#[no_mangle]
-pub extern "C" fn sound_manager_stop_music() {
+pub fn sound_manager_stop_music() {
     if SM_NO_SOUND.load(Ordering::Relaxed) {
         return;
     }

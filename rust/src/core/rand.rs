@@ -17,8 +17,7 @@ fn twist(u: u32, v: u32) -> u32 {
     (mixbits(u, v) >> 1) ^ if v & 1 != 0 { MATRIX_A } else { 0 }
 }
 
-#[no_mangle]
-pub extern "C" fn init_genrand(s: u32) {
+pub fn init_genrand(s: u32) {
     unsafe {
         STATE[0] = s & 0xffffffff;
         for j in 1..N {
@@ -49,8 +48,7 @@ unsafe fn next_state() {
     STATE[N - 1] = STATE[M - 1] ^ twist(STATE[N - 1], STATE[0]);
 }
 
-#[no_mangle]
-pub extern "C" fn genrand_int32() -> u32 {
+pub fn genrand_int32() -> u32 {
     unsafe {
         LEFT -= 1;
         if LEFT == 0 {
@@ -69,27 +67,22 @@ pub extern "C" fn genrand_int32() -> u32 {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn genrand_real1() -> f64 {
+pub fn genrand_real1() -> f64 {
     (genrand_int32() as f64) * (1.0 / 4294967295.0)
 }
 
-#[no_mangle]
-pub extern "C" fn rand_set_seed(s: u32) {
+pub fn rand_set_seed(s: u32) {
     init_genrand(s);
 }
 
-#[no_mangle]
-pub extern "C" fn rand_next_int(n: i32) -> i32 {
+pub fn rand_next_int(n: i32) -> i32 {
     (genrand_int32() % (n as u32)) as i32
 }
 
-#[no_mangle]
-pub extern "C" fn rand_next_float(n: f32) -> f32 {
+pub fn rand_next_float(n: f32) -> f32 {
     (genrand_real1() * n as f64) as f32
 }
 
-#[no_mangle]
-pub extern "C" fn rand_next_signed_float(n: f32) -> f32 {
+pub fn rand_next_signed_float(n: f32) -> f32 {
     (genrand_real1() * (n as f64 * 2.0) - n as f64) as f32
 }
