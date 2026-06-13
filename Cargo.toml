@@ -1,0 +1,11 @@
+# Cargo workspace root. Members:
+#   rust/     — the game crate `p47rust` (the executable)
+#   bulletml/ — the pure-Rust BulletML library (was the C++ `bulletlib/`)
+[workspace]
+members = ["rust", "bulletml"]
+resolver = "2"
+
+# Profiles must live in the workspace root; member-level profiles are ignored.
+[profile.release]
+lto = true
+panic = "abort"

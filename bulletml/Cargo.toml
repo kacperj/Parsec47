@@ -1,0 +1,8 @@
+[package]
+name = "bulletml"
+version = "0.1.0"
+edition = "2021"
+description = "Pure-Rust BulletML parser and runner (port of Kenta Cho's C++ libbulletml)."
+
+[dependencies]
+roxmltree = "0.20"

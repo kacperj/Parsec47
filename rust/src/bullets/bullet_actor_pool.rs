@@ -1,18 +1,47 @@
 //! Port of src/abagames/p47/bullets/BulletActorPool.d — the bullet pool, the
-//! BulletML callbacks the C++ engine calls back into, and the `bullets_*` API
-//! consumed by the rest of the game (enemy / game_manager / ship).
+//! host callbacks the `bulletml` runner invokes (the `GameRunner` AppRunner impl),
+//! and the `bullets_*` API consumed by the rest of the game (enemy / game_manager / ship).
 use crate::actors::actor::Actor;
 use crate::actors::actor_pool::ActorPool;
-use crate::barrage::barrage_export::bulletml_register_callbacks;
 use crate::bullets::bullet::Bullet;
 use crate::bullets::bullet_actor::{
     reset_total_bullets_speed, take_ship_hit_events, total_bullets_speed, BulletActor,
 };
-use crate::bullets::ffi::*;
+use crate::core::rand::genrand_real1;
 use crate::core::vector::Vector2;
+use bulletml::{AppRunner, BulletMLParser, BulletMLRunner, BulletMLState};
 use std::os::raw::c_void;
 
 const POOL_SIZE: i32 = 512;
+
+// Runners and parsers travel through the pool as opaque `*mut c_void` (so the
+// `Copy` bullet structs stay pointer-sized). These helpers box/borrow/reclaim
+// the real `bulletml` types at the boundary.
+
+/// Box a fresh runner for `parser` and return it as an opaque handle.
+fn new_runner_from_parser(parser: *mut c_void) -> *mut c_void {
+    // SAFETY: parsers are boxed in BarrageManager::load_bulletmls and outlive
+    // every runner created from them.
+    let p = unsafe { &*(parser as *const BulletMLParser) };
+    Box::into_raw(Box::new(BulletMLRunner::from_parser(p))) as *mut c_void
+}
+
+/// Box a runner resuming a BulletML sub-state, returned as an opaque handle.
+fn new_runner_from_state(state: BulletMLState) -> *mut c_void {
+    Box::into_raw(Box::new(BulletMLRunner::from_state(state))) as *mut c_void
+}
+
+/// Step a runner one frame, driving it with the game's `GameRunner` host.
+fn runner_run(runner: *mut c_void) {
+    // SAFETY: `runner` is a live boxed BulletMLRunner; the GameRunner host reaches
+    // the bullet pool through the global singleton, never through this borrow, so
+    // child bullets spawned mid-run never alias `*runner`.
+    unsafe { (*(runner as *mut BulletMLRunner)).run(&mut GameRunner) };
+}
+
+fn runner_is_end(runner: *mut c_void) -> bool {
+    unsafe { (*(runner as *mut BulletMLRunner)).is_end() }
+}
 
 // BulletML "ShootDanmaku" <-> internal speed unit conversions (= BulletActorPool.d).
 const VEL_SS_SDM_RATIO: f32 = 62.0 / 10.0;
@@ -57,8 +86,7 @@ impl BulletActorPool {
         };
         let rb = self.pool.actors[self.current_bullet as usize].bullet;
         if rb.is_morph {
-            let runner = unsafe { BulletMLRunner_new_parser(rb.morph_parser[rb.morph_idx as usize]) };
-            regist_functions(runner);
+            let runner = new_runner_from_parser(rb.morph_parser[rb.morph_idx as usize]);
             self.pool.actors[idx].set_runner_morph(
                 runner, rb.pos.x, rb.pos.y, deg, speed, rb.rank, rb.speed_rank, rb.shape, rb.color,
                 rb.bullet_size, rb.x_reverse, &rb.morph_parser, rb.morph_num, rb.morph_idx + 1,
@@ -73,13 +101,12 @@ impl BulletActorPool {
     }
 
     // addBullet(originalBullet, state, deg, speed) — spawn from a BulletML sub-state.
-    fn add_from_state(&mut self, state: *mut c_void, deg: f32, speed: f32) {
+    fn add_from_state(&mut self, state: BulletMLState, deg: f32, speed: f32) {
         let idx = match self.pool.get_instance_index() {
             Some(i) => i as usize,
             None => return,
         };
-        let runner = unsafe { BulletMLRunner_new_state(state) };
-        regist_functions(runner);
+        let runner = new_runner_from_state(state);
         let rb = self.pool.actors[self.current_bullet as usize].bullet;
         if rb.is_morph {
             self.pool.actors[idx].set_runner_morph(
@@ -102,17 +129,16 @@ impl BulletActorPool {
     fn rewind(&mut self, i: usize) {
         self.pool.actors[i].bullet.remove();
         let parser = self.pool.actors[i].parser;
-        let runner = unsafe { BulletMLRunner_new_parser(parser) };
-        regist_functions(runner);
+        let runner = new_runner_from_parser(parser);
         self.pool.actors[i].bullet.set_runner(runner);
         self.pool.actors[i].bullet.reset_morph();
     }
 }
 
 // The reentrant per-frame step for one bullet. We never hold a borrow of the pool
-// across BulletMLRunner_run, which synchronously calls the callbacks below and
-// mutates the same pool; each `bullet_pool()` borrow is short-lived and dropped
-// before the next, so the callbacks' borrows never overlap this one.
+// across the runner's run(), which synchronously calls the GameRunner host below
+// and mutates the same pool; each `bullet_pool()` borrow is short-lived and dropped
+// before the next, so the host's borrows never overlap this one.
 fn update_actor(i: usize) {
     {
         let a = &mut bullet_pool().pool.actors[i];
@@ -123,41 +149,18 @@ fn update_actor(i: usize) {
         (a.is_simple, a.bullet.runner())
     };
     if !is_simple {
-        if !runner.is_null() && unsafe { !BulletMLRunner_isEnd(runner) } {
-            unsafe { BulletMLRunner_run(runner) };
+        if !runner.is_null() && !runner_is_end(runner) {
+            runner_run(runner);
         }
         let (is_top, r) = {
             let a = &bullet_pool().pool.actors[i];
             (a.is_top, a.bullet.runner())
         };
-        if is_top && !r.is_null() && unsafe { BulletMLRunner_isEnd(r) } {
+        if is_top && !r.is_null() && runner_is_end(r) {
             bullet_pool().rewind(i);
         }
     }
     bullet_pool().pool.actors[i].advance();
-}
-
-// Registers every BulletML callback on a runner. The getDefaultSpeed/getRand pair
-// is registered by the existing Rust helper; the rest are the callbacks below.
-fn regist_functions(runner: *mut c_void) {
-    unsafe {
-        BulletMLRunner_set_getBulletDirection(runner, get_bullet_direction);
-        BulletMLRunner_set_getAimDirection(runner, get_aim_direction_with_xrev);
-        BulletMLRunner_set_getBulletSpeed(runner, get_bullet_speed);
-        BulletMLRunner_set_getRank(runner, get_rank);
-        BulletMLRunner_set_createSimpleBullet(runner, create_simple_bullet);
-        BulletMLRunner_set_createBullet(runner, create_bullet);
-        BulletMLRunner_set_getTurn(runner, get_turn);
-        BulletMLRunner_set_doVanish(runner, do_vanish);
-        BulletMLRunner_set_doChangeDirection(runner, do_change_direction);
-        BulletMLRunner_set_doChangeSpeed(runner, do_change_speed);
-        BulletMLRunner_set_doAccelX(runner, do_accel_x);
-        BulletMLRunner_set_doAccelY(runner, do_accel_y);
-        BulletMLRunner_set_getBulletSpeedX(runner, get_bullet_speed_x);
-        BulletMLRunner_set_getBulletSpeedY(runner, get_bullet_speed_y);
-    }
-    // getDefaultSpeed and getRand are implemented and registered in Rust (barrage).
-    bulletml_register_callbacks(runner);
 }
 
 // ---- Singleton --------------------------------------------------------------
@@ -178,68 +181,84 @@ fn cur_mut(pool: &mut BulletActorPool) -> &mut Bullet {
     &mut pool.pool.actors[ci].bullet
 }
 
-// ---- BulletML callbacks (the C++ runner calls these back via fn pointers) ----
+// ---- BulletML host (the `bulletml` runner calls these back via the trait) ----
 
-extern "C" fn get_bullet_direction(_r: *mut c_void) -> f64 {
-    rtod(cur(bullet_pool()).deg) as f64
-}
+// A zero-sized host: every method operates on the global bullet pool and the
+// pool's `current_bullet` (the bullet the runner is stepping), exactly as the old
+// C-ABI callbacks did. Reentrant pool mutation is safe because this holds no
+// borrow of its own.
+struct GameRunner;
 
-extern "C" fn get_bullet_speed(_r: *mut c_void) -> f64 {
-    (cur(bullet_pool()).speed * VEL_SS_SDM_RATIO) as f64
-}
+impl AppRunner for GameRunner {
+    fn get_bullet_direction(&mut self) -> f64 {
+        rtod(cur(bullet_pool()).deg) as f64
+    }
 
-extern "C" fn get_rank(_r: *mut c_void) -> f64 {
-    cur(bullet_pool()).rank as f64
-}
+    fn get_aim_direction(&mut self) -> f64 {
+        let pool = bullet_pool();
+        let b = cur(pool).pos;
+        let xrev = cur(pool).x_reverse;
+        let dir = pool.target - b;
+        rtod(dir.x.atan2(dir.y) * xrev) as f64
+    }
 
-extern "C" fn create_simple_bullet(_r: *mut c_void, d: f64, s: f64) {
-    bullet_pool().add_simple_or_morph(dtor(d as f32), s as f32 * VEL_SDM_SS_RATIO);
-}
+    fn get_bullet_speed(&mut self) -> f64 {
+        (cur(bullet_pool()).speed * VEL_SS_SDM_RATIO) as f64
+    }
 
-extern "C" fn create_bullet(_r: *mut c_void, state: *mut c_void, d: f64, s: f64) {
-    bullet_pool().add_from_state(state, dtor(d as f32), s as f32 * VEL_SDM_SS_RATIO);
-}
+    fn get_rank(&mut self) -> f64 {
+        cur(bullet_pool()).rank as f64
+    }
 
-extern "C" fn get_turn(_r: *mut c_void) -> i32 {
-    bullet_pool().cnt
-}
+    fn create_simple_bullet(&mut self, direction: f64, speed: f64) {
+        bullet_pool().add_simple_or_morph(dtor(direction as f32), speed as f32 * VEL_SDM_SS_RATIO);
+    }
 
-extern "C" fn do_vanish(_r: *mut c_void) {
-    let pool = bullet_pool();
-    let id = cur(pool).id;
-    pool.kill_me(id);
-}
+    fn create_bullet(&mut self, state: BulletMLState, direction: f64, speed: f64) {
+        bullet_pool().add_from_state(state, dtor(direction as f32), speed as f32 * VEL_SDM_SS_RATIO);
+    }
 
-extern "C" fn do_change_direction(_r: *mut c_void, d: f64) {
-    cur_mut(bullet_pool()).deg = dtor(d as f32);
-}
+    fn get_turn(&mut self) -> i32 {
+        bullet_pool().cnt
+    }
 
-extern "C" fn do_change_speed(_r: *mut c_void, s: f64) {
-    cur_mut(bullet_pool()).speed = s as f32 * VEL_SDM_SS_RATIO;
-}
+    fn do_vanish(&mut self) {
+        let pool = bullet_pool();
+        let id = cur(pool).id;
+        pool.kill_me(id);
+    }
 
-extern "C" fn do_accel_x(_r: *mut c_void, sx: f64) {
-    cur_mut(bullet_pool()).acc.x = sx as f32 * VEL_SDM_SS_RATIO;
-}
+    fn get_default_speed(&mut self) -> f64 {
+        1.0
+    }
 
-extern "C" fn do_accel_y(_r: *mut c_void, sy: f64) {
-    cur_mut(bullet_pool()).acc.y = sy as f32 * VEL_SDM_SS_RATIO;
-}
+    fn get_rand(&mut self) -> f64 {
+        genrand_real1()
+    }
 
-extern "C" fn get_bullet_speed_x(_r: *mut c_void) -> f64 {
-    cur(bullet_pool()).acc.x as f64
-}
+    fn do_change_direction(&mut self, direction: f64) {
+        cur_mut(bullet_pool()).deg = dtor(direction as f32);
+    }
 
-extern "C" fn get_bullet_speed_y(_r: *mut c_void) -> f64 {
-    cur(bullet_pool()).acc.y as f64
-}
+    fn do_change_speed(&mut self, speed: f64) {
+        cur_mut(bullet_pool()).speed = speed as f32 * VEL_SDM_SS_RATIO;
+    }
 
-extern "C" fn get_aim_direction_with_xrev(_r: *mut c_void) -> f64 {
-    let pool = bullet_pool();
-    let b = cur(pool).pos;
-    let xrev = cur(pool).x_reverse;
-    let dir = pool.target - b;
-    rtod(dir.x.atan2(dir.y) * xrev) as f64
+    fn do_accel_x(&mut self, accel: f64) {
+        cur_mut(bullet_pool()).acc.x = accel as f32 * VEL_SDM_SS_RATIO;
+    }
+
+    fn do_accel_y(&mut self, accel: f64) {
+        cur_mut(bullet_pool()).acc.y = accel as f32 * VEL_SDM_SS_RATIO;
+    }
+
+    fn get_bullet_speed_x(&mut self) -> f64 {
+        cur(bullet_pool()).acc.x as f64
+    }
+
+    fn get_bullet_speed_y(&mut self) -> f64 {
+        cur(bullet_pool()).acc.y as f64
+    }
 }
 
 // ---- Public bullet API ------------------------------------------------------
@@ -322,8 +341,7 @@ pub fn bullets_add(
         Some(i) => i,
         None => return -1,
     };
-    let runner = unsafe { BulletMLRunner_new_parser(parser) };
-    regist_functions(runner);
+    let runner = new_runner_from_parser(parser);
     let a = &mut pool.pool.actors[idx as usize];
     a.set_runner(runner, x, y, deg, speed, rank, speed_rank, shape, color, size, x_reverse);
     a.set_invisible();
@@ -377,8 +395,7 @@ pub fn bullets_add_top_morph(
         Some(i) => i,
         None => return -1,
     };
-    let runner = unsafe { BulletMLRunner_new_parser(parser) };
-    regist_functions(runner);
+    let runner = new_runner_from_parser(parser);
     let morph_slice = unsafe { std::slice::from_raw_parts(morph, morph_num as usize) };
     let a = &mut pool.pool.actors[idx as usize];
     a.set_runner_morph(

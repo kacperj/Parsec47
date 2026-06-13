@@ -1,7 +1,10 @@
 //! Port of src/abagames/p47/bullets/Bullet.d — a single BulletML-controlled bullet
 //! plus p47-specific params (speedRank, shape, color, size, xReverse).
-use crate::bullets::ffi::*;
+//!
+//! `runner` and `morph_parser` are opaque `*mut c_void` so this struct stays
+//! `Copy`; they are boxed `bulletml::BulletMLRunner` / `BulletMLParser` values.
 use crate::core::vector::Vector2;
+use bulletml::BulletMLRunner;
 use std::os::raw::c_void;
 use std::ptr;
 
@@ -108,7 +111,8 @@ impl Bullet {
 
     pub fn remove(&mut self) {
         if !self.runner.is_null() {
-            unsafe { BulletMLRunner_delete(self.runner) };
+            // Reclaim the boxed runner created in bullet_actor_pool.
+            unsafe { drop(Box::from_raw(self.runner as *mut BulletMLRunner)) };
             self.runner = ptr::null_mut();
         }
     }

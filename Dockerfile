@@ -1,8 +1,11 @@
 # Multi-stage build for p47. Select the target with `docker build --target`:
-#   --target windows  -> p47.exe + bulletml.dll + SDL2.dll + SDL2_mixer.dll (cross-compiled)
-#   --target linux    -> p47 (ELF) + libbulletml.so (native; SDL is a system dep)
+#   --target windows  -> p47.exe + SDL2.dll + SDL2_mixer.dll (cross-compiled)
+#   --target linux    -> p47 (ELF; SDL is a system dep)
 # `build.sh <target>` drives this. A bare `docker build .` builds the last
 # stage (windows), the historical default.
+#
+# BulletML is the pure-Rust `bulletml/` crate, built as a normal Cargo workspace
+# dependency of `rust/` — no C++ toolchain or shared library involved.
 
 # =============================================================================
 # Linux: native x86_64 build using distro SDL2/OpenGL packages
@@ -19,39 +22,15 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --de
 
 WORKDIR /build
 
-# ── bulletml (C++ → libbulletml.so) ──
-COPY bulletlib/src/         bulletlib/src/
-COPY bulletlib/include/     bulletlib/include/
-
-RUN set -e && mkdir -p out && \
-    for f in \
-      bulletlib/src/bulletmlparser.cpp \
-      bulletlib/src/bulletmlparser-tinyxml.cpp \
-      bulletlib/src/bulletmlrunner.cpp \
-      bulletlib/src/bulletmlrunnerimpl.cpp \
-      bulletlib/src/bulletmltree.cpp \
-      bulletlib/src/calc.cpp \
-      bulletlib/src/formula-variables.cpp \
-      bulletlib/src/tinyxml/tinyxml.cpp \
-      bulletlib/src/tinyxml/tinyxmlerror.cpp \
-      bulletlib/src/tinyxml/tinyxmlparser.cpp \
-      bulletlib/include/bulletml_d.cpp; do \
-        name=$(basename "${f%.cpp}"); \
-        clang++ -c -O2 -DNDEBUG -fPIC \
-          -Wno-register -Wno-writable-strings -Wno-string-plus-int \
-          -Ibulletlib/include -Ibulletlib/src -o "out/$name.o" "$f"; \
-    done && \
-    clang++ -shared -o out/libbulletml.so out/*.o && \
-    rm -f out/*.o
-
-# ── p47 (Rust → ELF executable) ──
+# ── p47 (Rust workspace → ELF executable) ──
+COPY Cargo.toml ./
+COPY bulletml/ bulletml/
 COPY rust/ rust/
 COPY assets/images/ assets/images/
 
 RUN . "$HOME/.cargo/env" && \
-    cd rust && \
-    BULLETML_LIB_DIR=/build/out \
-    cargo build --release && \
+    mkdir -p out && \
+    cargo build --release -p p47rust && \
     cp target/release/p47 /build/out/p47
 
 # =============================================================================
@@ -138,44 +117,19 @@ RUN wget -q "https://github.com/xiph/ogg/releases/download/v${LIBOGG_VER}/libogg
 
 WORKDIR /build
 
-# ── bulletml (C++ → Windows DLL) ──
-COPY bulletlib/src/         bulletlib/src/
-COPY bulletlib/include/     bulletlib/include/
-COPY bulletlib/bulletml_api.def bulletlib/
-
-RUN set -e && mkdir -p out && \
-    for f in \
-      bulletlib/src/bulletmlparser.cpp \
-      bulletlib/src/bulletmlparser-tinyxml.cpp \
-      bulletlib/src/bulletmlrunner.cpp \
-      bulletlib/src/bulletmlrunnerimpl.cpp \
-      bulletlib/src/bulletmltree.cpp \
-      bulletlib/src/calc.cpp \
-      bulletlib/src/formula-variables.cpp \
-      bulletlib/src/tinyxml/tinyxml.cpp \
-      bulletlib/src/tinyxml/tinyxmlerror.cpp \
-      bulletlib/src/tinyxml/tinyxmlparser.cpp \
-      bulletlib/include/bulletml_d.cpp; do \
-        name=$(basename "${f%.cpp}"); \
-        x86_64-w64-mingw32-clang++ -c -O2 -DNDEBUG -DBULLETML_SHARED_LIB \
-          -Wno-register -Wno-writable-strings -Wno-string-plus-int \
-          -Ibulletlib/include -Ibulletlib/src -o "out/$name.o" "$f"; \
-    done && \
-    x86_64-w64-mingw32-clang++ -shared -static \
-      -o out/bulletml.dll out/*.o bulletlib/bulletml_api.def && \
-    rm -f out/*.o
-
-# ── p47 (Rust → Windows EXE) ──
+# ── p47 (Rust workspace → Windows EXE) ──
+COPY Cargo.toml ./
+COPY bulletml/ bulletml/
 COPY rust/ rust/
 COPY assets/images/ assets/images/
 COPY resource/ resource/
 
 RUN . "$HOME/.cargo/env" && \
-    cd rust && \
+    mkdir -p out && \
     CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-clang \
     SDL2_LIB_DIR=/opt/sdl2/lib \
     LIBRARY_PATH=/opt/sdl2/lib \
-    cargo build --release --target x86_64-pc-windows-gnu && \
+    cargo build --release --target x86_64-pc-windows-gnu -p p47rust && \
     cp target/x86_64-pc-windows-gnu/release/p47.exe /build/out/ && \
     cp /opt/sdl2/bin/SDL2.dll /build/out/ && \
     cp /opt/sdl2/bin/SDL2_mixer.dll /build/out/

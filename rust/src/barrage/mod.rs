@@ -1,47 +1,14 @@
 pub mod barrage_export;
 
 use crate::core::rand::{rand_next_float, rand_next_int, rand_next_signed_float};
-use std::ffi::CString;
-use std::os::raw::{c_char, c_void};
+use bulletml::BulletMLParser;
+use std::os::raw::c_void;
 use std::ptr;
 
-// BulletML parser functions from the C++ bulletml library. The `raw-dylib` link
-// kind is Windows-only and rejected outright on other targets, and it must sit
-// on the extern block itself (it synthesizes import stubs from these symbols) —
-// so the block is duplicated under `#[cfg]` rather than gated with `cfg_attr`.
-// Windows: raw-dylib, no import lib needed. Linux: link libbulletml.so (build.rs
-// supplies the search path + rpath).
-#[cfg(windows)]
-#[link(name = "bulletml", kind = "raw-dylib")]
-extern "C" {
-    fn BulletMLParserTinyXML_new(path: *const c_char) -> *mut c_void;
-    fn BulletMLParserTinyXML_parse(parser: *mut c_void);
-    fn BulletMLParserTinyXML_delete(parser: *mut c_void);
-    pub(crate) fn BulletMLRunner_set_getDefaultSpeed(
-        runner: *mut c_void,
-        f: extern "C" fn(*mut c_void) -> f64,
-    );
-    pub(crate) fn BulletMLRunner_set_getRand(
-        runner: *mut c_void,
-        f: extern "C" fn(*mut c_void) -> f64,
-    );
-}
-
-#[cfg(not(windows))]
-#[link(name = "bulletml")]
-extern "C" {
-    fn BulletMLParserTinyXML_new(path: *const c_char) -> *mut c_void;
-    fn BulletMLParserTinyXML_parse(parser: *mut c_void);
-    fn BulletMLParserTinyXML_delete(parser: *mut c_void);
-    pub(crate) fn BulletMLRunner_set_getDefaultSpeed(
-        runner: *mut c_void,
-        f: extern "C" fn(*mut c_void) -> f64,
-    );
-    pub(crate) fn BulletMLRunner_set_getRand(
-        runner: *mut c_void,
-        f: extern "C" fn(*mut c_void) -> f64,
-    );
-}
+// Parsers and runners are stored as opaque `*mut c_void` so the bullet pool's
+// `Copy` structs stay pointer-sized; they are boxed Rust values from the
+// `bulletml` crate (`*mut BulletMLParser` / `*mut BulletMLRunner`), cast back at
+// the few use sites. This replaces the old FFI into the C++ bulletml library.
 
 pub const BARRAGE_TYPE: usize = 13;
 pub const BARRAGE_MAX: usize = 64;
@@ -222,12 +189,9 @@ impl BarrageManager {
                 }
                 let path = format!("{}/{}", dir, file_name);
                 eprintln!("Load BulletML: {}", path);
-                let c_path = CString::new(path).unwrap();
-                unsafe {
-                    let parser = BulletMLParserTinyXML_new(c_path.as_ptr());
-                    BulletMLParserTinyXML_parse(parser);
-                    self.parsers[i][j] = parser;
-                }
+                let parser = BulletMLParser::parse_file(&path)
+                    .unwrap_or_else(|e| panic!("cannot parse BulletML {}: {}", path, e));
+                self.parsers[i][j] = Box::into_raw(Box::new(parser)) as *mut c_void;
                 j += 1;
             }
             self.parser_num[i] = j as i32;
@@ -280,8 +244,9 @@ impl BarrageManager {
     pub fn unload_bulletmls(&mut self) {
         for i in 0..BARRAGE_TYPE {
             for j in 0..self.parser_num[i] as usize {
+                // Reclaim the boxed parser created in load_bulletmls.
                 unsafe {
-                    BulletMLParserTinyXML_delete(self.parsers[i][j]);
+                    drop(Box::from_raw(self.parsers[i][j] as *mut BulletMLParser));
                 }
                 self.parsers[i][j] = ptr::null_mut();
             }

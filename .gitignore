@@ -8,5 +8,6 @@ sound.dll
 SDL2.dll
 SDL2_mixer.dll
 build
+target
 rust/target
 rust/p47rust.def

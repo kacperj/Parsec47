@@ -16,16 +16,9 @@ fn main() {
         println!("cargo:rustc-link-lib=static:-bundle=unwind");
 
         embed_windows_icon();
-    } else {
-        // The `#[link(name = "bulletml")]` extern blocks link libbulletml.so on
-        // Linux. BULLETML_LIB_DIR points the linker at the directory holding it
-        // (set by the Docker build); rpath=$ORIGIN lets the executable find the
-        // .so beside itself at runtime.
-        if let Ok(dir) = std::env::var("BULLETML_LIB_DIR") {
-            println!("cargo:rustc-link-search=native={}", dir);
-        }
-        println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN");
     }
+    // BulletML is now the pure-Rust `bulletml` crate (a normal Cargo dependency),
+    // so there is no shared library to locate or set an rpath for.
 }
 
 /// Compile `resource/p47.rc` (the application icon) with windres and link the
