@@ -1,16 +1,62 @@
+use crate::core::vector::Vector2;
 use std::os::raw::{c_int, c_void};
 use std::ptr::null_mut;
-use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
+use std::sync::atomic::{AtomicPtr, Ordering};
 
 extern "C" {
     fn SDL_InitSubSystem(flags: u32) -> c_int;
-    fn SDL_JoystickOpen(device_index: c_int) -> *mut c_void;
-    fn SDL_JoystickGetAxis(joystick: *mut c_void, axis: c_int) -> i16;
-    fn SDL_JoystickGetButton(joystick: *mut c_void, button: c_int) -> u8;
+    fn SDL_NumJoysticks() -> c_int;
+    fn SDL_IsGameController(joystick_index: c_int) -> c_int;
+    fn SDL_GameControllerOpen(joystick_index: c_int) -> *mut c_void;
+    fn SDL_GameControllerGetButton(gamecontroller: *mut c_void, button: c_int) -> u8;
+    fn SDL_GameControllerGetAxis(gamecontroller: *mut c_void, axis: c_int) -> i16;
 }
 
-const SDL_INIT_JOYSTICK: u32 = 0x0000_0200;
-const JOYSTICK_AXIS: i16 = 16384;
+// SDL_INIT_GAMECONTROLLER implies SDL_INIT_JOYSTICK.
+const SDL_INIT_GAMECONTROLLER: u32 = 0x0000_2000;
+
+// Analog-stick deflection past this magnitude counts as a held direction.
+const STICK_DEADZONE: i16 = 16384;
+
+// SDL_GameControllerButton values. The GameController API maps every recognized
+// pad onto this abstract, layout-independent set, so we can reference buttons by
+// physical position (south/east/west/north, bumpers, d-pad) instead of the
+// device-specific numeric indices the raw Joystick API exposes.
+const BUTTON_SOUTH: c_int = 0; // A (Xbox) / Cross (PlayStation)
+const BUTTON_EAST: c_int = 1; // B (Xbox) / Circle (PlayStation)
+const BUTTON_WEST: c_int = 2; // X (Xbox) / Square (PlayStation)
+const BUTTON_NORTH: c_int = 3; // Y (Xbox) / Triangle (PlayStation)
+const BUTTON_BACK: c_int = 4; // Back / View / Select
+const BUTTON_START: c_int = 6; // Start / Menu / Options
+const BUTTON_LEFT_BUMPER: c_int = 9;
+const BUTTON_RIGHT_BUMPER: c_int = 10;
+const BUTTON_DPAD_UP: c_int = 11;
+const BUTTON_DPAD_DOWN: c_int = 12;
+const BUTTON_DPAD_LEFT: c_int = 13;
+const BUTTON_DPAD_RIGHT: c_int = 14;
+
+// SDL_GameControllerAxis values (left analog stick + the analog triggers).
+const AXIS_LEFT_X: c_int = 0;
+const AXIS_LEFT_Y: c_int = 1;
+const AXIS_TRIGGER_LEFT: c_int = 4;
+const AXIS_TRIGGER_RIGHT: c_int = 5;
+
+// Triggers report 0..32767; treat a past-halfway pull as a digital press.
+const TRIGGER_THRESHOLD: i16 = 16384;
+
+// Full-scale magnitude of a signed SDL axis; divide a raw reading by it to map
+// onto [-1, 1].
+const AXIS_MAX: f32 = 32767.0;
+
+// Radial deadzone for the analog stick when read as a continuous vector. Smaller
+// than STICK_DEADZONE (the digital threshold) so gentle tilts still register.
+const STICK_ANALOG_DEADZONE: f32 = 0.2;
+
+// Which controller inputs drive each in-game action. Naming the bindings here
+// keeps the mapping obvious and easy to retune. The right trigger doubles for
+// fire and the left trigger for special, so either hand can drive either action.
+const FIRE_BUTTONS: [c_int; 3] = [BUTTON_SOUTH, BUTTON_WEST, BUTTON_RIGHT_BUMPER];
+const SPECIAL_BUTTONS: [c_int; 3] = [BUTTON_EAST, BUTTON_NORTH, BUTTON_LEFT_BUMPER];
 
 // SDL2 SDLK keycode values
 const SK_RIGHT: u32 = 1073741903;
@@ -57,8 +103,7 @@ const PAD_BUTTON2: c_int = 32;
 // Key state table, indexed by our compact key indices above
 static mut KEY_STATE: [u8; 15] = [0u8; 15];
 
-static JOYSTICK: AtomicPtr<c_void> = AtomicPtr::new(null_mut());
-static BUTTON_REVERSED: AtomicBool = AtomicBool::new(false);
+static CONTROLLER: AtomicPtr<c_void> = AtomicPtr::new(null_mut());
 
 fn sdl2_keycode_to_index(kc: u32) -> Option<usize> {
     match kc {
@@ -95,92 +140,141 @@ fn key_at(idx: usize) -> bool {
     unsafe { KEY_STATE[idx] != 0 }
 }
 
-/// Initialize SDL2 joystick subsystem and open the first joystick.
-/// Returns 0 on success, -1 on failure.
-pub fn pad_open_joystick() -> c_int {
+/// True when the given SDL_GameControllerButton is held on the open controller.
+fn controller_button_held(button: c_int) -> bool {
+    let gc = CONTROLLER.load(Ordering::Relaxed);
+    !gc.is_null() && unsafe { SDL_GameControllerGetButton(gc, button) != 0 }
+}
+
+/// True when the given SDL_GameControllerAxis trigger is pulled past the
+/// half-pull threshold on the open controller.
+fn trigger_pulled(axis: c_int) -> bool {
+    let gc = CONTROLLER.load(Ordering::Relaxed);
+    !gc.is_null() && unsafe { SDL_GameControllerGetAxis(gc, axis) > TRIGGER_THRESHOLD }
+}
+
+/// Initialize the SDL2 game-controller subsystem and open the first connected
+/// controller. Returns 0 on success, -1 on failure.
+pub fn pad_open_controller() -> c_int {
     unsafe {
-        if SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0 {
+        if SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) < 0 {
             return -1;
         }
-        let joy = SDL_JoystickOpen(0);
-        if joy.is_null() {
-            return -1;
+        for i in 0..SDL_NumJoysticks() {
+            if SDL_IsGameController(i) == 0 {
+                continue;
+            }
+            let gc = SDL_GameControllerOpen(i);
+            if !gc.is_null() {
+                CONTROLLER.store(gc, Ordering::Relaxed);
+                return 0;
+            }
         }
-        JOYSTICK.store(joy, Ordering::Relaxed);
-        0
+        -1
     }
 }
 
-/// Returns a bitmask of directional pad state (UP/DOWN/LEFT/RIGHT).
-pub fn pad_get_pad_state() -> c_int {
-    let joy = JOYSTICK.load(Ordering::Relaxed);
-    let x: i16 = if !joy.is_null() {
-        unsafe { SDL_JoystickGetAxis(joy, 0) }
-    } else {
-        0
-    };
-    let y: i16 = if !joy.is_null() {
-        unsafe { SDL_JoystickGetAxis(joy, 1) }
-    } else {
-        0
-    };
+/// Returns a bitmask of directional pad state (UP/DOWN/LEFT/RIGHT), combining
+/// the keyboard, the left analog stick, and the controller d-pad.
+fn pad_get_pad_state() -> c_int {
+    let gc = CONTROLLER.load(Ordering::Relaxed);
+    let axis = |a: c_int| if !gc.is_null() { unsafe { SDL_GameControllerGetAxis(gc, a) } } else { 0 };
+    let held = |b: c_int| !gc.is_null() && unsafe { SDL_GameControllerGetButton(gc, b) != 0 };
+
+    let x = axis(AXIS_LEFT_X);
+    let y = axis(AXIS_LEFT_Y);
 
     let mut pad: c_int = 0;
-    if key_at(IDX_RIGHT) || key_at(IDX_KP_6) || x > JOYSTICK_AXIS {
+    if key_at(IDX_RIGHT) || key_at(IDX_KP_6) || x > STICK_DEADZONE || held(BUTTON_DPAD_RIGHT) {
         pad |= PAD_RIGHT;
     }
-    if key_at(IDX_LEFT) || key_at(IDX_KP_4) || x < -JOYSTICK_AXIS {
+    if key_at(IDX_LEFT) || key_at(IDX_KP_4) || x < -STICK_DEADZONE || held(BUTTON_DPAD_LEFT) {
         pad |= PAD_LEFT;
     }
-    if key_at(IDX_DOWN) || key_at(IDX_KP_2) || y > JOYSTICK_AXIS {
+    if key_at(IDX_DOWN) || key_at(IDX_KP_2) || y > STICK_DEADZONE || held(BUTTON_DPAD_DOWN) {
         pad |= PAD_DOWN;
     }
-    if key_at(IDX_UP) || key_at(IDX_KP_8) || y < -JOYSTICK_AXIS {
+    if key_at(IDX_UP) || key_at(IDX_KP_8) || y < -STICK_DEADZONE || held(BUTTON_DPAD_UP) {
         pad |= PAD_UP;
     }
     pad
 }
 
-/// Returns a bitmask of button state (BUTTON1/BUTTON2), respecting buttonReversed.
-pub fn pad_get_button_state() -> c_int {
-    let joy = JOYSTICK.load(Ordering::Relaxed);
+/// Left analog stick as a ship-space vector (+x = right, +y = up; note SDL's Y
+/// axis points down, so it is flipped here). Returns the zero vector inside the
+/// deadzone; outside it, the magnitude is rescaled to ramp from 0 at the
+/// deadzone edge up to 1 at full tilt, so there is no jump as the stick engages.
+fn stick_vector() -> Vector2 {
+    let gc = CONTROLLER.load(Ordering::Relaxed);
+    if gc.is_null() {
+        return Vector2 { x: 0.0, y: 0.0 };
+    }
+    let x = unsafe { SDL_GameControllerGetAxis(gc, AXIS_LEFT_X) } as f32 / AXIS_MAX;
+    let y = -(unsafe { SDL_GameControllerGetAxis(gc, AXIS_LEFT_Y) } as f32 / AXIS_MAX);
+    let mag = (x * x + y * y).sqrt();
+    if mag <= STICK_ANALOG_DEADZONE {
+        return Vector2 { x: 0.0, y: 0.0 };
+    }
+    let scaled = ((mag - STICK_ANALOG_DEADZONE) / (1.0 - STICK_ANALOG_DEADZONE)).min(1.0);
+    Vector2 {
+        x: x / mag * scaled,
+        y: y / mag * scaled,
+    }
+}
 
-    let btn1_joy = !joy.is_null()
-        && unsafe {
-            SDL_JoystickGetButton(joy, 0) != 0
-                || SDL_JoystickGetButton(joy, 3) != 0
-                || SDL_JoystickGetButton(joy, 4) != 0
-                || SDL_JoystickGetButton(joy, 7) != 0
-        };
-    let btn2_joy = !joy.is_null()
-        && unsafe {
-            SDL_JoystickGetButton(joy, 1) != 0
-                || SDL_JoystickGetButton(joy, 2) != 0
-                || SDL_JoystickGetButton(joy, 5) != 0
-                || SDL_JoystickGetButton(joy, 6) != 0
-        };
+/// Digital directional sources (keyboard arrows/keypad + controller d-pad) as a
+/// ship-space vector, each axis collapsed to -1, 0, or +1.
+fn digital_vector() -> Vector2 {
+    let mut x = 0.0;
+    let mut y = 0.0;
+    if key_at(IDX_RIGHT) || key_at(IDX_KP_6) || controller_button_held(BUTTON_DPAD_RIGHT) {
+        x += 1.0;
+    }
+    if key_at(IDX_LEFT) || key_at(IDX_KP_4) || controller_button_held(BUTTON_DPAD_LEFT) {
+        x -= 1.0;
+    }
+    if key_at(IDX_UP) || key_at(IDX_KP_8) || controller_button_held(BUTTON_DPAD_UP) {
+        y += 1.0;
+    }
+    if key_at(IDX_DOWN) || key_at(IDX_KP_2) || controller_button_held(BUTTON_DPAD_DOWN) {
+        y -= 1.0;
+    }
+    Vector2 { x, y }
+}
 
-    let press1 = key_at(IDX_Z) || key_at(IDX_LCTRL) || btn1_joy;
-    let press2 = key_at(IDX_X) || key_at(IDX_LALT) || key_at(IDX_LSHIFT) || btn2_joy;
+/// Returns a bitmask of button state (BUTTON1/BUTTON2).
+fn pad_get_button_state() -> c_int {
+    let gc = CONTROLLER.load(Ordering::Relaxed);
+    let any_held = |buttons: &[c_int]| -> bool {
+        !gc.is_null()
+            && buttons
+                .iter()
+                .any(|&b| unsafe { SDL_GameControllerGetButton(gc, b) != 0 })
+    };
 
-    let reversed = BUTTON_REVERSED.load(Ordering::Relaxed);
+    let press1 = key_at(IDX_Z)
+        || key_at(IDX_LCTRL)
+        || any_held(&FIRE_BUTTONS)
+        || trigger_pulled(AXIS_TRIGGER_LEFT);
+    let press2 = key_at(IDX_X)
+        || key_at(IDX_LALT)
+        || key_at(IDX_LSHIFT)
+        || any_held(&SPECIAL_BUTTONS)
+        || trigger_pulled(AXIS_TRIGGER_RIGHT);
+
     let mut btn: c_int = 0;
     if press1 {
-        btn |= if !reversed { PAD_BUTTON1 } else { PAD_BUTTON2 };
+        btn |= PAD_BUTTON1;
     }
     if press2 {
-        btn |= if !reversed { PAD_BUTTON2 } else { PAD_BUTTON1 };
+        btn |= PAD_BUTTON2;
     }
     btn
 }
 
-pub fn pad_set_button_reversed(v: c_int) {
-    BUTTON_REVERSED.store(v != 0, Ordering::Relaxed);
-}
-
 /// Check whether a given SDL2 SDLK keycode is currently pressed.
 /// Callers pass 112 (p) and 27 (ESC) — both valid SDL2 ASCII keycodes.
-pub fn pad_is_key_pressed(sk: c_int) -> c_int {
+fn pad_is_key_pressed(sk: c_int) -> c_int {
     if sk < 0 {
         return 0;
     }
@@ -194,4 +288,86 @@ pub fn pad_is_key_pressed(sk: c_int) -> c_int {
         }
         None => 0,
     }
+}
+
+// ---------------------------------------------------------------------------
+// High-level input queries. These are the public surface of this module; all
+// other input logic (key tables, joystick polling, bitmasks) stays private.
+// ---------------------------------------------------------------------------
+
+/// True while the fire button (button 1) is held.
+pub fn is_fire_button_pressed() -> bool {
+    pad_get_button_state() & PAD_BUTTON1 != 0
+}
+
+/// True while the special button (button 2) is held.
+pub fn is_special_button_pressed() -> bool {
+    pad_get_button_state() & PAD_BUTTON2 != 0
+}
+
+/// True while the directional up input is active.
+pub fn is_up_pressed() -> bool {
+    pad_get_pad_state() & PAD_UP != 0
+}
+
+/// True while the directional down input is active.
+pub fn is_down_pressed() -> bool {
+    pad_get_pad_state() & PAD_DOWN != 0
+}
+
+/// True while the directional left input is active.
+pub fn is_left_pressed() -> bool {
+    pad_get_pad_state() & PAD_LEFT != 0
+}
+
+/// True while the directional right input is active.
+pub fn is_right_pressed() -> bool {
+    pad_get_pad_state() & PAD_RIGHT != 0
+}
+
+/// True while any directional input is active.
+pub fn is_any_direction_pressed() -> bool {
+    pad_get_pad_state() != 0
+}
+
+/// The current movement direction as a ship-space vector (+x = right, +y = up),
+/// fusing the analog stick with the keyboard arrows/keypad and the d-pad.
+///
+/// Returns `None` when there is no input. Otherwise the vector's length is in
+/// `(0, 1]`: the analog stick yields a proportional magnitude (gentle tilt =
+/// slower), while digital sources yield a unit vector (diagonals normalized so
+/// they are not faster than cardinals). Callers scale it by their own speed.
+pub fn pad_get_direction() -> Option<Vector2> {
+    let stick = stick_vector();
+    let digital = digital_vector();
+
+    // Per axis, let whichever source pushes hardest win, so the stick and the
+    // keys/d-pad can be used interchangeably.
+    let mut v = Vector2 {
+        x: if stick.x.abs() >= digital.x.abs() { stick.x } else { digital.x },
+        y: if stick.y.abs() >= digital.y.abs() { stick.y } else { digital.y },
+    };
+
+    let mag = (v.x * v.x + v.y * v.y).sqrt();
+    if mag <= f32::EPSILON {
+        return None;
+    }
+    // Clamp to unit length: a digital diagonal is sqrt(2) long and must be
+    // brought back to 1 (the classic 0.707 per-axis); the stick is already
+    // within the unit circle.
+    if mag > 1.0 {
+        v.x /= mag;
+        v.y /= mag;
+    }
+    Some(v)
+}
+
+/// True while pause is requested (keyboard P or the controller Start button).
+pub fn is_pause_pressed() -> bool {
+    pad_is_key_pressed(SK_P as c_int) != 0 || controller_button_held(BUTTON_START)
+}
+
+/// True while quit is requested (keyboard Escape or the controller Back button).
+pub fn is_quit_pressed() -> bool {
+    pad_is_key_pressed(SK_ESCAPE as c_int) != 0 || controller_button_held(BUTTON_BACK)
 }

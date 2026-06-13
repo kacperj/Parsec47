@@ -59,7 +59,7 @@ The `bulletml` crate is compiled by Cargo as an ordinary workspace dependency (i
 
 After building, run the executable from `build/`. The Windows build needs the DLLs beside it (`SDL2.dll`, `SDL2_mixer.dll`); the Linux build needs system SDL2 installed. Both need the asset/BulletML pattern directories.
 
-Command-line options: `-window`, `-fullscreen`, `-nosound`, `-lowres`, `-brightness N`, `-luminous N`, `-reverse`, `-slowship`, `-nowait`, `-nofield`, `-nobonus`.
+Command-line options: `-window`, `-fullscreen`, `-nosound`, `-lowres`, `-brightness N`, `-luminous N`, `-slowship`, `-nowait`, `-nofield`, `-nobonus`.
 
 ## Code Conventions
 

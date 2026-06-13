@@ -4,7 +4,7 @@ use crate::actors::actor_export::{
 use crate::bullets::bullet_actor_pool::bullets_set_target;
 use crate::core::rand::rand_next_float;
 use crate::field::field_get_collision_box;
-use crate::pad::{pad_get_button_state, pad_get_pad_state};
+use crate::pad::{is_fire_button_pressed, is_special_button_pressed, pad_get_direction};
 use crate::renderer::{draw_box_line, draw_box_solid, set_color};
 use crate::rendering::color::Color;
 use crate::rendering::gl::*;
@@ -24,14 +24,6 @@ const RESTART_CNT: i32 = 300;
 const INVINCIBLE_CNT: i32 = 228;
 
 const MODE_ROLL: c_int = 0;
-
-// Pad bitmask values (mirrors pad.rs).
-const PAD_UP: c_int = 1;
-const PAD_DOWN: c_int = 2;
-const PAD_LEFT: c_int = 4;
-const PAD_RIGHT: c_int = 8;
-const PAD_BUTTON1: c_int = 16;
-const PAD_BUTTON2: c_int = 32;
 
 // SE indices (mirrors SoundManager.d enum).
 const SE_SHOT: c_int = 0;
@@ -153,8 +145,7 @@ pub fn ship_move() -> c_int {
             return events;
         }
 
-        let button = pad_get_button_state();
-        if button & PAD_BUTTON2 != 0 {
+        if is_special_button_pressed() {
             SHIP.speed += (SHIP.slow_speed - SHIP.speed) * 0.2;
             SHIP.fire_wide_deg += (FIRE_NARROW_BASE_DEG - SHIP.fire_wide_deg) * 0.1;
             SHIP.roll_lock_cnt += 1;
@@ -183,22 +174,11 @@ pub fn ship_move() -> c_int {
             }
         }
 
-        let pad = pad_get_pad_state();
         SHIP.vel_x = 0.0;
         SHIP.vel_y = 0.0;
-        if pad & PAD_UP != 0 {
-            SHIP.vel_y = SHIP.speed;
-        } else if pad & PAD_DOWN != 0 {
-            SHIP.vel_y = -SHIP.speed;
-        }
-        if pad & PAD_RIGHT != 0 {
-            SHIP.vel_x = SHIP.speed;
-        } else if pad & PAD_LEFT != 0 {
-            SHIP.vel_x = -SHIP.speed;
-        }
-        if SHIP.vel_x != 0.0 && SHIP.vel_y != 0.0 {
-            SHIP.vel_x *= 0.707;
-            SHIP.vel_y *= 0.707;
+        if let Some(dir) = pad_get_direction() {
+            SHIP.vel_x = dir.x * SHIP.speed;
+            SHIP.vel_y = dir.y * SHIP.speed;
         }
         SHIP.ppos_x = SHIP_POS_X;
         SHIP.ppos_y = SHIP_POS_Y;
@@ -216,7 +196,7 @@ pub fn ship_move() -> c_int {
             SHIP_POS_Y = SHIP.field_limit_y;
         }
 
-        if button & PAD_BUTTON1 != 0 {
+        if is_fire_button_pressed() {
             let fire_pos_x;
             let td;
             match SHIP.fire_cnt % 4 {

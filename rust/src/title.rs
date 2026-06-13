@@ -1,6 +1,8 @@
 use core::ffi::c_int;
 
-use crate::pad::pad_get_pad_state;
+use crate::pad::{
+    is_any_direction_pressed, is_down_pressed, is_left_pressed, is_right_pressed, is_up_pressed,
+};
 use crate::prefs::prefs_get_slots;
 use crate::ui_renderer::renderer_draw_title;
 
@@ -8,11 +10,6 @@ const DIFFICULTY_NUM: c_int = 4;
 const MODE_NUM: c_int = 2;
 const VERTICAL_BOXES_COUNT: c_int = DIFFICULTY_NUM + 1;
 const BOX_COUNT: c_int = 16;
-
-const PAD_UP: c_int = 1;
-const PAD_DOWN: c_int = 2;
-const PAD_LEFT: c_int = 4;
-const PAD_RIGHT: c_int = 8;
 
 static mut CUR_X: c_int = 0;
 static mut CUR_Y: c_int = 0;
@@ -39,12 +36,11 @@ pub fn title_move() {
     unsafe {
         STAGE_CHANGED = false;
 
-        let pad = pad_get_pad_state();
-        let up = (pad & PAD_UP) != 0;
-        let down = (pad & PAD_DOWN) != 0;
-        let left = (pad & PAD_LEFT) != 0;
-        let right = (pad & PAD_RIGHT) != 0;
-        let any_dir = pad != 0;
+        let up = is_up_pressed();
+        let down = is_down_pressed();
+        let left = is_left_pressed();
+        let right = is_right_pressed();
+        let any_dir = is_any_direction_pressed();
 
         if !PAD_PRSD {
             if down {

@@ -37,7 +37,9 @@ use crate::core::rand::rand_next_int;
 use crate::enemy::{enemies_clear, enemies_move, enemies_push_lock_targets};
 use crate::field::{field_create_ring_display_list, field_init, field_move, field_set_color};
 use crate::letter_render::letter_render_create_display_lists;
-use crate::pad::{pad_get_button_state, pad_is_key_pressed};
+use crate::pad::{
+    is_fire_button_pressed, is_pause_pressed, is_quit_pressed, is_special_button_pressed,
+};
 use crate::prefs::{
     prefs_get_hi_score, prefs_get_reached_parsec, prefs_get_selected_difficulty,
     prefs_get_selected_mode, prefs_get_selected_parsec_slot, prefs_get_start_parsec,
@@ -94,24 +96,6 @@ const EVENT_DESTROYED: i32 = 4;
 
 // Intentional slowdown threshold, indexed by ship mode (ROLL, LOCK).
 const SLOWDOWN_START_BULLETS_SPEED: [f32; MODE_NUM] = [30.0, 42.0];
-
-// Pad button bits / key codes (= Pad.d).
-const PAD_BUTTON1: i32 = 16;
-const PAD_BUTTON2: i32 = 32;
-const KEY_PAUSE: i32 = 112; // SDLK_p
-const KEY_ESCAPE: i32 = 27; // SDLK_ESCAPE
-
-fn is_button1() -> bool {
-    pad_get_button_state() & PAD_BUTTON1 != 0
-}
-
-fn is_button2() -> bool {
-    pad_get_button_state() & PAD_BUTTON2 != 0
-}
-
-fn is_pause_pressed() -> bool {
-    pad_is_key_pressed(KEY_PAUSE) != 0
-}
 
 #[derive(Clone, Copy)]
 struct StageSelection {
@@ -406,7 +390,7 @@ impl GameManager {
 
         if self.cnt <= 8 {
             self.btn_prsd = true;
-        } else if is_button1() {
+        } else if is_fire_button_pressed() {
             if !self.btn_prsd {
                 self.stage_selection = self.get_status();
                 if self.stage_selection.difficulty >= DIFFICULTY_NUM {
@@ -419,7 +403,7 @@ impl GameManager {
                 }
                 return false;
             }
-        } else if is_button2() {
+        } else if is_special_button_pressed() {
             if !self.btn_prsd {
                 title_change_mode();
                 self.start_stage_preview();
@@ -441,7 +425,7 @@ impl GameManager {
         let mut goto_next_state = false;
         if self.cnt <= 64 {
             self.btn_prsd = true;
-        } else if is_button1() || is_button2() {
+        } else if is_fire_button_pressed() || is_special_button_pressed() {
             if !self.btn_prsd {
                 goto_next_state = true;
             }
@@ -474,7 +458,7 @@ impl GameManager {
 
     // Returns nonzero when the game should quit.
     fn move_(&mut self) -> i32 {
-        if pad_is_key_pressed(KEY_ESCAPE) != 0 {
+        if is_quit_pressed() {
             return 1;
         }
         sound_manager_set_in_game((self.state == STATE_IN_GAME) as i32);

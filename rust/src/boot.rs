@@ -2,7 +2,7 @@
 //! `Logger` from the D `P47Boot` module).
 //!
 //! This is the game's entry point. `main` (in `main.rs`) hands us the program
-//! arguments and we own everything from here: open the joystick, seed the RNG,
+//! arguments and we own everything from here: open the controller, seed the RNG,
 //! parse the command line (calling the relevant setters directly — they all
 //! live in this crate) and finally run the main loop.
 
@@ -11,7 +11,7 @@ use crate::game_manager::{
     game_manager_set_no_bonus, game_manager_set_no_field, game_manager_set_nowait,
 };
 use crate::main_loop::main_loop_run;
-use crate::pad::{pad_open_joystick, pad_set_button_reversed};
+use crate::pad::pad_open_controller;
 use crate::renderer::renderer_set_brightness;
 use crate::ship::ship_set_slow;
 use crate::sound::sound_manager_set_no_sound;
@@ -20,7 +20,7 @@ const EXIT_SUCCESS: i32 = 0;
 const EXIT_FAILURE: i32 = 1;
 
 /// Options accumulated while parsing the command line and consumed by
-/// `main_loop_run`. The other flags (`-nosound`, `-reverse`, …) take effect
+/// `main_loop_run`. The other flags (`-nosound`, `-slowship`, …) take effect
 /// immediately through their setters and are not stored here.
 struct BootOptions {
     lowres: bool,
@@ -79,7 +79,7 @@ fn c_atoi(s: &str) -> i32 {
 fn usage(prog: &str) {
     Logger::error(&format!(
         "Usage: {} [-brightness [0-100]] [-luminous [0-100]] [-nosound] [-window] \
-         [-fullscreen] [-reverse] [-lowres] [-slowship] [-nowait] [-nofield] [-nobonus]",
+         [-fullscreen] [-lowres] [-slowship] [-nowait] [-nofield] [-nobonus]",
         prog
     ));
 }
@@ -124,7 +124,6 @@ fn parse_args(args: &[String]) -> Result<BootOptions, ()> {
             "-nosound" => sound_manager_set_no_sound(1),
             "-window" => opt.window_mode = true,
             "-fullscreen" => opt.fullscreen_desktop = true,
-            "-reverse" => pad_set_button_reversed(1),
             "-lowres" => opt.lowres = true,
             "-slowship" => ship_set_slow(1),
             "-nowait" => game_manager_set_nowait(1),
@@ -156,7 +155,7 @@ fn time_seed() -> u32 {
 /// name, as in C). Returns `EXIT_SUCCESS` (0) or `EXIT_FAILURE` (1).
 pub fn run(args: Vec<String>) -> i32 {
     // openJoystick(); the D code swallowed any error here.
-    pad_open_joystick();
+    pad_open_controller();
 
     rand_set_seed(time_seed());
 
