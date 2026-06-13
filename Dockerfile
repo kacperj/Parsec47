@@ -38,7 +38,7 @@ RUN . "$HOME/.cargo/env" && \
 # =============================================================================
 FROM mstorsjo/llvm-mingw:latest AS windows
 
-RUN apt-get update && apt-get install -y --no-install-recommends wget xz-utils p7zip-full cmake make && \
+RUN apt-get update && apt-get install -y --no-install-recommends wget && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Rust with the Windows cross-compilation target
@@ -56,64 +56,16 @@ RUN mkdir -p /opt/sdl2 && \
     x86_64-w64-mingw32-ar rcs /opt/sdl2/lib/libgcc.a && \
     x86_64-w64-mingw32-ar rcs /opt/sdl2/lib/libgcc_eh.a
 
-# ── Cross-compile libogg + libvorbis + SDL2_mixer for x86_64 Windows ──
-# Build SDL2_mixer from source with the reference libvorbis decoder
-# (stb_vorbis built into pre-built SDL2_mixer produces different output).
-RUN cat <<'EOF' > /tmp/mingw-toolchain.cmake
-set(CMAKE_SYSTEM_NAME Windows)
-set(CMAKE_C_COMPILER x86_64-w64-mingw32-clang)
-set(CMAKE_RC_COMPILER x86_64-w64-mingw32-windres)
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-EOF
-
-ARG LIBOGG_VER=1.3.5
-ARG LIBVORBIS_VER=1.3.7
+# ── SDL2_mixer MinGW development package (prebuilt) ──
+# Music is shipped as FLAC (lossless), so the prebuilt SDL2_mixer's built-in
+# FLAC decoder is used — no libvorbis/stb_vorbis decode path is involved. The
+# FLAC files were pre-decoded from the original OGGs with reference libvorbis,
+# so playback matches the historical from-source build bit-for-bit.
 ARG SDL2_MIXER_VER=2.8.0
-RUN wget -q "https://github.com/xiph/ogg/releases/download/v${LIBOGG_VER}/libogg-${LIBOGG_VER}.tar.gz" && \
-    tar xf "libogg-${LIBOGG_VER}.tar.gz" && \
-    cmake -S "libogg-${LIBOGG_VER}" -B /tmp/ogg-build \
-      -DCMAKE_TOOLCHAIN_FILE=/tmp/mingw-toolchain.cmake \
-      -DCMAKE_INSTALL_PREFIX=/opt/vorbis \
-      -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTING=OFF \
-      -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-      -DCMAKE_BUILD_TYPE=Release && \
-    cmake --build /tmp/ogg-build -j$(nproc) && \
-    cmake --install /tmp/ogg-build && \
-    rm -rf "libogg-${LIBOGG_VER}"* /tmp/ogg-build && \
-    wget -q "https://github.com/xiph/vorbis/releases/download/v${LIBVORBIS_VER}/libvorbis-${LIBVORBIS_VER}.tar.gz" && \
-    tar xf "libvorbis-${LIBVORBIS_VER}.tar.gz" && \
-    cmake -S "libvorbis-${LIBVORBIS_VER}" -B /tmp/vorbis-build \
-      -DCMAKE_TOOLCHAIN_FILE=/tmp/mingw-toolchain.cmake \
-      -DCMAKE_INSTALL_PREFIX=/opt/vorbis \
-      -DCMAKE_PREFIX_PATH=/opt/vorbis \
-      -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTING=OFF \
-      -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-      -DCMAKE_BUILD_TYPE=Release && \
-    cmake --build /tmp/vorbis-build -j$(nproc) && \
-    cmake --install /tmp/vorbis-build && \
-    rm -rf "libvorbis-${LIBVORBIS_VER}"* /tmp/vorbis-build && \
-    wget -q "https://github.com/libsdl-org/SDL_mixer/releases/download/release-${SDL2_MIXER_VER}/SDL2_mixer-${SDL2_MIXER_VER}.tar.gz" && \
-    tar xf "SDL2_mixer-${SDL2_MIXER_VER}.tar.gz" && \
-    cmake -S "SDL2_mixer-${SDL2_MIXER_VER}" -B /tmp/mixer-build \
-      -DCMAKE_TOOLCHAIN_FILE=/tmp/mingw-toolchain.cmake \
-      -DCMAKE_PREFIX_PATH="/opt/sdl2;/opt/vorbis" \
-      -DCMAKE_INSTALL_PREFIX=/opt/sdl2 \
-      -DBUILD_SHARED_LIBS=ON \
-      -DSDL2MIXER_VORBIS=VORBISFILE \
-      -DSDL2MIXER_VORBIS_VORBISFILE_SHARED=OFF \
-      -DSDL2MIXER_MP3=OFF \
-      -DSDL2MIXER_FLAC=OFF \
-      -DSDL2MIXER_MOD=OFF \
-      -DSDL2MIXER_MIDI=OFF \
-      -DSDL2MIXER_OPUS=OFF \
-      -DSDL2MIXER_WAVPACK=OFF \
-      -DSDL2MIXER_SAMPLES=OFF \
-      -DCMAKE_BUILD_TYPE=Release && \
-    cmake --build /tmp/mixer-build -j$(nproc) && \
-    cmake --install /tmp/mixer-build && \
-    rm -rf "SDL2_mixer-${SDL2_MIXER_VER}"* /tmp/mixer-build /tmp/mingw-toolchain.cmake
+RUN wget -q "https://github.com/libsdl-org/SDL_mixer/releases/download/release-${SDL2_MIXER_VER}/SDL2_mixer-devel-${SDL2_MIXER_VER}-mingw.tar.gz" && \
+    tar xf "SDL2_mixer-devel-${SDL2_MIXER_VER}-mingw.tar.gz" && \
+    cp -r "SDL2_mixer-${SDL2_MIXER_VER}/x86_64-w64-mingw32"/* /opt/sdl2/ && \
+    rm -rf "SDL2_mixer-${SDL2_MIXER_VER}" "SDL2_mixer-devel-${SDL2_MIXER_VER}-mingw.tar.gz"
 
 WORKDIR /build
 

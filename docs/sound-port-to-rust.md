@@ -181,7 +181,28 @@ Built SDL2_mixer 2.8.0 from source with:
 - `SDL2MIXER_VORBIS_VORBISFILE_SHARED=OFF` — statically links libvorbis into SDL2_mixer.dll
 - libogg 1.3.5 and libvorbis 1.3.7 cross-compiled as static libraries
 
-**Status**: Awaiting test results.
+**Status**: Worked, but required building libogg + libvorbis + SDL2_mixer from
+source in the Windows Docker stage — a slow, heavy step that made the Windows
+build far more complex than the Linux one.
+
+### Attempt 7 (current): Pre-decode OGG → FLAC with reference libvorbis
+
+**Hypothesis**: The "odd" sound is purely a *decoder* difference for the same
+compressed source. If the OGGs are decoded **once, offline, with reference
+libvorbis** (`oggdec` from vorbis-tools) and stored in a **lossless** container,
+the stored PCM *is* exactly what the from-source build produced. Any player then
+reproduces it bit-for-bit, and no Vorbis decoder is needed at runtime at all.
+
+Converted `ptn0..3.ogg` → `ptn0..3.flac` (libvorbis decode → FLAC encode). The
+4 music tracks are now FLAC; everything else was already WAV. `BGM_FILES` and the
+`mixer::init` flag (`InitFlag::FLAC`) were updated accordingly.
+
+**Result**: The Windows Docker stage drops the entire libogg/libvorbis/SDL2_mixer
+from-source build and uses the **prebuilt `SDL2_mixer-devel` MinGW package** (its
+built-in FLAC decoder is statically linked — no companion DLLs). The Windows
+block now mirrors the SDL2 block (~8 lines) and the build is much faster. Linux
+playback is unchanged (same libvorbis PCM, now via FLAC). This is option 3 from
+the "Remaining Theories" list below, refined to FLAC instead of WAV for size.
 
 ### Summary of What Works
 

@@ -48,7 +48,7 @@ The Dockerfile is multi-stage; `build.sh` selects the stage via `docker build --
 
 - **Windows** (cross-compiled on the `mstorsjo/llvm-mingw` image):
   - **Rust**: stable, target `x86_64-pc-windows-gnu`, built as a `[[bin]]` (GUI subsystem)
-  - SDL2 from the MinGW devel package; SDL2_mixer + libogg/libvorbis built from source
+  - SDL2 and SDL2_mixer both from the prebuilt MinGW devel packages (no from-source builds). Music ships as FLAC (pre-decoded from the original OGGs with reference libvorbis), so SDL2_mixer's built-in FLAC decoder is used — no Vorbis decode path at runtime
 - **Linux** (native on `debian:bookworm`):
   - **Rust**: stable, host target `x86_64-unknown-linux-gnu`, built as a `[[bin]]`
   - SDL2/SDL2_mixer/OpenGL from distro packages (`libsdl2-dev`, `libsdl2-mixer-dev`, `libgl1-mesa-dev`)

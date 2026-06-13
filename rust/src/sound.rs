@@ -50,7 +50,7 @@ pub fn sound_init() -> c_int {
         Err(_) => return -1,
     };
 
-    if let Ok(ctx) = mixer::init(InitFlag::OGG) {
+    if let Ok(ctx) = mixer::init(InitFlag::FLAC) {
         std::mem::forget(ctx);
     }
 
@@ -219,10 +219,10 @@ const BGM_COUNT: usize = 4;
 const SE_COUNT: usize = 11;
 
 const BGM_FILES: [&str; BGM_COUNT] = [
-    "assets/sounds/ptn0.ogg",
-    "assets/sounds/ptn1.ogg",
-    "assets/sounds/ptn2.ogg",
-    "assets/sounds/ptn3.ogg",
+    "assets/sounds/ptn0.flac",
+    "assets/sounds/ptn1.flac",
+    "assets/sounds/ptn2.flac",
+    "assets/sounds/ptn3.flac",
 ];
 
 const SE_FILES: [&str; SE_COUNT] = [
