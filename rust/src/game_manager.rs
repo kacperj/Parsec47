@@ -17,7 +17,8 @@ use crate::stage_manager::{stage_manager_get_parsec, stage_manager_is_boss_secti
 use crate::title::title_draw;
 use crate::ui_renderer::{
     renderer_draw_box, renderer_draw_gameover_status, renderer_draw_pause_status,
-    renderer_draw_score, renderer_draw_side_boards, renderer_draw_side_info,
+    renderer_draw_score, renderer_draw_side_boards, renderer_draw_side_info, PAUSE_RESUME,
+    PAUSE_SURRENDER,
 };
 
 // Game-logic functions called by the state machine ported below (formerly the
@@ -38,7 +39,8 @@ use crate::enemy::{enemies_clear, enemies_move, enemies_push_lock_targets};
 use crate::field::{field_create_ring_display_list, field_init, field_move, field_set_color};
 use crate::letter_render::letter_render_create_display_lists;
 use crate::pad::{
-    is_fire_button_pressed, is_pause_pressed, is_quit_pressed, is_special_button_pressed,
+    is_down_pressed, is_fire_button_pressed, is_pause_pressed, is_quit_pressed,
+    is_special_button_pressed, is_up_pressed,
 };
 use crate::prefs::{
     prefs_get_hi_score, prefs_get_reached_parsec, prefs_get_selected_difficulty,
@@ -70,6 +72,9 @@ pub const STATE_PAUSE: i32 = 3;
 
 // Ship mode (= ShipMode.d). Only ROLL needs distinguishing here.
 const MODE_ROLL: i32 = 0;
+
+// Frames the selected pause box takes to grow to full size (matches title BOX_COUNT).
+const PAUSE_BOX_COUNT: i32 = 16;
 
 // ── Game-manager state machine (port of the P47GameManager class) ─────────────
 //
@@ -117,6 +122,9 @@ struct GameManager {
     no_bonus: bool,
     p_prsd: bool,   // pause-key edge detect
     btn_prsd: bool, // action-button edge detect
+    pad_prsd: bool, // direction-pad edge detect (pause menu)
+    pause_cursor: i32, // selected pause-menu button
+    pause_box_cnt: i32, // selected pause box grow animation
 }
 
 static mut GAME_MANAGER: Option<GameManager> = None;
@@ -143,6 +151,9 @@ impl GameManager {
             no_bonus: false,
             p_prsd: true,
             btn_prsd: true,
+            pad_prsd: true,
+            pause_cursor: PAUSE_RESUME,
+            pause_box_cnt: PAUSE_BOX_COUNT,
         }
     }
 
@@ -329,6 +340,10 @@ impl GameManager {
     fn start_pause(&mut self) {
         self.state = STATE_PAUSE;
         self.pause_cnt = 0;
+        self.pause_cursor = PAUSE_RESUME;
+        self.pause_box_cnt = PAUSE_BOX_COUNT;
+        self.btn_prsd = true;
+        self.pad_prsd = true;
     }
 
     fn resume_pause(&mut self) {
@@ -355,7 +370,10 @@ impl GameManager {
         particles_update();
         fragments_update();
         screen_shake_update();
-        if is_pause_pressed() {
+        // Pause on the pause key/Start button, or when quit (Escape/Back) is
+        // pressed during play — quitting from gameplay opens the pause menu
+        // instead of exiting the game.
+        if is_pause_pressed() || is_quit_pressed() {
             if !self.p_prsd {
                 self.p_prsd = true;
                 self.start_pause();
@@ -446,21 +464,53 @@ impl GameManager {
 
     fn pause_move(&mut self) {
         self.pause_cnt += 1;
+
+        // Pause key still toggles straight back into the game.
         if is_pause_pressed() {
             if !self.p_prsd {
                 self.p_prsd = true;
                 self.resume_pause();
+                return;
             }
         } else {
             self.p_prsd = false;
+        }
+
+        // Move the cursor between the Resume / Surrender buttons.
+        if is_up_pressed() || is_down_pressed() {
+            if !self.pad_prsd {
+                self.pad_prsd = true;
+                self.pause_cursor = if self.pause_cursor == PAUSE_RESUME {
+                    PAUSE_SURRENDER
+                } else {
+                    PAUSE_RESUME
+                };
+                self.pause_box_cnt = PAUSE_BOX_COUNT;
+            }
+        } else {
+            self.pad_prsd = false;
+        }
+
+        if self.pause_box_cnt >= 0 {
+            self.pause_box_cnt -= 1;
+        }
+
+        // Activate the selected button.
+        if is_fire_button_pressed() {
+            if !self.btn_prsd {
+                self.btn_prsd = true;
+                match self.pause_cursor {
+                    PAUSE_SURRENDER => self.start_gameover(),
+                    _ => self.resume_pause(),
+                }
+            }
+        } else {
+            self.btn_prsd = false;
         }
     }
 
     // Returns nonzero when the game should quit.
     fn move_(&mut self) -> i32 {
-        if is_quit_pressed() {
-            return 1;
-        }
         sound_manager_set_in_game((self.state == STATE_IN_GAME) as i32);
         match self.state {
             STATE_IN_GAME => self.in_game_move(),
@@ -581,7 +631,7 @@ fn in_game_draw_status() {
 
 // Full per-frame draw (port of P47GameManager.draw). The six values are pulled
 // from the GameManager state by `game_manager_draw` below.
-fn draw_frame(state: i32, mode: i32, cnt: i32, pause_cnt: i32, no_field: bool, no_bonus: bool) {
+fn draw_frame(state: i32, mode: i32, cnt: i32, pause_cnt: i32, pause_cursor: i32, pause_box_cnt: i32, no_field: bool, no_bonus: bool) {
     game_manager_draw_luminous(state);
 
     screen_clear();
@@ -602,7 +652,9 @@ fn draw_frame(state: i32, mode: i32, cnt: i32, pause_cnt: i32, no_field: bool, n
         STATE_IN_GAME => in_game_draw_status(),
         STATE_TITLE => game_manager_title_draw_status(),
         STATE_GAMEOVER => renderer_draw_gameover_status(stage_manager_get_parsec(), cnt),
-        STATE_PAUSE => renderer_draw_pause_status(stage_manager_get_parsec(), pause_cnt),
+        STATE_PAUSE => {
+            renderer_draw_pause_status(stage_manager_get_parsec(), pause_cnt, pause_cursor, pause_box_cnt)
+        }
         _ => {}
     }
     screen_view_perspective();
@@ -639,6 +691,8 @@ pub fn game_manager_draw() {
         gm.stage_selection.mode,
         gm.cnt,
         gm.pause_cnt,
+        gm.pause_cursor,
+        gm.pause_box_cnt,
         gm.no_field,
         gm.no_bonus,
     );

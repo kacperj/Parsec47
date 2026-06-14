@@ -13,6 +13,7 @@ const TITLE_VERTICAL_BOXES: i32 = TITLE_DIFFICULTY_NUM + 1;
 const TITLE_BOX_COUNT: i32 = 16;
 const TITLE_BOX_SMALL: i32 = 24;
 const TITLE_SLOT_NUM: i32 = 10;
+const BOX_LETTER_SCALE: c_float = 12.0;
 
 fn draw_board(x: i32, y: i32, width: i32, height: i32) {
     unsafe {
@@ -156,14 +157,45 @@ pub fn renderer_draw_gameover_status(
     }
 }
 
+// Pause-menu buttons, in cursor order.
+pub const PAUSE_RESUME: i32 = 0;
+pub const PAUSE_SURRENDER: i32 = 1;
+
+fn renderer_draw_pause_button(letter: &[u8], label: &[u8], box_y: i32, selected: bool, box_cnt: i32) {
+    const BOX_X: i32 = 230;
+
+    if selected {
+        // Same enlarging-box animation as the selected title box.
+        let bs = (TITLE_BOX_COUNT - box_cnt) / 2;
+        renderer_draw_box_outlined(
+            BOX_X - bs,
+            box_y - bs,
+            TITLE_BOX_SMALL + bs * 2,
+            TITLE_BOX_SMALL + bs * 2,
+        );
+
+        // Letters stay anchored to the base box, so the box grows around them.
+        let tx = BOX_X as c_float;
+        let ty = (box_y + TITLE_BOX_SMALL) as c_float - 12.0;
+        letter_render_draw_string(label.as_ptr(), label.len() as i32, tx + 46.0, ty, BOX_LETTER_SCALE, TO_RIGHT);
+        letter_render_draw_string(letter.as_ptr(), letter.len() as i32, tx + 14.0, ty, BOX_LETTER_SCALE, TO_RIGHT);
+    } else {
+        renderer_draw_box_light(BOX_X, box_y, TITLE_BOX_SMALL, TITLE_BOX_SMALL);
+    }
+}
+
 pub fn renderer_draw_pause_status(
     parsec: i32,
     pause_cnt: i32,
+    cursor: i32,
+    box_cnt: i32,
 ) {
     renderer_draw_side_info(parsec);
     if (pause_cnt % 60) < 30 {
         letter_render_draw_string(b"PAUSE".as_ptr(), 5, 280.0, 220.0, 12.0, 0);
     }
+    renderer_draw_pause_button(b"R", b"ESUME", 270, cursor == PAUSE_RESUME, box_cnt);
+    renderer_draw_pause_button(b"S", b"URRENDER", 302, cursor == PAUSE_SURRENDER, box_cnt);
 }
 
 pub fn renderer_draw_side_boards() {
@@ -219,13 +251,11 @@ pub fn renderer_draw_title(cur_x: i32, cur_y: i32, mode: i32, box_cnt: i32) {
         );
     }
 
-    let box_letter_scale: c_float = 12.0;
-
     for y in 0..TITLE_VERTICAL_BOXES {
         let slots = prefs_get_slots(mode, y);
         for x in 0..slots {
             let sx = 180 + x * 28;
-            let mut sy = 260 + y * 32;
+            let mut sy: i32 = 260 + y * 32;
 
             if y == TITLE_DIFFICULTY_NUM {
                 sy += 15;
@@ -247,7 +277,7 @@ pub fn renderer_draw_title(cur_x: i32, cur_y: i32, mode: i32, box_cnt: i32) {
                         short.len() as i32,
                         (sx + 13) as c_float,
                         (sy + 13) as c_float,
-                        box_letter_scale,
+                        BOX_LETTER_SCALE,
                         TO_RIGHT,
                     );
                 } else {
@@ -257,7 +287,7 @@ pub fn renderer_draw_title(cur_x: i32, cur_y: i32, mode: i32, box_cnt: i32) {
                         short.len() as i32,
                         (sx + 4) as c_float,
                         (sy + 13) as c_float,
-                        box_letter_scale,
+                        BOX_LETTER_SCALE,
                         TO_RIGHT,
                     );
                     if x >= TITLE_SLOT_NUM - 1 {
@@ -267,7 +297,7 @@ pub fn renderer_draw_title(cur_x: i32, cur_y: i32, mode: i32, box_cnt: i32) {
                             1,
                             (sx + 21) as c_float,
                             (sy + 14) as c_float,
-                            box_letter_scale,
+                            BOX_LETTER_SCALE,
                             TO_RIGHT,
                         );
                     } else {
@@ -275,7 +305,7 @@ pub fn renderer_draw_title(cur_x: i32, cur_y: i32, mode: i32, box_cnt: i32) {
                             x,
                             (sx + 22) as c_float,
                             (sy + 13) as c_float,
-                            box_letter_scale,
+                            BOX_LETTER_SCALE,
                             TO_RIGHT,
                         );
                     }
