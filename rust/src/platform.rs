@@ -38,6 +38,8 @@ const SDL_QUIT_EVENT: u32 = 0x100;
 const SDL_WINDOWEVENT: u32 = 0x200;
 const SDL_KEYDOWN: u32 = 0x300;
 const SDL_KEYUP: u32 = 0x301;
+const SDL_CONTROLLERDEVICEADDED: u32 = 0x653;
+const SDL_CONTROLLERDEVICEREMOVED: u32 = 0x654;
 
 // SDL_WindowEventID for resize
 const SDL_WINDOWEVENT_RESIZED: u8 = 5;
@@ -180,6 +182,19 @@ pub fn window_poll_events() -> c_int {
                         u32::from_le_bytes([buf[20], buf[21], buf[22], buf[23]]);
                     let pressed = ev_type == SDL_KEYDOWN;
                     crate::pad::handle_key_event(keycode, pressed);
+                }
+                SDL_CONTROLLERDEVICEADDED | SDL_CONTROLLERDEVICEREMOVED => {
+                    // SDL_ControllerDeviceEvent layout:
+                    //   0-3:  type (u32)
+                    //   4-7:  timestamp (u32)
+                    //   8-11: which (Sint32) — device index for ADDED,
+                    //         instance id for REMOVED
+                    let which = i32::from_le_bytes([buf[8], buf[9], buf[10], buf[11]]);
+                    if ev_type == SDL_CONTROLLERDEVICEADDED {
+                        crate::pad::pad_handle_device_added(which);
+                    } else {
+                        crate::pad::pad_handle_device_removed(which);
+                    }
                 }
                 _ => {}
             }

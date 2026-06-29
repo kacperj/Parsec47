@@ -10,6 +10,9 @@ extern "C" {
     fn SDL_GameControllerOpen(joystick_index: c_int) -> *mut c_void;
     fn SDL_GameControllerGetButton(gamecontroller: *mut c_void, button: c_int) -> u8;
     fn SDL_GameControllerGetAxis(gamecontroller: *mut c_void, axis: c_int) -> i16;
+    fn SDL_GameControllerClose(gamecontroller: *mut c_void);
+    fn SDL_GameControllerGetJoystick(gamecontroller: *mut c_void) -> *mut c_void;
+    fn SDL_JoystickInstanceID(joystick: *mut c_void) -> c_int;
 }
 
 // SDL_INIT_GAMECONTROLLER implies SDL_INIT_JOYSTICK.
@@ -171,6 +174,45 @@ pub fn pad_open_controller() -> c_int {
             }
         }
         -1
+    }
+}
+
+/// A controller was plugged in (SDL_CONTROLLERDEVICEADDED). `device_index` is the
+/// joystick device index from the event. Opens it only if we don't already hold a
+/// controller, so the first connected pad wins and extras are ignored.
+///
+/// Driven by the event queue (no per-frame polling), so hotplug detection during
+/// gameplay is free beyond this branch.
+pub(crate) fn pad_handle_device_added(device_index: c_int) {
+    if !CONTROLLER.load(Ordering::Relaxed).is_null() {
+        return;
+    }
+    unsafe {
+        if SDL_IsGameController(device_index) == 0 {
+            return;
+        }
+        let gc = SDL_GameControllerOpen(device_index);
+        if !gc.is_null() {
+            CONTROLLER.store(gc, Ordering::Relaxed);
+        }
+    }
+}
+
+/// A controller was unplugged (SDL_CONTROLLERDEVICEREMOVED). `instance_id` is the
+/// joystick instance id from the event. Closes our controller only if it is the
+/// one that was removed; input then falls back to the keyboard automatically since
+/// every read path null-checks `CONTROLLER`.
+pub(crate) fn pad_handle_device_removed(instance_id: c_int) {
+    let gc = CONTROLLER.load(Ordering::Relaxed);
+    if gc.is_null() {
+        return;
+    }
+    unsafe {
+        let joy = SDL_GameControllerGetJoystick(gc);
+        if !joy.is_null() && SDL_JoystickInstanceID(joy) == instance_id {
+            CONTROLLER.store(null_mut(), Ordering::Relaxed);
+            SDL_GameControllerClose(gc);
+        }
     }
 }
 
