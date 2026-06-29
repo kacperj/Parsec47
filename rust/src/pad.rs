@@ -1,7 +1,7 @@
 use crate::core::vector::Vector2;
 use std::os::raw::{c_int, c_void};
 use std::ptr::null_mut;
-use std::sync::atomic::{AtomicPtr, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
 
 extern "C" {
     fn SDL_InitSubSystem(flags: u32) -> c_int;
@@ -108,6 +108,10 @@ static mut KEY_STATE: [u8; 15] = [0u8; 15];
 
 static CONTROLLER: AtomicPtr<c_void> = AtomicPtr::new(null_mut());
 
+// Latched when the active controller is unplugged, so the game loop can react
+// (e.g. pause) on its next frame. Consumed (cleared) by `pad_take_controller_unplugged`.
+static CONTROLLER_UNPLUGGED: AtomicBool = AtomicBool::new(false);
+
 fn sdl2_keycode_to_index(kc: u32) -> Option<usize> {
     match kc {
         k if k == SK_RIGHT => Some(IDX_RIGHT),
@@ -212,8 +216,15 @@ pub(crate) fn pad_handle_device_removed(instance_id: c_int) {
         if !joy.is_null() && SDL_JoystickInstanceID(joy) == instance_id {
             CONTROLLER.store(null_mut(), Ordering::Relaxed);
             SDL_GameControllerClose(gc);
+            CONTROLLER_UNPLUGGED.store(true, Ordering::Relaxed);
         }
     }
+}
+
+/// Returns true exactly once after the active controller is unplugged, clearing
+/// the latch. The game loop polls this to pause when the pad disappears mid-game.
+pub fn pad_take_controller_unplugged() -> bool {
+    CONTROLLER_UNPLUGGED.swap(false, Ordering::Relaxed)
 }
 
 /// Returns a bitmask of directional pad state (UP/DOWN/LEFT/RIGHT), combining

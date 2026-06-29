@@ -40,7 +40,7 @@ use crate::field::{field_create_ring_display_list, field_init, field_move, field
 use crate::letter_render::letter_render_create_display_lists;
 use crate::pad::{
     is_down_pressed, is_fire_button_pressed, is_pause_pressed, is_quit_pressed,
-    is_special_button_pressed, is_up_pressed,
+    is_special_button_pressed, is_up_pressed, pad_take_controller_unplugged,
 };
 use crate::prefs::{
     prefs_get_hi_score, prefs_get_reached_parsec, prefs_get_selected_difficulty,
@@ -370,6 +370,14 @@ impl GameManager {
         particles_update();
         fragments_update();
         screen_shake_update();
+        // Losing the controller mid-game opens the pause menu so play can't
+        // continue with input silently gone. Latched in the SDL event handler;
+        // `pad_take_controller_unplugged` clears it so this fires once per unplug.
+        if pad_take_controller_unplugged() {
+            self.p_prsd = true;
+            self.start_pause();
+            return;
+        }
         // Pause on the pause key/Start button, or when quit (Escape/Back) is
         // pressed during play — quitting from gameplay opens the pause menu
         // instead of exiting the game.
